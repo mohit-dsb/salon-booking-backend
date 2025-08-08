@@ -1,0 +1,1007 @@
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.467Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.472Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.474Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.476Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.478Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.479Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.480Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.480Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.481Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.482Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.483Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.484Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.486Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.487Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.488Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.489Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.490Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.490Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.491Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.492Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.493Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.493Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.494Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.495Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.495Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.496Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.497Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.497Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.498Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.499Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.500Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.501Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.501Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.502Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.502Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.503Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.504Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.505Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.505Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.506Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.507Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.508Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.509Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.510Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.511Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.512Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.513Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.513Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.514Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.515Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.517Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.518Z'
+}
+{
+  errno: -5,
+  syscall: 'write',
+  code: 'EIO',
+  level: 'error',
+  message: 'Uncaught Exception: EIO: i/o error, write',
+  stack: 'Error: EIO: i/o error, write\n' +
+    '    at writeSync (node:fs:923:3)\n' +
+    '    at SyncWriteStream._write (node:internal/fs/sync_write_stream:27:5)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:572:12)\n' +
+    '    at _write (node:internal/streams/writable:501:10)\n' +
+    '    at SyncWriteStream.Writable.write (node:internal/streams/writable:510:10)\n' +
+    '    at Console.log (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston/lib/winston/transports/console.js:87:23)\n' +
+    '    at Console._write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/winston-transport/modern.js:103:17)\n' +
+    '    at doWrite (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:390:139)\n' +
+    '    at writeOrBuffer (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:381:5)\n' +
+    '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
+  timestamp: '2025-08-08T07:35:25.520Z'
+}

@@ -32,7 +32,7 @@ const logger = winston.createLogger({
 // Morgan middleware for HTTP logging
 export const morganMiddleware = morgan(":method :url :status :res[content-length] - :response-time ms", {
   stream: {
-    write: (message) => logger.http(message.trim()),
+    write: (message: string) => logger.http(message.trim()),
   },
 });
 

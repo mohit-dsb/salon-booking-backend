@@ -1439,3 +1439,18 @@
   level: 'info',
   timestamp: '2025-08-11T09:39:21.689Z'
 }
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-11T09:53:24.147Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-11T09:53:24.164Z'
+}
+{
+  message: 'Gracefully shutting down...',
+  level: 'info',
+  timestamp: '2025-08-11T09:53:25.526Z'
+}

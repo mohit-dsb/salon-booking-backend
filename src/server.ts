@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { app } from "./app";
 import { logger } from "@/utils/logger";
 import { env } from "@/config/environment";
@@ -24,12 +25,12 @@ import { DatabaseConnection } from "@/config/database";
     process.on("SIGTERM", shutdown);
 
     // Handle uncaught exceptions/unhandled rejections
-    process.on("uncaughtException", (err) => {
+    process.on("uncaughtException", (err: Error) => {
       logger.error("Uncaught Exception:", err);
       shutdown();
     });
 
-    process.on("unhandledRejection", (reason) => {
+    process.on("unhandledRejection", (reason: unknown) => {
       logger.error("Unhandled Rejection:", reason);
       shutdown();
     });

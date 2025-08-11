@@ -8,7 +8,7 @@ export enum UserRole {
 @modelOptions({
   schemaOptions: {
     toJSON: {
-      transform: (_doc, ret) => {
+      transform: (_doc: unknown, ret: Record<string, unknown>) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { __v, ...cleanRet } = ret;
         return cleanRet;

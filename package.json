@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon -r tsconfig-paths/register src/server.ts",
+    "prebuild": "rm -rf dist",
     "build": "tsc && tsc-alias",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -37,6 +38,7 @@
     "helmet": "^8.1.0",
     "mongoose": "^8.17.1",
     "morgan": "^1.10.1",
+    "reflect-metadata": "^0.2.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.17.0"

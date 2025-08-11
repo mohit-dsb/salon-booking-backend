@@ -1,9 +1,9 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
 
 const router = Router();
 
-router.get("/protected", async (req, res) => {
+router.get("/protected", async (req: Request, res: Response) => {
   try {
     // Use `getAuth()` to get the user's `userId`
     const { userId } = getAuth(req);
@@ -36,7 +36,7 @@ router.get("/protected", async (req, res) => {
   }
 });
 
-router.get("/", (req, res) => {
+router.get("/", (req: Request, res: Response) => {
   res.status(200).json({ message: "Welcome to the API" });
 });
 

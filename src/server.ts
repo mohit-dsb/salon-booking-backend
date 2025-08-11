@@ -1,43 +1,40 @@
-import { app } from './app';
-import { logger } from '@/utils/logger';
-import { env } from '@/config/environment';
-import { DatabaseConnection } from '@/config/database';
-
-const PORT = env.PORT || 3000;
+import { app } from "./app";
+import { logger } from "@/utils/logger";
+import { env } from "@/config/environment";
+import { DatabaseConnection } from "@/config/database";
 
 (async () => {
   try {
     await DatabaseConnection.connect();
-    const server = app.listen(PORT, () => {
-      logger.info(`Server running on port ${PORT} [${env.NODE_ENV}]`);
+    const server = app.listen(env.PORT, () => {
+      logger.info(`Server running on port ${env.PORT} [${env.NODE_ENV}]`);
     });
 
     // Graceful shutdown
     const shutdown = async () => {
-      logger.info('Gracefully shutting down...');
+      logger.info("Gracefully shutting down...");
       await DatabaseConnection.disconnect();
       server.close(() => {
-        logger.info('Server closed');
+        logger.info("Server closed");
         process.exit(0);
       });
     };
 
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
 
     // Handle uncaught exceptions/unhandled rejections
-    process.on('uncaughtException', (err) => {
-      logger.error('Uncaught Exception:', err);
+    process.on("uncaughtException", (err) => {
+      logger.error("Uncaught Exception:", err);
       shutdown();
     });
 
-    process.on('unhandledRejection', (reason) => {
-      logger.error('Unhandled Rejection:', reason);
+    process.on("unhandledRejection", (reason) => {
+      logger.error("Unhandled Rejection:", reason);
       shutdown();
     });
-
   } catch (error) {
-    logger.error('Startup error:', error);
+    logger.error("Startup error:", error);
     process.exit(1);
   }
 })();

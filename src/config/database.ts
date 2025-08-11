@@ -14,7 +14,11 @@ export class DatabaseConnection {
 
       if (env.NODE_ENV === "production") {
         mongooseOptions.retryWrites = true;
-        mongooseOptions.w = "majority";
+        mongooseOptions.writeConcern = {
+          w: "majority",
+          wtimeout: 10000,
+          j: true,
+        };
       }
 
       await mongoose.connect(env.MONGODB_URI, mongooseOptions);

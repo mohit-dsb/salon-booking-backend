@@ -1279,3 +1279,148 @@
   level: 'info',
   timestamp: '2025-08-08T07:38:59.202Z'
 }
+{
+  message: 'Server closed',
+  level: 'info',
+  timestamp: '2025-08-08T07:42:30.557Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:16:48.377Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:16:48.380Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:16:53.009Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:16:53.014Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:17:58.732Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:17:58.738Z'
+}
+{
+  message: 'Gracefully shutting down...',
+  level: 'info',
+  timestamp: '2025-08-08T09:20:14.410Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:20:18.898Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:20:18.912Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:22:48.336Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:22:48.340Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:23:05.179Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:23:05.190Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:23:39.568Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:23:39.572Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:24:19.812Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:24:19.817Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:24:41.862Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:24:41.879Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:25:45.905Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:25:45.909Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:36:46.917Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:36:46.926Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:37:19.791Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:37:19.803Z'
+}
+{
+  message: 'Database connected successfully',
+  level: 'info',
+  timestamp: '2025-08-08T09:38:12.923Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-08T09:38:12.928Z'
+}
+{
+  message: 'Gracefully shutting down...',
+  level: 'info',
+  timestamp: '2025-08-08T09:39:54.026Z'
+}

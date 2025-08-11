@@ -2,6 +2,36 @@ import { logger } from "@/utils/logger";
 import { env } from "@/config/environment";
 import { Request, Response, NextFunction } from "express";
 
+// Interface for Mongoose validation errors
+interface MongooseValidationError extends Error {
+  errors: Record<string, { message: string }>;
+}
+
+// Interface for MongoDB duplicate key errors
+interface MongoDuplicateKeyError extends Error {
+  code: number;
+  keyValue: Record<string, unknown>;
+}
+
+interface ErrorResponse {
+  success: boolean;
+  message: string;
+  stack?: string;
+  error?: Error;
+}
+
+// Type guard functions
+const isMongooseValidationError = (error: unknown): error is MongooseValidationError => {
+  return (
+    (error as MongooseValidationError).name === "ValidationError" &&
+    (error as MongooseValidationError).errors !== undefined
+  );
+};
+
+const isMongoDuplicateKeyError = (error: unknown): error is MongoDuplicateKeyError => {
+  return (error as MongoDuplicateKeyError).code === 11000;
+};
+
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly isOperational: boolean;
@@ -15,20 +45,21 @@ export class AppError extends Error {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const errorHandler = (err: AppError | Error, req: Request, res: Response, next: NextFunction) => {
   let error = err as AppError;
 
   // Mongoose validation error
-  if (err.name === "ValidationError") {
-    const message = Object.values((err as any).errors)
-      .map((val: any) => val.message)
+  if (isMongooseValidationError(err)) {
+    const message = Object.values(err.errors)
+      .map((val) => val.message)
       .join(", ");
     error = new AppError(message, 400);
   }
 
   // Mongoose duplicate key error
-  if ((err as any).code === 11000) {
-    const field = Object.keys((err as any).keyValue)[0];
+  if (isMongoDuplicateKeyError(err)) {
+    const field = Object.keys(err.keyValue)[0];
     const message = `${field} already exists`;
     error = new AppError(message, 400);
   }
@@ -56,7 +87,7 @@ export const errorHandler = (err: AppError | Error, req: Request, res: Response,
   const statusCode = error.statusCode || 500;
   const message = error.isOperational ? error.message : "Something went wrong";
 
-  const response: any = {
+  const response: ErrorResponse = {
     success: false,
     message,
     ...(env.NODE_ENV === "development" && {
@@ -69,7 +100,7 @@ export const errorHandler = (err: AppError | Error, req: Request, res: Response,
 };
 
 // Async error wrapper
-export const asyncHandler = (fn: Function) => {
+export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

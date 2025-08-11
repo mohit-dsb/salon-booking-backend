@@ -21,15 +21,6 @@ const swaggerOptions: swaggerJSDoc.Options = {
         description: env.NODE_ENV === "production" ? "Production" : "Development",
       },
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
   },
   apis: ["./src/routes/**/*.ts", "./src/controllers/**/*.ts"],
 };
@@ -45,7 +36,7 @@ export const setupSwagger = (app: Application) => {
         explorer: true,
         customCss: ".swagger-ui .topbar { display: none }",
         customSiteTitle: "Your API Documentation",
-      })
+      }),
     );
   }
 };

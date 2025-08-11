@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
-    "start": "node dist/server.js",
+    "start": "node ./dist/server.js",
     "dev": "nodemon -r tsconfig-paths/register src/server.ts",
     "prebuild": "rm -rf dist",
     "build": "tsc && tsc-alias",

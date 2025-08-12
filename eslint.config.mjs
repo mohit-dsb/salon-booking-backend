@@ -9,6 +9,10 @@ export default defineConfig([
     plugins: { js },
     extends: ["js/recommended"],
     languageOptions: { globals: globals.browser },
+    rules:{
+      "js/no-unused-vars": "warn"
+    }
   },
   tseslint.configs.recommended,
+  
 ]);

@@ -1005,3 +1005,138 @@
     '    at Console.Writable.write (/home/mohitmouryaa/github/salon-booking-backend/node_modules/readable-stream/lib/_stream_writable.js:302:11)',
   timestamp: '2025-08-08T07:35:25.520Z'
 }
+{
+  message: 'Error occurred: Request with GET/HEAD method cannot have body.',
+  statusCode: undefined,
+  stack: 'TypeError: Request with GET/HEAD method cannot have body.\n' +
+    '    at new Request (node:internal/deps/undici/undici:9805:17)\n' +
+    '    at verifyWebhook (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/webhooks.ts:57:25)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/controllers/user.controller.ts:11:36\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/error.middleware.ts:108:21\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15',
+  url: '/api/v1/sync-clerk-user',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-12T09:06:31.245Z'
+}
+{
+  message: 'Error occurred: Request with GET/HEAD method cannot have body.',
+  statusCode: undefined,
+  stack: 'TypeError: Request with GET/HEAD method cannot have body.\n' +
+    '    at new Request (node:internal/deps/undici/undici:9805:17)\n' +
+    '    at verifyWebhook (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/webhooks.ts:57:25)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/controllers/user.controller.ts:11:36\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/error.middleware.ts:108:21\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15',
+  url: '/api/v1/sync-clerk-user',
+  method: 'GET',
+  ip: '115.245.238.146',
+  level: 'error',
+  timestamp: '2025-08-12T09:11:03.799Z'
+}
+{
+  message: 'Error occurred: @clerk/backend: Missing webhook signing secret. Set the CLERK_WEBHOOK_SIGNING_SECRET environment variable with the webhook secret from the Clerk Dashboard.',
+  statusCode: undefined,
+  stack: 'Error: @clerk/backend: Missing webhook signing secret. Set the CLERK_WEBHOOK_SIGNING_SECRET environment variable with the webhook secret from the Clerk Dashboard.\n' +
+    '    at Object.throw (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/shared/src/error.ts:425:13)\n' +
+    '    at verifyWebhookBase (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/backend/src/webhooks.ts:89:25)\n' +
+    '    at verifyWebhook (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/webhooks.ts:60:10)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/controllers/user.controller.ts:11:36\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/error.middleware.ts:108:21\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)',
+  url: '/api/v1/sync-clerk-user',
+  method: 'POST',
+  ip: '52.215.16.239',
+  level: 'error',
+  timestamp: '2025-08-12T09:11:36.757Z'
+}
+{
+  message: 'Error occurred: \n' +
+    'Invalid `prisma.user.upsert()` invocation:\n' +
+    '\n' +
+    '{\n' +
+    '  where: {\n' +
+    '    clerkId: "user_2g7np7Hrk0SN6kj5EDMLDaKNL0S"\n' +
+    '  },\n' +
+    '  update: {\n' +
+    '    role: "MEMBER",\n' +
+    '          ~~~~~~~~\n' +
+    '    orgId: null\n' +
+    '  },\n' +
+    '  create: {\n' +
+    '    clerkId: "user_2g7np7Hrk0SN6kj5EDMLDaKNL0S"\n' +
+    '  }\n' +
+    '}\n' +
+    '\n' +
+    'Invalid value for argument `role`. Expected Role.',
+  statusCode: undefined,
+  stack: 'PrismaClientValidationError: \n' +
+    'Invalid `prisma.user.upsert()` invocation:\n' +
+    '\n' +
+    '{\n' +
+    '  where: {\n' +
+    '    clerkId: "user_2g7np7Hrk0SN6kj5EDMLDaKNL0S"\n' +
+    '  },\n' +
+    '  update: {\n' +
+    '    role: "MEMBER",\n' +
+    '          ~~~~~~~~\n' +
+    '    orgId: null\n' +
+    '  },\n' +
+    '  create: {\n' +
+    '    clerkId: "user_2g7np7Hrk0SN6kj5EDMLDaKNL0S"\n' +
+    '  }\n' +
+    '}\n' +
+    '\n' +
+    'Invalid value for argument `role`. Expected Role.\n' +
+    '    at _n (/home/mohitmouryaa/github/salon-booking-backend/src/generated/prisma/runtime/library.js:32:1363)\n' +
+    '    at ri.handleRequestError (/home/mohitmouryaa/github/salon-booking-backend/src/generated/prisma/runtime/library.js:124:7102)\n' +
+    '    at ri.handleAndLogRequestError (/home/mohitmouryaa/github/salon-booking-backend/src/generated/prisma/runtime/library.js:124:6784)\n' +
+    '    at ri.request (/home/mohitmouryaa/github/salon-booking-backend/src/generated/prisma/runtime/library.js:124:6491)\n' +
+    '    at async l (/home/mohitmouryaa/github/salon-booking-backend/src/generated/prisma/runtime/library.js:133:9812)\n' +
+    '    at async UserService.syncClerkUser (/home/mohitmouryaa/github/salon-booking-backend/src/services/user.service.ts:8:5)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/user.controller.ts:13:5',
+  url: '/api/v1/sync-clerk-user',
+  method: 'POST',
+  ip: '54.216.8.72',
+  level: 'error',
+  timestamp: '2025-08-12T09:12:53.761Z'
+}
+{
+  message: 'Error occurred: \n' +
+    'Invalid `prisma.user.delete()` invocation:\n' +
+    '\n' +
+    '\n' +
+    'An operation failed because it depends on one or more records that were required but not found. No record was found for a delete.',
+  statusCode: undefined,
+  stack: 'PrismaClientKnownRequestError: \n' +
+    'Invalid `prisma.user.delete()` invocation:\n' +
+    '\n' +
+    '\n' +
+    'An operation failed because it depends on one or more records that were required but not found. No record was found for a delete.\n' +
+    '    at ri.handleRequestError (/home/mohitmouryaa/github/salon-booking-backend/src/generated/prisma/runtime/library.js:124:7459)\n' +
+    '    at ri.handleAndLogRequestError (/home/mohitmouryaa/github/salon-booking-backend/src/generated/prisma/runtime/library.js:124:6784)\n' +
+    '    at ri.request (/home/mohitmouryaa/github/salon-booking-backend/src/generated/prisma/runtime/library.js:124:6491)\n' +
+    '    at async l (/home/mohitmouryaa/github/salon-booking-backend/src/generated/prisma/runtime/library.js:133:9812)\n' +
+    '    at async UserService.syncClerkUser (/home/mohitmouryaa/github/salon-booking-backend/src/services/user.service.ts:9:7)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/user.controller.ts:13:5',
+  url: '/api/v1/sync-clerk-user',
+  method: 'POST',
+  ip: '63.33.109.123',
+  level: 'error',
+  timestamp: '2025-08-12T09:35:35.731Z'
+}

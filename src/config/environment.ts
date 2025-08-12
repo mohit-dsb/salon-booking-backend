@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { cleanEnv, str, port, num, bool } from "envalid";
+import { cleanEnv, str, port, num } from "envalid";
 
 dotenv.config();
 
@@ -13,7 +13,6 @@ export const env = cleanEnv(process.env, {
   }),
   RATE_LIMIT_WINDOW_MS: num({ default: 15 * 60 * 1000 }),
   RATE_LIMIT_MAX_REQUESTS: num({ default: 100 }),
-  SWAGGER_ENABLED: bool({ default: false }),
   CLERK_PUBLISHABLE_KEY: str(),
   CLERK_SECRET_KEY: str(),
 });

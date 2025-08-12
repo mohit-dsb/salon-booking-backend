@@ -1,5 +1,4 @@
 import routesV1 from "@/routes/v1";
-import { setupSwagger } from "@/config/swagger";
 import { clerkMiddleware } from "@clerk/express";
 import { morganMiddleware } from "@/utils/logger";
 import { errorHandler } from "@/middlewares/error.middleware";
@@ -7,6 +6,8 @@ import express, { Application, Request, Response } from "express";
 import { securityMiddlewares } from "@/middlewares/security.middleware";
 
 const app: Application = express();
+
+app.set('trust proxy', true);
 
 // Middleware: Security, compression, CORS, rate limiting
 securityMiddlewares.forEach((middleware) => app.use(middleware));
@@ -28,9 +29,6 @@ app.get("/health", (req: Request, res: Response) => {
 
 // API Routes (versioned)
 app.use("/api/v1", routesV1);
-
-// API Docs (Swagger)
-setupSwagger(app);
 
 // 404 Handler
 app.use((req: Request, res: Response) => {

@@ -1,7 +1,12 @@
 import { Router, Request, Response } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
+import { UserController } from "@/controllers/user.controller";
 
 const router = Router();
+
+const userController = new UserController();
+
+router.post("/sync-clerk-user", userController.syncClerkUser);
 
 router.get("/protected", async (req: Request, res: Response) => {
   try {

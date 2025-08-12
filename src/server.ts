@@ -2,11 +2,9 @@ import "reflect-metadata";
 import { app } from "./app";
 import { logger } from "@/utils/logger";
 import { env } from "@/config/environment";
-import { DatabaseConnection } from "@/config/database";
 
 (async () => {
   try {
-    await DatabaseConnection.connect();
     const server = app.listen(env.PORT, () => {
       logger.info(`Server running on port ${env.PORT} [${env.NODE_ENV}]`);
     });
@@ -14,7 +12,7 @@ import { DatabaseConnection } from "@/config/database";
     // Graceful shutdown
     const shutdown = async () => {
       logger.info("Gracefully shutting down...");
-      await DatabaseConnection.disconnect();
+
       server.close(() => {
         logger.info("Server closed");
         process.exit(0);

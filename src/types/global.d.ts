@@ -10,7 +10,6 @@ declare global {
       CLERK_SECRET_KEY: string;
       RATE_LIMIT_WINDOW_MS?: string;
       RATE_LIMIT_MAX_REQUESTS?: string;
-      SWAGGER_ENABLED?: string;
     }
   }
 }

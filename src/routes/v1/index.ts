@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
-import { clerkClient, getAuth } from "@clerk/express";
+import categoryRoutes from "./category.route";
+import { requireAuth } from "@clerk/express";
 import { UserController } from "@/controllers/user.controller";
 
 const router = Router();
@@ -8,40 +9,9 @@ const userController = new UserController();
 
 router.post("/sync-clerk-user", userController.syncClerkUser);
 
-router.get("/protected", async (req: Request, res: Response) => {
-  try {
-    // Use `getAuth()` to get the user's `userId`
-    const { userId } = getAuth(req);
+router.use("/categories", requireAuth(), categoryRoutes);
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized - No valid session found",
-      });
-    }
-
-    // Use Clerk's JavaScript Backend SDK to get the user's User object
-    const user = await clerkClient.users.getUser(userId);
-
-    return res.json({
-      success: true,
-      user: {
-        id: user.id,
-        emailAddresses: user.emailAddresses,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      },
-    });
-  } catch (error) {
-    console.error("Error in protected route:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-});
-
-router.get("/", (req: Request, res: Response) => {
+router.get("/", (_req: Request, res: Response) => {
   res.status(200).json({ message: "Welcome to the API" });
 });
 

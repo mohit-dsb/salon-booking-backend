@@ -19,10 +19,43 @@ model User {
   role      Role     @default(MEMBER)
   orgId     String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Category {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String   @unique
-  createdAt DateTime @default(now())
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  orgId       String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relationships
+  services    Service[]
+  
+  // Ensure category name is unique within each organization
+  @@unique([name, orgId])
+  @@index([orgId])
+}
+
+model Service {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  price       Float
+  duration    Int      // Duration in minutes
+  categoryId  String   @db.ObjectId
+  orgId       String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  // Ensure service name is unique within each organization
+  @@unique([name, orgId])
+  @@index([categoryId])
+  @@index([orgId])
 }

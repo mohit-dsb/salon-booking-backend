@@ -112,11 +112,11 @@ export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunctio
 
 // Custom authentication middleware
 export const customAuth = (req: Request, _res: Response, next: NextFunction) => {
-  const auth = getAuth(req);
+  // const auth = getAuth(req);
 
-  if (!auth.isAuthenticated) {
-    return next(new AppError("Authentication required", 401));
-  }
+  // if (!auth.isAuthenticated) {
+  //   return next(new AppError("Authentication required", 401));
+  // }
 
   next();
 };

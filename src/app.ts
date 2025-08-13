@@ -7,8 +7,6 @@ import { securityMiddlewares } from "@/middlewares/security.middleware";
 
 const app: Application = express();
 
-app.set('trust proxy', true);
-
 // Middleware: Security, compression, CORS, rate limiting
 securityMiddlewares.forEach((middleware) => app.use(middleware));
 
@@ -31,7 +29,7 @@ app.get("/health", (req: Request, res: Response) => {
 app.use("/api/v1", routesV1);
 
 // 404 Handler
-app.use((req: Request, res: Response) => {
+app.use((_req: Request, res: Response) => {
   res.status(404).json({ success: false, message: "API endpoint not found" });
 });
 

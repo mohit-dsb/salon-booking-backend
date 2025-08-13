@@ -1,35 +1,48 @@
 import { prisma } from "@/config/prisma";
+import { AppError } from "@/middlewares/error.middleware";
 import { Category } from "@prisma/client";
 
 // Types for Category operations
-export interface CreateCategoryInput {
+export interface ICreateCategory {
   name: string;
   description?: string;
   orgId: string;
   isActive?: boolean;
 }
 
-export interface UpdateCategoryInput {
+export interface IUpdateCategory {
   name?: string;
   description?: string;
   isActive?: boolean;
 }
 
 export class CategoryService {
+  // Helper method to normalize category names
+  private normalizeName(name: string): string {
+    return name.trim().toLowerCase();
+  }
+
   // Create a new category
-  public async createCategory(data: CreateCategoryInput): Promise<Category> {
+  public async createCategory(data: ICreateCategory): Promise<Category> {
+    const normalizedName = this.normalizeName(data.name);
+    
+    if (await this.categoryExists(data.name, data.orgId)) {
+      throw new AppError("Category already exists", 400);
+    }
+    
     return await prisma.category.create({
       data: {
-        name: data.name,
+        name: data.name.trim(), // Store original casing for display
+        nameNormalized: normalizedName, // Store normalized for uniqueness
         orgId: data.orgId,
-        description: data.description || "",
+        description: data.description?.trim() || "",
       },
     });
   }
 
   // Get category by ID (with orgId check for multi-tenancy)
   public async getCategoryById(id: string, orgId: string): Promise<Category | null> {
-    return await prisma.category.findFirst({
+    return await prisma.category.findUnique({
       where: {
         id,
         orgId,
@@ -70,21 +83,25 @@ export class CategoryService {
   }
 
   // Update category
-  public async updateCategory(id: string, orgId: string, data: UpdateCategoryInput): Promise<Category> {
+  public async updateCategory(id: string, orgId: string, data: IUpdateCategory): Promise<Category> {
+    const updateData: any = { ...data, orgId };
+    
+    // If name is being updated, also update the normalized field
+    if (data.name) {
+      updateData.name = data.name.trim();
+      updateData.nameNormalized = this.normalizeName(data.name);
+    }
+    
     return await prisma.category.update({
       where: {
         id,
       },
-      data: {
-        ...data,
-        // Ensure we can't change orgId
-        orgId,
-      },
+      data: updateData,
     });
   }
 
   // Delete category (this will cascade delete all services)
-  public async deleteCategory(id: string, orgId: string): Promise<Category> {
+  public async deleteCategory(id: string): Promise<Category> {
     return await prisma.category.delete({
       where: {
         id,
@@ -118,11 +135,12 @@ export class CategoryService {
     });
   }
 
-  // Check if category exists in organization
+  // Check if category exists in organization (using normalized field for exact matching)
   public async categoryExists(name: string, orgId: string): Promise<boolean> {
+    const normalizedName = this.normalizeName(name);
     const category = await prisma.category.findFirst({
       where: {
-        name,
+        nameNormalized: normalizedName,
         orgId,
       },
       select: { id: true },
@@ -130,11 +148,12 @@ export class CategoryService {
     return !!category;
   }
 
-  // Get category by name within organization
+  // Get category by name within organization (using normalized field for exact matching)
   public async getCategoryByName(name: string, orgId: string): Promise<Category | null> {
+    const normalizedName = this.normalizeName(name);
     return await prisma.category.findFirst({
       where: {
-        name,
+        nameNormalized: normalizedName,
         orgId,
       },
       include: {

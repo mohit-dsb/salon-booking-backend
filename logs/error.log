@@ -1220,3 +1220,413 @@
   level: 'error',
   timestamp: '2025-08-13T07:15:26.699Z'
 }
+{
+  message: 'Error occurred: Validation error: [{"message":"Invalid input: expected object, received undefined","path":["body"]}]',
+  statusCode: 400,
+  stack: 'Error: Validation error: [{"message":"Invalid input: expected object, received undefined","path":["body"]}]\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:20:14\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T10:49:45.285Z'
+}
+{
+  message: 'Error occurred: Validation error: [{"message":"Invalid input: expected string, received undefined","path":["body","name"]},{"message":"Invalid input: expected string, received undefined","path":["body","orgId"]}]',
+  statusCode: 400,
+  stack: 'Error: Validation error: [{"message":"Invalid input: expected string, received undefined","path":["body","name"]},{"message":"Invalid input: expected string, received undefined","path":["body","orgId"]}]\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:20:14\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T10:49:51.559Z'
+}
+{
+  message: 'Error occurred: name is required; orgId is required',
+  statusCode: 400,
+  stack: 'Error: name is required; orgId is required\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:56:14\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T10:52:36.357Z'
+}
+{
+  message: 'Error occurred: name is required',
+  statusCode: 400,
+  stack: 'Error: name is required\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:53:14\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T10:54:08.671Z'
+}
+{
+  message: 'Error occurred: orgId is required',
+  statusCode: 400,
+  stack: 'Error: orgId is required\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:53:14\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T10:58:15.959Z'
+}
+{
+  message: 'Error occurred: Organization ID is required. User must be part of an organization.',
+  statusCode: 401,
+  stack: 'Error: Organization ID is required. User must be part of an organization.\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:13:13\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/error.middleware.ts:109:21\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:13:7\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T10:58:47.381Z'
+}
+{
+  message: 'Error occurred: Organization ID is required. User must be part of an organization.',
+  statusCode: 401,
+  stack: 'Error: Organization ID is required. User must be part of an organization.\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:13:13\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/error.middleware.ts:109:21\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:13:7\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T10:59:40.201Z'
+}
+{
+  message: 'Error occurred: Organization ID is required. User must be part of an organization.',
+  statusCode: 401,
+  stack: 'Error: Organization ID is required. User must be part of an organization.\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:34:13\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/error.middleware.ts:109:21\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15\n' +
+    '    at param (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:600:14)\n' +
+    '    at param (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:610:14)',
+  url: '/api/v1/categories/689c705c46cf3bb91dfa0f3a',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:07:06.684Z'
+}
+{
+  message: 'Error occurred: \n' +
+    'Invalid `prisma.category.findFirst()` invocation in\n' +
+    '/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:32:34\n' +
+    '\n' +
+    '  29 \n' +
+    '  30 // Get category by ID (with orgId check for multi-tenancy)\n' +
+    '  31 public async getCategoryById(id: string, orgId: string): Promise<Category | null> {\n' +
+    '→ 32   return await prisma.category.findFirst(\n' +
+    'Inconsistent column data: Malformed ObjectID: provided hex string representation must be exactly 12 bytes, instead got: "org_31EIOJRoyYVVnmybWQkpEdGjaC8", length 31.',
+  statusCode: undefined,
+  stack: 'PrismaClientKnownRequestError: \n' +
+    'Invalid `prisma.category.findFirst()` invocation in\n' +
+    '/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:32:34\n' +
+    '\n' +
+    '  29 \n' +
+    '  30 // Get category by ID (with orgId check for multi-tenancy)\n' +
+    '  31 public async getCategoryById(id: string, orgId: string): Promise<Category | null> {\n' +
+    '→ 32   return await prisma.category.findFirst(\n' +
+    'Inconsistent column data: Malformed ObjectID: provided hex string representation must be exactly 12 bytes, instead got: "org_31EIOJRoyYVVnmybWQkpEdGjaC8", length 31.\n' +
+    '    at ri.handleRequestError (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)\n' +
+    '    at ri.handleAndLogRequestError (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)\n' +
+    '    at ri.request (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)\n' +
+    '    at async l (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:862:24)\n' +
+    '    at async CategoryService.getCategoryById (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:32:12)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:39:22',
+  url: '/api/v1/categories/689c705c46cf3bb91dfa0f3a',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:07:21.448Z'
+}
+{
+  message: 'Error occurred: \n' +
+    'Invalid `prisma.category.create()` invocation in\n' +
+    '/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:21:34\n' +
+    '\n' +
+    '  18 export class CategoryService {\n' +
+    '  19   // Create a new category\n' +
+    '  20   public async createCategory(data: CreateCategoryInput): Promise<Category> {\n' +
+    '→ 21     return await prisma.category.create(\n' +
+    'Unique constraint failed on the constraint: `Category_name_orgId_key`',
+  statusCode: undefined,
+  stack: 'PrismaClientKnownRequestError: \n' +
+    'Invalid `prisma.category.create()` invocation in\n' +
+    '/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:21:34\n' +
+    '\n' +
+    '  18 export class CategoryService {\n' +
+    '  19   // Create a new category\n' +
+    '  20   public async createCategory(data: CreateCategoryInput): Promise<Category> {\n' +
+    '→ 21     return await prisma.category.create(\n' +
+    'Unique constraint failed on the constraint: `Category_name_orgId_key`\n' +
+    '    at ri.handleRequestError (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)\n' +
+    '    at ri.handleAndLogRequestError (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)\n' +
+    '    at ri.request (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)\n' +
+    '    at async l (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:862:24)\n' +
+    '    at async CategoryService.createCategory (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:21:12)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:22:22',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:17:01.832Z'
+}
+{
+  message: 'Error occurred: Category already exists',
+  statusCode: 400,
+  stack: 'Error: Category already exists\n' +
+    '    at CategoryService.createCategory (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:23:13)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:22:22',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:18:46.587Z'
+}
+{
+  message: 'Error occurred: name must be at least 2 characters long',
+  statusCode: 400,
+  stack: 'Error: name must be at least 2 characters long\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:53:14\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:30:40.789Z'
+}
+{
+  message: 'Error occurred: \n' +
+    'Invalid `prisma.category.findUnique()` invocation in\n' +
+    '/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:36:34\n' +
+    '\n' +
+    '  33 \n' +
+    '  34 // Get category by ID (with orgId check for multi-tenancy)\n' +
+    '  35 public async getCategoryById(id: string, orgId: string): Promise<Category | null> {\n' +
+    '→ 36   return await prisma.category.findUnique(\n' +
+    'Inconsistent column data: Malformed ObjectID: provided hex string representation must be exactly 12 bytes, instead got: "689c705c46cf3bb91dfa0f3", length 23.',
+  statusCode: undefined,
+  stack: 'PrismaClientKnownRequestError: \n' +
+    'Invalid `prisma.category.findUnique()` invocation in\n' +
+    '/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:36:34\n' +
+    '\n' +
+    '  33 \n' +
+    '  34 // Get category by ID (with orgId check for multi-tenancy)\n' +
+    '  35 public async getCategoryById(id: string, orgId: string): Promise<Category | null> {\n' +
+    '→ 36   return await prisma.category.findUnique(\n' +
+    'Inconsistent column data: Malformed ObjectID: provided hex string representation must be exactly 12 bytes, instead got: "689c705c46cf3bb91dfa0f3", length 23.\n' +
+    '    at ri.handleRequestError (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)\n' +
+    '    at ri.handleAndLogRequestError (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)\n' +
+    '    at ri.request (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)\n' +
+    '    at async l (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:862:24)\n' +
+    '    at async CategoryService.getCategoryById (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:36:12)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:38:22',
+  url: '/api/v1/categories/689c705c46cf3bb91dfa0f3',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:42:27.844Z'
+}
+{
+  message: 'Error occurred: Category not found',
+  statusCode: 404,
+  stack: 'Error: Category not found\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:41:13',
+  url: '/api/v1/categories/689c705c46cf3bb91dfa0f31',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:42:46.560Z'
+}
+{
+  message: 'Error occurred: Authentication required',
+  statusCode: 401,
+  stack: 'Error: Authentication required\n' +
+    '    at customAuth (/home/mohitmouryaa/github/salon-booking-backend/dist/middlewares/error.middleware.js:74:21)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:297:9\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)\n' +
+    '    at router (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:60:12)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)',
+  url: '/api/v1/categories/689c705c46cf3bb91dfa0f31',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:43:21.756Z'
+}
+{
+  message: 'Error occurred: Authentication required',
+  statusCode: 401,
+  stack: 'Error: Authentication required\n' +
+    '    at customAuth (/home/mohitmouryaa/github/salon-booking-backend/dist/middlewares/error.middleware.js:74:21)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:297:9\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)\n' +
+    '    at router (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:60:12)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)',
+  url: '/api/v1/categories/689c705c46cf3bb91dfa0f31',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:44:20.832Z'
+}
+{
+  message: 'Error occurred: Category not found',
+  statusCode: 404,
+  stack: 'Error: Category not found\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:41:13',
+  url: '/api/v1/categories/689c705c46cf3bb91dfa0f31',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T11:44:42.806Z'
+}
+{
+  message: 'Error occurred: Category already exists',
+  statusCode: 400,
+  stack: 'Error: Category already exists\n' +
+    '    at CategoryService.createCategory (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:30:13)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:22:22',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T12:01:21.830Z'
+}
+{
+  message: 'Error occurred: Category already exists',
+  statusCode: 400,
+  stack: 'Error: Category already exists\n' +
+    '    at CategoryService.createCategory (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:30:13)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:22:22',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T12:01:29.947Z'
+}
+{
+  message: 'Error occurred: Category already exists',
+  statusCode: 400,
+  stack: 'Error: Category already exists\n' +
+    '    at CategoryService.createCategory (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:30:13)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:22:22',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T12:01:40.663Z'
+}
+{
+  message: 'Error occurred: Category already exists',
+  statusCode: 400,
+  stack: 'Error: Category already exists\n' +
+    '    at CategoryService.createCategory (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:30:13)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:22:22',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T12:01:47.234Z'
+}
+{
+  message: 'Error occurred: Category already exists',
+  statusCode: 400,
+  stack: 'Error: Category already exists\n' +
+    '    at CategoryService.createCategory (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:30:13)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:22:22',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T12:04:32.874Z'
+}

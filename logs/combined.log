@@ -1739,3 +1739,188 @@
   level: 'info',
   timestamp: '2025-08-12T09:38:39.212Z'
 }
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T06:58:59.535Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:03:24.754Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:06:26.783Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:07:11.126Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:08:28.148Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:08:57.675Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:09:41.974Z'
+}
+{
+  message: 'Gracefully shutting down...',
+  level: 'info',
+  timestamp: '2025-08-13T07:09:45.870Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:11:14.302Z'
+}
+{
+  message: "Error occurred: Cannot read properties of undefined (reading 'headers')",
+  statusCode: undefined,
+  stack: "TypeError: Cannot read properties of undefined (reading 'headers')\n" +
+    '    at incomingMessageToRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/utils.ts:41:35)\n' +
+    '    at authenticateRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/authenticateRequest.ts:18:43)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:297:9\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)\n' +
+    '    at router (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:60:12)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)',
+  url: '/api/v1/categories/',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T07:11:18.672Z'
+}
+{
+  message: 'Gracefully shutting down...',
+  level: 'info',
+  timestamp: '2025-08-13T07:11:28.504Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:11:32.685Z'
+}
+{
+  message: "Error occurred: Cannot read properties of undefined (reading 'headers')",
+  statusCode: undefined,
+  stack: "TypeError: Cannot read properties of undefined (reading 'headers')\n" +
+    '    at incomingMessageToRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/utils.ts:41:35)\n' +
+    '    at authenticateRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/authenticateRequest.ts:18:43)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:297:9\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)\n' +
+    '    at router (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:60:12)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)',
+  url: '/api/v1/categories/',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T07:11:35.717Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:12:39.607Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:14:00.788Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:14:19.932Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:14:23.545Z'
+}
+{
+  message: 'Error occurred: Validation error: [{"message":"Invalid input: expected object, received undefined","path":["body"]}]',
+  statusCode: 400,
+  stack: 'Error: Validation error: [{"message":"Invalid input: expected object, received undefined","path":["body"]}]\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:20:14\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)',
+  url: '/api/v1/categories/',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T07:14:28.157Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:15:09.583Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:15:23.654Z'
+}
+{
+  message: 'Error occurred: Authentication required',
+  statusCode: 401,
+  stack: 'Error: Authentication required\n' +
+    '    at customAuth (/home/mohitmouryaa/github/salon-booking-backend/src/middlewares/error.middleware.ts:118:17)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:297:9\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)\n' +
+    '    at router (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:60:12)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)',
+  url: '/api/v1/categories/',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T07:15:26.699Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:15:47.960Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:15:50.866Z'
+}
+{
+  message: 'Server running on port 3000 [development]',
+  level: 'info',
+  timestamp: '2025-08-13T07:16:06.205Z'
+}
+{
+  message: 'Gracefully shutting down...',
+  level: 'info',
+  timestamp: '2025-08-13T07:18:06.353Z'
+}

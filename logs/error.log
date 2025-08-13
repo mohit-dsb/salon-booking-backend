@@ -1140,3 +1140,83 @@
   level: 'error',
   timestamp: '2025-08-12T09:35:35.731Z'
 }
+{
+  message: "Error occurred: Cannot read properties of undefined (reading 'headers')",
+  statusCode: undefined,
+  stack: "TypeError: Cannot read properties of undefined (reading 'headers')\n" +
+    '    at incomingMessageToRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/utils.ts:41:35)\n' +
+    '    at authenticateRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/authenticateRequest.ts:18:43)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:297:9\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)\n' +
+    '    at router (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:60:12)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)',
+  url: '/api/v1/categories/',
+  method: 'GET',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T07:11:18.672Z'
+}
+{
+  message: "Error occurred: Cannot read properties of undefined (reading 'headers')",
+  statusCode: undefined,
+  stack: "TypeError: Cannot read properties of undefined (reading 'headers')\n" +
+    '    at incomingMessageToRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/utils.ts:41:35)\n' +
+    '    at authenticateRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/@clerk/express/src/authenticateRequest.ts:18:43)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:297:9\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)\n' +
+    '    at router (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:60:12)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)',
+  url: '/api/v1/categories/',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T07:11:35.717Z'
+}
+{
+  message: 'Error occurred: Validation error: [{"message":"Invalid input: expected object, received undefined","path":["body"]}]',
+  statusCode: 400,
+  stack: 'Error: Validation error: [{"message":"Invalid input: expected object, received undefined","path":["body"]}]\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/src/middlewares/validation.middleware.ts:20:14\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:157:13)\n' +
+    '    at Route.dispatch (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/route.js:117:3)\n' +
+    '    at handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:435:11)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:295:15\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)',
+  url: '/api/v1/categories/',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T07:14:28.157Z'
+}
+{
+  message: 'Error occurred: Authentication required',
+  statusCode: 401,
+  stack: 'Error: Authentication required\n' +
+    '    at customAuth (/home/mohitmouryaa/github/salon-booking-backend/src/middlewares/error.middleware.ts:118:17)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)\n' +
+    '    at /home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:297:9\n' +
+    '    at processParams (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:582:12)\n' +
+    '    at next (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:291:5)\n' +
+    '    at Function.handle (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:186:3)\n' +
+    '    at router (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:60:12)\n' +
+    '    at Layer.handleRequest (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at trimPrefix (/home/mohitmouryaa/github/salon-booking-backend/node_modules/router/index.js:342:13)',
+  url: '/api/v1/categories/',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T07:15:26.699Z'
+}

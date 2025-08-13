@@ -1,18 +1,18 @@
 import { Router, Request, Response } from "express";
 import categoryRoutes from "./category.route";
-import { requireAuth } from "@clerk/express";
 import { UserController } from "@/controllers/user.controller";
+import { customAuth } from "@/middlewares/error.middleware";
 
-const router = Router();
+const routerV1 = Router();
 
 const userController = new UserController();
 
-router.post("/sync-clerk-user", userController.syncClerkUser);
+routerV1.post("/sync-clerk-user", userController.syncClerkUser);
 
-router.use("/categories", requireAuth(), categoryRoutes);
+routerV1.use("/categories", customAuth, categoryRoutes);
 
-router.get("/", (_req: Request, res: Response) => {
+routerV1.get("/", (_req: Request, res: Response) => {
   res.status(200).json({ message: "Welcome to the API" });
 });
 
-export default router;
+export default routerV1;

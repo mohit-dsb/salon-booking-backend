@@ -1,6 +1,7 @@
 import { logger } from "@/utils/logger";
 import { env } from "@/config/environment";
 import { Request, Response, NextFunction } from "express";
+import { getAuth } from "@clerk/express";
 
 // Interface for Mongoose validation errors
 interface MongooseValidationError extends Error {
@@ -107,4 +108,15 @@ export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunctio
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
+};
+
+// Custom authentication middleware
+export const customAuth = (req: Request, _res: Response, next: NextFunction) => {
+  const auth = getAuth(req);
+
+  if (!auth.isAuthenticated) {
+    return next(new AppError("Authentication required", 401));
+  }
+
+  next();
 };

@@ -33,6 +33,6 @@
       "@/routes/*": ["routes/*"]
     }
   },
-  "include": ["src/**/*", "src/types/**/*"],
+  "include": ["src/**/*", "types/**/*"],
   "exclude": ["node_modules", "dist", "tests/**/*"]
 }

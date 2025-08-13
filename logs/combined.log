@@ -2569,3 +2569,52 @@
   level: 'error',
   timestamp: '2025-08-13T12:04:32.874Z'
 }
+{
+  message: 'Gracefully shutting down...',
+  level: 'info',
+  timestamp: '2025-08-13T12:05:07.363Z'
+}
+{
+  message: 'Server running on port 3000 [production]',
+  level: 'info',
+  timestamp: '2025-08-13T12:12:45.837Z'
+}
+{
+  message: 'Error occurred: Category already exists',
+  statusCode: 400,
+  stack: 'Error: Category already exists\n' +
+    '    at CategoryService.createCategory (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:62:13)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:22:22',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T12:13:38.442Z'
+}
+{
+  message: 'Error occurred: Category already exists',
+  statusCode: 400,
+  stack: 'Error: Category already exists\n' +
+    '    at CategoryService.createCategory (/home/mohitmouryaa/github/salon-booking-backend/src/services/category.service.ts:62:13)\n' +
+    '    at async /home/mohitmouryaa/github/salon-booking-backend/src/controllers/category.controller.ts:22:22',
+  url: '/api/v1/categories',
+  method: 'POST',
+  ip: '::1',
+  level: 'error',
+  timestamp: '2025-08-13T12:13:42.154Z'
+}
+{
+  message: 'Server running on port 3000 [production]',
+  level: 'info',
+  timestamp: '2025-08-13T12:16:55.644Z'
+}
+{
+  message: 'Server running on port 3000 [production]',
+  level: 'info',
+  timestamp: '2025-08-13T12:16:58.451Z'
+}
+{
+  message: 'Server running on port 3000 [production]',
+  level: 'info',
+  timestamp: '2025-08-13T12:17:10.618Z'
+}

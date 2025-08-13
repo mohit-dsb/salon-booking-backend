@@ -1,6 +1,7 @@
 import { prisma } from "@/config/prisma";
-import { AppError } from "@/middlewares/error.middleware";
 import { Category } from "@prisma/client";
+import { createSlug } from "@/utils/slugify";
+import { AppError } from "@/middlewares/error.middleware";
 
 // Types for Category operations
 export interface ICreateCategory {
@@ -17,23 +18,45 @@ export interface IUpdateCategory {
 }
 
 export class CategoryService {
-  // Helper method to normalize category names
-  private normalizeName(name: string): string {
-    return name.trim().toLowerCase();
+  // Helper method to generate unique slug (handles collisions)
+  private async generateUniqueSlug(name: string, orgId: string, excludeId?: string): Promise<string> {
+    const baseSlug = createSlug(name);
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (await this.slugExists(slug, orgId, excludeId)) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    return slug;
+  }
+
+  // Check if slug exists in organization
+  private async slugExists(slug: string, orgId: string, excludeId?: string): Promise<boolean> {
+    const category = await prisma.category.findFirst({
+      where: {
+        slug,
+        orgId,
+        ...(excludeId && { id: { not: excludeId } }),
+      },
+      select: { id: true },
+    });
+    return !!category;
   }
 
   // Create a new category
   public async createCategory(data: ICreateCategory): Promise<Category> {
-    const normalizedName = this.normalizeName(data.name);
-    
+    const slug = await this.generateUniqueSlug(data.name, data.orgId);
+
     if (await this.categoryExists(data.name, data.orgId)) {
       throw new AppError("Category already exists", 400);
     }
-    
+
     return await prisma.category.create({
       data: {
         name: data.name.trim(), // Store original casing for display
-        nameNormalized: normalizedName, // Store normalized for uniqueness
+        slug: slug, // Store URL-friendly slug for uniqueness
         orgId: data.orgId,
         description: data.description?.trim() || "",
       },
@@ -85,13 +108,13 @@ export class CategoryService {
   // Update category
   public async updateCategory(id: string, orgId: string, data: IUpdateCategory): Promise<Category> {
     const updateData: any = { ...data, orgId };
-    
-    // If name is being updated, also update the normalized field
+
+    // If name is being updated, also update the slug
     if (data.name) {
       updateData.name = data.name.trim();
-      updateData.nameNormalized = this.normalizeName(data.name);
+      updateData.slug = await this.generateUniqueSlug(data.name, orgId, id);
     }
-    
+
     return await prisma.category.update({
       where: {
         id,
@@ -135,12 +158,12 @@ export class CategoryService {
     });
   }
 
-  // Check if category exists in organization (using normalized field for exact matching)
+  // Check if category exists in organization (using slug for exact matching)
   public async categoryExists(name: string, orgId: string): Promise<boolean> {
-    const normalizedName = this.normalizeName(name);
+    const slug = createSlug(name);
     const category = await prisma.category.findFirst({
       where: {
-        nameNormalized: normalizedName,
+        slug: slug,
         orgId,
       },
       select: { id: true },
@@ -148,12 +171,25 @@ export class CategoryService {
     return !!category;
   }
 
-  // Get category by name within organization (using normalized field for exact matching)
+  // Get category by name within organization (using slug for exact matching)
   public async getCategoryByName(name: string, orgId: string): Promise<Category | null> {
-    const normalizedName = this.normalizeName(name);
+    const slug = createSlug(name);
     return await prisma.category.findFirst({
       where: {
-        nameNormalized: normalizedName,
+        slug: slug,
+        orgId,
+      },
+      include: {
+        services: true,
+      },
+    });
+  }
+
+  // Get category by slug within organization
+  public async getCategoryBySlug(slug: string, orgId: string): Promise<Category | null> {
+    return await prisma.category.findFirst({
+      where: {
+        slug,
         orgId,
       },
       include: {

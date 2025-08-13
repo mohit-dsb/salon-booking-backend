@@ -1,5 +1,5 @@
 import { prisma } from "@/config/prisma";
-import { Category } from "@/generated/prisma";
+import { Category } from "@prisma/client";
 
 // Types for Category operations
 export interface CreateCategoryInput {

@@ -1,6 +1,6 @@
 import { prisma } from "@/config/prisma";
+import { User, Role } from "@prisma/client";
 import { UserJSON } from "@clerk/express";
-import { User, Role } from "@/generated/prisma";
 
 export class UserService {
   // Create user from Clerk data

@@ -4,8 +4,8 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
-    "start": "node ./dist/server.js",
-    "dev": "nodemon -r tsconfig-paths/register src/server.ts",
+    "start": "npx prisma generate && node ./dist/server.js",
+    "dev": "npx prisma generate && nodemon -r tsconfig-paths/register src/server.ts",
     "prebuild": "rm -rf dist",
     "build": "tsc && tsc-alias",
     "test": "jest",

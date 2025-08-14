@@ -9,6 +9,6 @@ const categoryController = new CategoryController();
 categoryRoutes
   .post("/", validate(createCategorySchema), categoryController.createCategory)
   .get("/", categoryController.getAllCategories);
-categoryRoutes.get("/:id", categoryController.getCategoryById);
+categoryRoutes.get("/:slug", categoryController.getCategoryBySlug);
 
 export default categoryRoutes;

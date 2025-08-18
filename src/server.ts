@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { app } from "./app";
 import { logger } from "@/utils/logger";
 import { env } from "@/config/environment";
-import { redisClient } from "./config/redis";
+import { redisClient } from "@/config/redis";
 
 (async () => {
   try {

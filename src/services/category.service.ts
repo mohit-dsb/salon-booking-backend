@@ -3,6 +3,7 @@ import { Category } from "@prisma/client";
 import { createSlug } from "@/utils/slugify";
 import { cacheService } from "./cache.service";
 import { AppError } from "@/middlewares/error.middleware";
+import { PaginationParams, createPaginatedResponse, PaginatedResponse } from "@/utils/pagination";
 
 // Types for Category operations
 export interface ICreateCategory {
@@ -121,6 +122,50 @@ export class CategoryService {
     await cacheService.set(cacheKey, categories, 3600);
 
     return categories;
+  }
+
+  // Get all categories for an organization with pagination
+  public async getCategoriesByOrgPaginated(orgId: string, pagination: PaginationParams): Promise<PaginatedResponse<Category>> {
+    const cacheKey = `category:${orgId}:paginated:${pagination.page}:${pagination.limit}:${pagination.sortBy}:${pagination.sortOrder}`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<PaginatedResponse<Category>>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // Get total count for pagination metadata
+    const totalItems = await prisma.category.count({
+      where: { orgId },
+    });
+
+    // Build orderBy based on sortBy and sortOrder
+    const orderBy: Record<string, 'asc' | 'desc'> = {};
+    orderBy[pagination.sortBy] = pagination.sortOrder;
+
+    // If not in cache, fetch from database with pagination
+    const categories = await prisma.category.findMany({
+      where: { orgId },
+      include: {
+        services: true,
+      },
+      orderBy,
+      skip: pagination.skip,
+      take: pagination.limit,
+    });
+
+    // Create paginated response
+    const paginatedResponse = createPaginatedResponse(
+      categories,
+      totalItems,
+      pagination.page,
+      pagination.limit
+    );
+
+    // Cache the result for 30 minutes (shorter TTL for paginated data)
+    await cacheService.set(cacheKey, paginatedResponse, 1800);
+
+    return paginatedResponse;
   }
 
   // Get only active categories for an organization

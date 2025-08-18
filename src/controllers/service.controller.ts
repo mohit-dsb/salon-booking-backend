@@ -2,6 +2,7 @@ import { ServiceService } from "@/services/service.service";
 import type { NextFunction, Request, Response } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppError, asyncHandler } from "@/middlewares/error.middleware";
+import { parsePaginationParams, PaginationQuery } from "@/utils/pagination";
 
 export class ServiceController {
   private serviceService = new ServiceService();
@@ -36,9 +37,10 @@ export class ServiceController {
 
   public getAllServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const auth = getAuthWithOrgId(req);
-
-    const services = await this.serviceService.getServicesByOrg(auth.orgId);
-    res.status(200).json({ success: true, data: services });
+    // Use paginated response
+    const pagination = parsePaginationParams(req.query as PaginationQuery, "createdAt");
+    const result = await this.serviceService.getServicesByOrgPaginated(auth.orgId, pagination);
+    res.status(200).json(result);
   });
 
   public getActiveServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {

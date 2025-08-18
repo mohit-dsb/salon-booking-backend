@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { CategoryService } from "@/services/category.service";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppError, asyncHandler } from "@/middlewares/error.middleware";
+import { parsePaginationParams, PaginationQuery } from "@/utils/pagination";
 
 export class CategoryController {
   private categoryService = new CategoryService();
@@ -36,8 +37,10 @@ export class CategoryController {
   public getAllCategories = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const auth = getAuthWithOrgId(req);
 
-    const categories = await this.categoryService.getCategoriesByOrg(auth.orgId);
-    res.status(200).json({ success: true, data: categories });
+    // Use paginated response
+    const pagination = parsePaginationParams(req.query as PaginationQuery, "createdAt");
+    const result = await this.categoryService.getCategoriesByOrgPaginated(auth.orgId, pagination);
+    res.status(200).json(result);
   });
 
   public getCategoryBySlug = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {

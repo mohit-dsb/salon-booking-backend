@@ -1,6 +1,6 @@
 import { AuthObject } from "@clerk/express";
-import { NextFunction, Request, Response } from "express";
 import { ServiceService } from "@/services/service.service";
+import type { NextFunction, Request, Response } from "express";
 import { AppError, asyncHandler } from "@/middlewares/error.middleware";
 
 // Type for auth object with orgId

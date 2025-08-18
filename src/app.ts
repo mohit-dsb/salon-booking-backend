@@ -1,4 +1,5 @@
 import routesV1 from "@/routes/v1";
+import { redisClient } from "@/config/redis";
 import { clerkMiddleware } from "@clerk/express";
 import { morganMiddleware } from "@/utils/logger";
 import { errorHandler } from "@/middlewares/error.middleware";
@@ -22,7 +23,8 @@ app.use(clerkMiddleware());
 
 // Health check endpoint
 app.get("/health", (req: Request, res: Response) => {
-  res.status(200).json({ status: "ok", uptime: process.uptime() });
+  const isRedisConnected = redisClient.ping();
+  res.status(200).json({ status: "ok", uptime: process.uptime(), isRedisConnected });
 });
 
 // API Routes (versioned)

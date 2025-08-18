@@ -1,6 +1,6 @@
 import { UserService } from "@/services/user.service";
 import { verifyWebhook } from "@clerk/express/webhooks";
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "@/middlewares/error.middleware";
 
 export class UserController {

@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { app } from "./app";
 import { logger } from "@/utils/logger";
 import { env } from "@/config/environment";
+import { redisClient } from "./config/redis";
 
 (async () => {
   try {
@@ -14,6 +15,7 @@ import { env } from "@/config/environment";
       logger.info("Gracefully shutting down...");
 
       server.close(() => {
+        redisClient.disconnect();
         logger.info("Server closed");
         process.exit(0);
       });

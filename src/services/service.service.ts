@@ -1,6 +1,7 @@
 import { prisma } from "@/config/prisma";
 import { Service } from "@prisma/client";
 import { createSlug } from "@/utils/slugify";
+import { cacheService } from "./cache.service";
 import { AppError } from "@/middlewares/error.middleware";
 
 // Types for Service operations
@@ -71,7 +72,7 @@ export class ServiceService {
       throw new AppError("Service already exists", 400);
     }
 
-    return await prisma.service.create({
+    const service = await prisma.service.create({
       data: {
         name: data.name.trim(),
         slug: slug,
@@ -86,11 +87,26 @@ export class ServiceService {
         category: true,
       },
     });
+
+    // Invalidate cache after creation
+    await cacheService.invalidatePattern(`service:${data.orgId}:*`);
+    await cacheService.invalidatePattern(`category:${data.orgId}:*`); // Also invalidate category cache as it includes services
+
+    return service;
   }
 
   // Get service by ID (with orgId check for multi-tenancy)
   public async getServiceById(id: string, orgId: string): Promise<Service | null> {
-    return await prisma.service.findFirst({
+    const cacheKey = `service:${orgId}:id:${id}`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<Service>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // If not in cache, fetch from database
+    const service = await prisma.service.findFirst({
       where: {
         id,
         orgId,
@@ -99,22 +115,52 @@ export class ServiceService {
         category: true,
       },
     });
+
+    if (service) {
+      // Cache the result for 1 hour
+      await cacheService.set(cacheKey, service, 3600);
+    }
+
+    return service;
   }
 
   // Get all services for an organization
   public async getServicesByOrg(orgId: string): Promise<Service[]> {
-    return await prisma.service.findMany({
+    const cacheKey = `service:${orgId}:all`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<Service[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // If not in cache, fetch from database
+    const services = await prisma.service.findMany({
       where: { orgId },
       include: {
         category: true,
       },
       orderBy: { createdAt: "desc" },
     });
+
+    // Cache the result for 1 hour
+    await cacheService.set(cacheKey, services, 3600);
+
+    return services;
   }
 
   // Get services by category
   public async getServicesByCategory(categoryId: string, orgId: string): Promise<Service[]> {
-    return await prisma.service.findMany({
+    const cacheKey = `service:${orgId}:category:${categoryId}`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<Service[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // If not in cache, fetch from database
+    const services = await prisma.service.findMany({
       where: {
         categoryId,
         orgId,
@@ -124,11 +170,25 @@ export class ServiceService {
       },
       orderBy: { name: "asc" },
     });
+
+    // Cache the result for 1 hour
+    await cacheService.set(cacheKey, services, 3600);
+
+    return services;
   }
 
   // Get only active services for an organization
   public async getActiveServicesByOrg(orgId: string): Promise<Service[]> {
-    return await prisma.service.findMany({
+    const cacheKey = `service:${orgId}:active`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<Service[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // If not in cache, fetch from database
+    const services = await prisma.service.findMany({
       where: {
         orgId,
         isActive: true,
@@ -141,6 +201,11 @@ export class ServiceService {
       },
       orderBy: { name: "asc" },
     });
+
+    // Cache the result for 1 hour
+    await cacheService.set(cacheKey, services, 3600);
+
+    return services;
   }
 
   // Update service
@@ -167,7 +232,7 @@ export class ServiceService {
       }
     }
 
-    return await prisma.service.update({
+    const service = await prisma.service.update({
       where: {
         id,
       },
@@ -176,6 +241,12 @@ export class ServiceService {
         category: false,
       },
     });
+
+    // Invalidate all related cache entries
+    await cacheService.invalidatePattern(`service:${orgId}:*`);
+    await cacheService.invalidatePattern(`category:${orgId}:*`); // Also invalidate category cache as it includes services
+
+    return service;
   }
 
   // Delete service
@@ -186,16 +257,22 @@ export class ServiceService {
       throw new AppError("Service not found or does not belong to your organization", 404);
     }
 
-    return await prisma.service.delete({
+    const deletedService = await prisma.service.delete({
       where: {
         id,
       },
     });
+
+    // Invalidate all related cache entries
+    await cacheService.invalidatePattern(`service:${orgId}:*`);
+    await cacheService.invalidatePattern(`category:${orgId}:*`); // Also invalidate category cache as it includes services
+
+    return deletedService;
   }
 
   // Soft delete - deactivate service
   public async deactivateService(id: string, orgId: string): Promise<Service> {
-    return await prisma.service.update({
+    const service = await prisma.service.update({
       where: {
         id,
       },
@@ -207,11 +284,17 @@ export class ServiceService {
         category: true,
       },
     });
+
+    // Invalidate all related cache entries
+    await cacheService.invalidatePattern(`service:${orgId}:*`);
+    await cacheService.invalidatePattern(`category:${orgId}:*`); // Also invalidate category cache as it includes services
+
+    return service;
   }
 
   // Activate service
   public async activateService(id: string, orgId: string): Promise<Service> {
-    return await prisma.service.update({
+    const service = await prisma.service.update({
       where: {
         id,
       },
@@ -223,6 +306,12 @@ export class ServiceService {
         category: true,
       },
     });
+
+    // Invalidate all related cache entries
+    await cacheService.invalidatePattern(`service:${orgId}:*`);
+    await cacheService.invalidatePattern(`category:${orgId}:*`); // Also invalidate category cache as it includes services
+
+    return service;
   }
 
   // Check if service exists in organization
@@ -254,7 +343,16 @@ export class ServiceService {
 
   // Get service by slug within organization
   public async getServiceBySlug(slug: string, orgId: string): Promise<Service | null> {
-    return await prisma.service.findFirst({
+    const cacheKey = `service:${orgId}:slug:${slug}`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<Service>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // If not in cache, fetch from database
+    const service = await prisma.service.findFirst({
       where: {
         slug,
         orgId,
@@ -263,6 +361,13 @@ export class ServiceService {
         category: false,
       },
     });
+
+    if (service) {
+      // Cache the result for 1 hour
+      await cacheService.set(cacheKey, service, 3600);
+    }
+
+    return service;
   }
 
   // Count services in organization
@@ -274,7 +379,17 @@ export class ServiceService {
 
   // Search services by name within organization
   public async searchServices(searchTerm: string, orgId: string): Promise<Service[]> {
-    return await prisma.service.findMany({
+    const normalizedSearchTerm = searchTerm.toLowerCase().trim();
+    const cacheKey = `service:${orgId}:search:${normalizedSearchTerm}`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<Service[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // If not in cache, fetch from database
+    const services = await prisma.service.findMany({
       where: {
         orgId,
         OR: [
@@ -297,11 +412,25 @@ export class ServiceService {
       },
       orderBy: { name: "asc" },
     });
+
+    // Cache the result for 30 minutes (shorter TTL for search results)
+    await cacheService.set(cacheKey, services, 1800);
+
+    return services;
   }
 
   // Get services with price range filter
   public async getServicesByPriceRange(orgId: string, minPrice?: number, maxPrice?: number): Promise<Service[]> {
-    return await prisma.service.findMany({
+    const cacheKey = `service:${orgId}:price:${minPrice || 0}:${maxPrice || "max"}`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<Service[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // If not in cache, fetch from database
+    const services = await prisma.service.findMany({
       where: {
         orgId,
         isActive: true,
@@ -313,11 +442,25 @@ export class ServiceService {
       },
       orderBy: { price: "asc" },
     });
+
+    // Cache the result for 1 hour
+    await cacheService.set(cacheKey, services, 3600);
+
+    return services;
   }
 
   // Get services with duration filter
   public async getServicesByDuration(orgId: string, maxDuration?: number): Promise<Service[]> {
-    return await prisma.service.findMany({
+    const cacheKey = `service:${orgId}:duration:${maxDuration || "max"}`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<Service[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // If not in cache, fetch from database
+    const services = await prisma.service.findMany({
       where: {
         orgId,
         isActive: true,
@@ -328,5 +471,10 @@ export class ServiceService {
       },
       orderBy: { duration: "asc" },
     });
+
+    // Cache the result for 1 hour
+    await cacheService.set(cacheKey, services, 3600);
+
+    return services;
   }
 }

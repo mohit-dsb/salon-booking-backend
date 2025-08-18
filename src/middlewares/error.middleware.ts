@@ -1,6 +1,6 @@
 import { logger } from "@/utils/logger";
 import { env } from "@/config/environment";
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 
 // Interface for Mongoose validation errors
 interface MongooseValidationError extends Error {

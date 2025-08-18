@@ -2,7 +2,7 @@ import { z, ZodError } from "zod";
 import { AppError } from "./error.middleware";
 import type { Request, Response, NextFunction } from "express";
 
-export const validate = (schema: z.ZodObject<any, any>) => {
+export const validate = (schema: z.ZodObject<z.ZodRawShape>) => {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
       schema.parse({
@@ -26,15 +26,15 @@ export const validate = (schema: z.ZodObject<any, any>) => {
           message = `${fieldName} is required`;
         } else if (firstIssue.code === "too_small") {
           if (originalMessage.includes("string")) {
-            message = `${fieldName} must be at least ${(firstIssue as any).minimum} characters long`;
+            message = `${fieldName} must be at least ${firstIssue.minimum} characters long`;
           } else {
-            message = `${fieldName} must be at least ${(firstIssue as any).minimum}`;
+            message = `${fieldName} must be at least ${firstIssue.minimum}`;
           }
         } else if (firstIssue.code === "too_big") {
           if (originalMessage.includes("string")) {
-            message = `${fieldName} must be no more than ${(firstIssue as any).maximum} characters long`;
+            message = `${fieldName} must be no more than ${firstIssue.maximum} characters long`;
           } else {
-            message = `${fieldName} must be no more than ${(firstIssue as any).maximum}`;
+            message = `${fieldName} must be no more than ${firstIssue.maximum}`;
           }
         } else if (originalMessage.includes("email")) {
           message = `${fieldName} must be a valid email address`;

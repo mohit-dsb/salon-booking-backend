@@ -2,6 +2,12 @@ import { getAuth } from "@clerk/express";
 import { AppError } from "@/middlewares/error.middleware";
 import type { Request, Response, NextFunction } from "express";
 
+// Type for extended auth object
+interface AuthWithOrgId {
+  orgId: string;
+  [key: string]: unknown;
+}
+
 // Extract orgId from different sources based on your needs
 export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFunction) => {
   const auth = getAuth(req);
@@ -31,7 +37,7 @@ export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFun
   }
 
   // Extend the auth object with orgId
-  (req.auth as any) = {
+  (req.auth as unknown as AuthWithOrgId) = {
     ...auth,
     orgId,
   };

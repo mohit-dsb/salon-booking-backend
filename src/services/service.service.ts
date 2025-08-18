@@ -210,7 +210,7 @@ export class ServiceService {
 
   // Update service
   public async updateService(id: string, orgId: string, data: IUpdateService): Promise<Service> {
-    const updateData: any = { ...data, orgId };
+    const updateData: Record<string, unknown> = { ...data, orgId };
 
     // If name is being updated, also update the slug
     if (data.name) {

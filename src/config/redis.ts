@@ -181,6 +181,6 @@ export const parseFromCache = <T>(cachedValue: string | null): T | null => {
 };
 
 // Helper function to stringify for cache
-export const stringifyForCache = (value: any): string => {
+export const stringifyForCache = (value: unknown): string => {
   return JSON.stringify(value);
 };

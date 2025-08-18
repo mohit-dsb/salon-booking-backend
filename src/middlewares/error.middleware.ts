@@ -48,8 +48,7 @@ export class AppError extends Error {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const errorHandler = (err: AppError | Error, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (err: AppError | Error, req: Request, res: Response, _next: NextFunction) => {
   let error = err as AppError;
 
   // Mongoose validation error
@@ -104,7 +103,7 @@ export const errorHandler = (err: AppError | Error, req: Request, res: Response,
 
 // Async error wrapper
 export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+  return (_req: Request, _res: Response, _next: NextFunction) => {
+    Promise.resolve(fn(_req, _res, _next)).catch(_next);
   };
 };

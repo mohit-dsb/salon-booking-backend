@@ -157,7 +157,7 @@ export class CategoryService {
 
   // Update category
   public async updateCategory(id: string, orgId: string, data: IUpdateCategory): Promise<Category> {
-    const updateData: any = { ...data, orgId };
+    const updateData: Record<string, unknown> = { ...data, orgId };
 
     // If name is being updated, also update the slug
     if (data.name) {

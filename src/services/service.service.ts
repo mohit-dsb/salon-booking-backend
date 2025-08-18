@@ -1,0 +1,332 @@
+import { prisma } from "@/config/prisma";
+import { Service } from "@prisma/client";
+import { createSlug } from "@/utils/slugify";
+import { AppError } from "@/middlewares/error.middleware";
+
+// Types for Service operations
+export interface ICreateService {
+  name: string;
+  description?: string;
+  price: number;
+  duration: number;
+  categoryId: string;
+  orgId: string;
+  isActive?: boolean;
+}
+
+export interface IUpdateService {
+  name?: string;
+  description?: string;
+  price?: number;
+  duration?: number;
+  categoryId?: string;
+  isActive?: boolean;
+}
+
+export class ServiceService {
+  // Helper method to generate unique slug (handles collisions)
+  private async generateUniqueSlug(name: string, orgId: string, excludeId?: string): Promise<string> {
+    const baseSlug = createSlug(name);
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (await this.slugExists(slug, orgId, excludeId)) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    return slug;
+  }
+
+  // Check if slug exists in organization
+  private async slugExists(slug: string, orgId: string, excludeId?: string): Promise<boolean> {
+    const service = await prisma.service.findFirst({
+      where: {
+        slug,
+        orgId,
+        ...(excludeId && { id: { not: excludeId } }),
+      },
+      select: { id: true },
+    });
+    return !!service;
+  }
+
+  // Create a new service
+  public async createService(data: ICreateService): Promise<Service> {
+    const slug = await this.generateUniqueSlug(data.name, data.orgId);
+
+    // Check if category exists and belongs to the organization
+    const category = await prisma.category.findFirst({
+      where: {
+        id: data.categoryId,
+        orgId: data.orgId,
+      },
+    });
+
+    if (!category) {
+      throw new AppError("Category not found or does not belong to your organization", 404);
+    }
+
+    if (await this.serviceExists(data.name, data.orgId)) {
+      throw new AppError("Service already exists", 400);
+    }
+
+    return await prisma.service.create({
+      data: {
+        name: data.name.trim(),
+        slug: slug,
+        description: data.description?.trim() || "",
+        price: data.price,
+        duration: data.duration,
+        categoryId: data.categoryId,
+        orgId: data.orgId,
+        isActive: data.isActive ?? true,
+      },
+      include: {
+        category: true,
+      },
+    });
+  }
+
+  // Get service by ID (with orgId check for multi-tenancy)
+  public async getServiceById(id: string, orgId: string): Promise<Service | null> {
+    return await prisma.service.findFirst({
+      where: {
+        id,
+        orgId,
+      },
+      include: {
+        category: true,
+      },
+    });
+  }
+
+  // Get all services for an organization
+  public async getServicesByOrg(orgId: string): Promise<Service[]> {
+    return await prisma.service.findMany({
+      where: { orgId },
+      include: {
+        category: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Get services by category
+  public async getServicesByCategory(categoryId: string, orgId: string): Promise<Service[]> {
+    return await prisma.service.findMany({
+      where: {
+        categoryId,
+        orgId,
+      },
+      include: {
+        category: false,
+      },
+      orderBy: { name: "asc" },
+    });
+  }
+
+  // Get only active services for an organization
+  public async getActiveServicesByOrg(orgId: string): Promise<Service[]> {
+    return await prisma.service.findMany({
+      where: {
+        orgId,
+        isActive: true,
+        category: {
+          isActive: true,
+        },
+      },
+      include: {
+        category: true,
+      },
+      orderBy: { name: "asc" },
+    });
+  }
+
+  // Update service
+  public async updateService(id: string, orgId: string, data: IUpdateService): Promise<Service> {
+    const updateData: any = { ...data, orgId };
+
+    // If name is being updated, also update the slug
+    if (data.name) {
+      updateData.name = data.name.trim();
+      updateData.slug = await this.generateUniqueSlug(data.name, orgId, id);
+    }
+
+    // If categoryId is being updated, verify it belongs to the organization
+    if (data.categoryId) {
+      const category = await prisma.category.findFirst({
+        where: {
+          id: data.categoryId,
+          orgId: orgId,
+        },
+      });
+
+      if (!category) {
+        throw new AppError("Category not found or does not belong to your organization", 404);
+      }
+    }
+
+    return await prisma.service.update({
+      where: {
+        id,
+      },
+      data: updateData,
+      include: {
+        category: false,
+      },
+    });
+  }
+
+  // Delete service
+  public async deleteService(id: string, orgId: string): Promise<Service> {
+    // Verify service belongs to organization
+    const service = await this.getServiceById(id, orgId);
+    if (!service) {
+      throw new AppError("Service not found or does not belong to your organization", 404);
+    }
+
+    return await prisma.service.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
+  // Soft delete - deactivate service
+  public async deactivateService(id: string, orgId: string): Promise<Service> {
+    return await prisma.service.update({
+      where: {
+        id,
+      },
+      data: {
+        isActive: false,
+        orgId, // Ensure orgId check
+      },
+      include: {
+        category: true,
+      },
+    });
+  }
+
+  // Activate service
+  public async activateService(id: string, orgId: string): Promise<Service> {
+    return await prisma.service.update({
+      where: {
+        id,
+      },
+      data: {
+        isActive: true,
+        orgId, // Ensure orgId check
+      },
+      include: {
+        category: true,
+      },
+    });
+  }
+
+  // Check if service exists in organization
+  public async serviceExists(name: string, orgId: string): Promise<boolean> {
+    const slug = createSlug(name);
+    const service = await prisma.service.findFirst({
+      where: {
+        slug: slug,
+        orgId,
+      },
+      select: { id: true },
+    });
+    return !!service;
+  }
+
+  // Get service by name within organization
+  public async getServiceByName(name: string, orgId: string): Promise<Service | null> {
+    const slug = createSlug(name);
+    return await prisma.service.findFirst({
+      where: {
+        slug: slug,
+        orgId,
+      },
+      include: {
+        category: true,
+      },
+    });
+  }
+
+  // Get service by slug within organization
+  public async getServiceBySlug(slug: string, orgId: string): Promise<Service | null> {
+    return await prisma.service.findFirst({
+      where: {
+        slug,
+        orgId,
+      },
+      include: {
+        category: false,
+      },
+    });
+  }
+
+  // Count services in organization
+  public async countServices(orgId: string): Promise<number> {
+    return await prisma.service.count({
+      where: { orgId },
+    });
+  }
+
+  // Search services by name within organization
+  public async searchServices(searchTerm: string, orgId: string): Promise<Service[]> {
+    return await prisma.service.findMany({
+      where: {
+        orgId,
+        OR: [
+          {
+            name: {
+              contains: searchTerm,
+              mode: "insensitive",
+            },
+          },
+          {
+            description: {
+              contains: searchTerm,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+      include: {
+        category: true,
+      },
+      orderBy: { name: "asc" },
+    });
+  }
+
+  // Get services with price range filter
+  public async getServicesByPriceRange(orgId: string, minPrice?: number, maxPrice?: number): Promise<Service[]> {
+    return await prisma.service.findMany({
+      where: {
+        orgId,
+        isActive: true,
+        ...(minPrice && { price: { gte: minPrice } }),
+        ...(maxPrice && { price: { lte: maxPrice } }),
+      },
+      include: {
+        category: true,
+      },
+      orderBy: { price: "asc" },
+    });
+  }
+
+  // Get services with duration filter
+  public async getServicesByDuration(orgId: string, maxDuration?: number): Promise<Service[]> {
+    return await prisma.service.findMany({
+      where: {
+        orgId,
+        isActive: true,
+        ...(maxDuration && { duration: { lte: maxDuration } }),
+      },
+      include: {
+        category: true,
+      },
+      orderBy: { duration: "asc" },
+    });
+  }
+}

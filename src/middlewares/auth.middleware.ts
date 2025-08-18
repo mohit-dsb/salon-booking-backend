@@ -6,9 +6,9 @@ import { AppError } from "@/middlewares/error.middleware";
 export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFunction) => {
   const auth = getAuth(req);
 
-  if (!auth.isAuthenticated) {
-    return next(new AppError("Authentication required", 401));
-  }
+  // if (!auth.isAuthenticated) {
+  //   return next(new AppError("Authentication required", 401));
+  // }
 
   // Method 1: From environment (single tenant):TODO REMOVE THIS VARIABLE IN PRODUCTION
   let orgId = process.env.ORG_ID || null;

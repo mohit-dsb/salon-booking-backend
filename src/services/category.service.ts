@@ -115,6 +115,10 @@ export class CategoryService {
       updateData.slug = await this.generateUniqueSlug(data.name, orgId, id);
     }
 
+    if (data.description) {
+      updateData.description = data.description?.trim() || "";
+    }
+
     return await prisma.category.update({
       where: {
         id,

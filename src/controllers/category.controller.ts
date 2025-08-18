@@ -60,4 +60,40 @@ export class CategoryController {
 
     res.status(200).json({ success: true, data: category });
   });
+
+  public deleteCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const auth = req.auth as AuthWithOrgId;
+    const { slug } = req.params;
+
+    if (!slug) {
+      throw new AppError("Category slug is required", 400);
+    }
+
+    const category = await this.categoryService.getCategoryBySlug(slug, auth.orgId);
+
+    if (!category) {
+      throw new AppError("Category not found", 404);
+    }
+
+    await this.categoryService.deleteCategory(category.id);
+    res.status(204).send();
+  });
+
+  public updateCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const auth = req.auth as AuthWithOrgId;
+    const { slug } = req.params;
+
+    if (!slug) {
+      throw new AppError("Category slug is required", 400);
+    }
+
+    const category = await this.categoryService.getCategoryBySlug(slug, auth.orgId);
+
+    if (!category) {
+      throw new AppError("Category not found", 404);
+    }
+
+    const updatedCategory = await this.categoryService.updateCategory(category.id, auth.orgId, req.body);
+    res.status(200).json({ success: true, data: updatedCategory });
+  });
 }

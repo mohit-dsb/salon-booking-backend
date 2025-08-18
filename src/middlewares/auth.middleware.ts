@@ -44,3 +44,12 @@ export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFun
 
   next();
 };
+
+// Helper function to get auth with orgId safely
+export const getAuthWithOrgId = (req: Request): AuthWithOrgId => {
+  const auth = req.auth as unknown as AuthWithOrgId;
+  if (!auth?.orgId) {
+    throw new AppError("Organization ID is required", 401);
+  }
+  return auth;
+};

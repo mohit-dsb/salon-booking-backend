@@ -1,18 +1,13 @@
-import { AuthObject } from "@clerk/express";
 import { ServiceService } from "@/services/service.service";
 import type { NextFunction, Request, Response } from "express";
+import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppError, asyncHandler } from "@/middlewares/error.middleware";
-
-// Type for auth object with orgId
-type AuthWithOrgId = AuthObject & {
-  orgId: string;
-};
 
 export class ServiceController {
   private serviceService = new ServiceService();
 
   public createService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
 
     const serviceData = {
       ...req.body,
@@ -24,7 +19,7 @@ export class ServiceController {
   });
 
   public getServiceById = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
 
     if (!req.params.id) {
       throw new AppError("Service ID is required", 400);
@@ -40,21 +35,21 @@ export class ServiceController {
   });
 
   public getAllServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
 
     const services = await this.serviceService.getServicesByOrg(auth.orgId);
     res.status(200).json({ success: true, data: services });
   });
 
   public getActiveServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
 
     const services = await this.serviceService.getActiveServicesByOrg(auth.orgId);
     res.status(200).json({ success: true, data: services });
   });
 
   public getServiceBySlug = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -71,7 +66,7 @@ export class ServiceController {
   });
 
   public getServicesByCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { categoryId } = req.params;
 
     if (!categoryId) {
@@ -83,7 +78,7 @@ export class ServiceController {
   });
 
   public updateService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -101,7 +96,7 @@ export class ServiceController {
   });
 
   public deleteService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -119,7 +114,7 @@ export class ServiceController {
   });
 
   public deactivateService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -137,7 +132,7 @@ export class ServiceController {
   });
 
   public activateService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -155,7 +150,7 @@ export class ServiceController {
   });
 
   public searchServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { q } = req.query;
 
     if (!q || typeof q !== "string") {
@@ -167,7 +162,7 @@ export class ServiceController {
   });
 
   public getServicesByPriceRange = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { minPrice, maxPrice } = req.query;
 
     const min = minPrice ? parseFloat(minPrice as string) : undefined;
@@ -186,7 +181,7 @@ export class ServiceController {
   });
 
   public getServicesByDuration = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { maxDuration } = req.query;
 
     const max = maxDuration ? parseInt(maxDuration as string) : undefined;

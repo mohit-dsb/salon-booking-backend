@@ -1,18 +1,13 @@
-import { AuthObject } from "@clerk/express";
 import { NextFunction, Request, Response } from "express";
 import { CategoryService } from "@/services/category.service";
+import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppError, asyncHandler } from "@/middlewares/error.middleware";
-
-// Type for auth object with orgId
-type AuthWithOrgId = AuthObject & {
-  orgId: string;
-};
 
 export class CategoryController {
   private categoryService = new CategoryService();
 
   public createCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
 
     const categoryData = {
       ...req.body,
@@ -24,7 +19,7 @@ export class CategoryController {
   });
 
   public getCategoryById = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
 
     if (!req.params.id) {
       throw new AppError("Category ID is required", 400);
@@ -39,14 +34,14 @@ export class CategoryController {
   });
 
   public getAllCategories = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
 
     const categories = await this.categoryService.getCategoriesByOrg(auth.orgId);
     res.status(200).json({ success: true, data: categories });
   });
 
   public getCategoryBySlug = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -62,7 +57,7 @@ export class CategoryController {
   });
 
   public deleteCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -80,7 +75,7 @@ export class CategoryController {
   });
 
   public updateCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = req.auth as AuthWithOrgId;
+    const auth = getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {

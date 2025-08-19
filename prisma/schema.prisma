@@ -55,9 +55,56 @@ model Service {
 
   // Relationships
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  memberServices MemberService[]
 
   // Ensure slug is unique within each organization
   @@unique([slug, orgId])
   @@index([categoryId])
+  @@index([orgId])
+}
+
+model Member {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId           String   @unique
+  orgId             String
+  firstName         String
+  lastName          String
+  email             String
+  phone             String?
+  profileImage      String?
+  jobTitle          String?
+  bio               String?
+  workingHours      Json? // Store working hours as JSON
+  isActive          Boolean  @default(true)
+  commissionRate    Float?   // Commission percentage (0-100)
+  hourlyRate        Float?   // Hourly rate for services
+  dateOfBirth       DateTime?
+  address           Json?    // Store address as JSON
+  emergencyContact  Json?    // Store emergency contact as JSON
+  startDate         DateTime @default(now())
+  endDate           DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relationships
+  memberServices MemberService[]
+
+  @@index([orgId])
+  @@unique([email, orgId])
+}
+
+model MemberService {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  memberId  String   @db.ObjectId
+  serviceId String   @db.ObjectId
+  orgId     String
+  createdAt DateTime @default(now())
+
+  // Relationships
+  member  Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  // Ensure a member can only be assigned to a service once
+  @@unique([memberId, serviceId])
   @@index([orgId])
 }

@@ -131,8 +131,7 @@ const emergencyContactSchema = z.object({
 
 export const createMemberSchema = z.object({
   body: z.object({
-    firstName: z.string().trim().min(1).max(50),
-    lastName: z.string().trim().min(1).max(50),
+    username: z.string().trim().min(1).max(50),
     email: z.email(),
     phone: z.string().min(10).max(20).optional(),
     role: roleEnum.optional().default("MEMBER"),
@@ -151,8 +150,7 @@ export const createMemberSchema = z.object({
 
 export const updateMemberSchema = z.object({
   body: z.object({
-    firstName: z.string().trim().min(1).max(50).optional(),
-    lastName: z.string().trim().min(1).max(50).optional(),
+    username: z.string().trim().min(1).max(50).optional(),
     email: z.email().optional(),
     phone: z.string().min(10).max(20).optional(),
     profileImage: z.url().optional(),
@@ -180,8 +178,7 @@ export const assignServicesSchema = z.object({
 export const inviteMemberSchema = z.object({
   body: z.object({
     email: z.email(),
-    firstName: z.string().trim().min(1).max(50),
-    lastName: z.string().trim().min(1).max(50),
+    username: z.string().trim().min(1).max(50),
     role: roleEnum.optional().default("MEMBER"),
     jobTitle: z.string().trim().min(1).max(100).optional(),
     serviceIds: z.array(z.string()).optional(),

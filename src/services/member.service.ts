@@ -37,8 +37,7 @@ export interface EmergencyContact {
 }
 
 export interface CreateMemberData {
-  firstName: string;
-  lastName: string;
+  username: string;
   email: string;
   phone?: string;
   jobTitle?: string;
@@ -54,8 +53,7 @@ export interface CreateMemberData {
 }
 
 export interface UpdateMemberData {
-  firstName?: string;
-  lastName?: string;
+  username?: string;
   email?: string;
   phone?: string;
   profileImage?: string;
@@ -106,8 +104,7 @@ export class MemberService {
       // Create user in Clerk with minimal information
       const clerkUser = await clerkClient.users.createUser({
         emailAddress: [data.email],
-        firstName: data.firstName,
-        lastName: data.lastName,
+        username: data.username || "",
         skipPasswordRequirement: true, // They'll set password via invitation email
         skipPasswordChecks: true,
       });
@@ -124,8 +121,7 @@ export class MemberService {
         data: {
           clerkId: clerkUser.id,
           orgId,
-          firstName: data.firstName,
-          lastName: data.lastName,
+          username: data.username,
           email: data.email,
           phone: data.phone,
           jobTitle: data.jobTitle,
@@ -236,8 +232,7 @@ export class MemberService {
       orgId: string;
       isActive?: boolean;
       OR?: Array<{
-        firstName?: { contains: string; mode: "insensitive" };
-        lastName?: { contains: string; mode: "insensitive" };
+        username?: { contains: string; mode: "insensitive" };
         email?: { contains: string; mode: "insensitive" };
         jobTitle?: { contains: string; mode: "insensitive" };
       }>;
@@ -254,8 +249,7 @@ export class MemberService {
 
     if (filters?.search) {
       where.OR = [
-        { firstName: { contains: filters.search, mode: "insensitive" } },
-        { lastName: { contains: filters.search, mode: "insensitive" } },
+        { username: { contains: filters.search, mode: "insensitive" } },
         { email: { contains: filters.search, mode: "insensitive" } },
         { jobTitle: { contains: filters.search, mode: "insensitive" } },
       ];
@@ -327,15 +321,13 @@ export class MemberService {
     }
 
     try {
-      // Update Clerk user if email, firstName, or lastName changed
-      if (data.email || data.firstName || data.lastName) {
+      // Update Clerk user if email or username changed
+      if (data.email || data.username) {
         const updateData: {
-          firstName?: string;
-          lastName?: string;
+          username?: string;
           primaryEmailAddressID?: string;
         } = {};
-        if (data.firstName) updateData.firstName = data.firstName;
-        if (data.lastName) updateData.lastName = data.lastName;
+        if (data.username) updateData.username = data.username;
         if (data.email) updateData.primaryEmailAddressID = data.email;
 
         await clerkClient.users.updateUser(existingMember.clerkId, updateData);
@@ -462,7 +454,7 @@ export class MemberService {
           },
         },
       },
-      orderBy: { firstName: "asc" },
+      orderBy: { username: "asc" },
     });
   }
 
@@ -471,8 +463,7 @@ export class MemberService {
     clerkUserId: string,
     orgId: string,
     userData: {
-      firstName?: string;
-      lastName?: string;
+      username?: string;
       emailAddresses?: Array<{ emailAddress: string }>;
       imageUrl?: string;
     },
@@ -486,8 +477,7 @@ export class MemberService {
       await prisma.member.update({
         where: { id: existingMember.id },
         data: {
-          firstName: userData.firstName || existingMember.firstName,
-          lastName: userData.lastName || existingMember.lastName,
+          username: userData.username || existingMember.username,
           email: userData.emailAddresses?.[0]?.emailAddress || existingMember.email,
           profileImage: userData.imageUrl || existingMember.profileImage,
         },
@@ -523,7 +513,7 @@ export class MemberService {
 
   // Create member from Clerk webhook data
   public async createMemberFromWebhook(userData: UserJSON): Promise<void> {
-    const { id, email_addresses, first_name, last_name, image_url, organization_memberships } = userData;
+    const { id, email_addresses, username, image_url, organization_memberships } = userData;
 
     // Extract primary email
     const primaryEmail = email_addresses?.find(
@@ -542,8 +532,7 @@ export class MemberService {
         clerkId: id,
         orgId: orgId,
         role: role as Role,
-        firstName: first_name || "",
-        lastName: last_name || "",
+        username: username || "",
         email: primaryEmail,
         profileImage: image_url,
         isActive: Boolean(orgId),
@@ -553,7 +542,7 @@ export class MemberService {
 
   // Update member from Clerk webhook data
   public async updateMemberFromWebhook(clerkId: string, userData: UserJSON): Promise<void> {
-    const { email_addresses, first_name, last_name, image_url } = userData;
+    const { email_addresses, username, image_url } = userData;
 
     // Extract primary email
     const primaryEmail = email_addresses?.find(
@@ -570,8 +559,7 @@ export class MemberService {
       await prisma.member.update({
         where: { id: member.id },
         data: {
-          firstName: first_name || member.firstName,
-          lastName: last_name || member.lastName,
+          username: username || member.username,
           email: primaryEmail || member.email,
           profileImage: image_url || member.profileImage,
         },
@@ -623,9 +611,8 @@ export class MemberService {
             data: {
               clerkId: clerkUserId,
               orgId,
-              role: Role.MEMBER,
-              firstName: memberInOtherOrg.firstName,
-              lastName: memberInOtherOrg.lastName,
+              role: memberInOtherOrg.role || Role.MEMBER,
+              username: memberInOtherOrg.username,
               email: memberInOtherOrg.email,
               profileImage: memberInOtherOrg.profileImage,
               isActive: true,
@@ -638,8 +625,7 @@ export class MemberService {
               clerkId: clerkUserId,
               orgId,
               role: Role.MEMBER,
-              firstName: "New",
-              lastName: "Member",
+              username: `${clerkUserId}@temp.local`, // Temporary username
               email: `${clerkUserId}@temp.local`, // Temporary email
               isActive: true,
             },

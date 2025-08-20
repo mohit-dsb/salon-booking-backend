@@ -45,7 +45,7 @@ model Service {
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category       Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   memberServices MemberService[]
 
   // Ensure slug is unique within each organization
@@ -55,34 +55,33 @@ model Service {
 }
 
 model Member {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId           String   @unique
-  orgId             String
-  role              Role     @default(MEMBER)
-  firstName         String
-  lastName          String
-  email             String
-  phone             String?
-  profileImage      String?
-  jobTitle          String?
-  bio               String?
-  workingHours      Json? // Store working hours as JSON
-  isActive          Boolean  @default(true)
-  commissionRate    Float?   // Commission percentage (0-100)
-  hourlyRate        Float?   // Hourly rate for services
-  dateOfBirth       DateTime?
-  address           Json?    // Store address as JSON
-  emergencyContact  Json?    // Store emergency contact as JSON
-  startDate         DateTime @default(now())
-  endDate           DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId          String    @unique
+  orgId            String
+  role             Role      @default(MEMBER)
+  username         String
+  email            String
+  phone            String?
+  profileImage     String?
+  jobTitle         String?
+  bio              String?
+  workingHours     Json? // Store working hours as JSON
+  isActive         Boolean   @default(true)
+  commissionRate   Float? // Commission percentage (0-100)
+  hourlyRate       Float? // Hourly rate for services
+  dateOfBirth      DateTime?
+  address          Json? // Store address as JSON
+  emergencyContact Json? // Store emergency contact as JSON
+  startDate        DateTime  @default(now())
+  endDate          DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   // Relationships
   memberServices MemberService[]
 
-  @@index([orgId])
   @@unique([email, orgId])
+  @@index([orgId])
 }
 
 model MemberService {

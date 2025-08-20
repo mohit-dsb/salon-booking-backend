@@ -509,7 +509,7 @@ export class MemberService {
     };
   }
 
-  // ========== USER-RELATED METHODS (replacing UserService) ==========
+  // ========== USER-RELATED METHODS ==========
 
   // Create member from Clerk webhook data
   public async createMemberFromWebhook(userData: UserJSON): Promise<void> {
@@ -525,19 +525,48 @@ export class MemberService {
       return;
     }
 
-    const orgId = organization_memberships?.[0]?.id || "";
-    const role = organization_memberships?.[0]?.role || Role.MEMBER;
-    await prisma.member.create({
-      data: {
-        clerkId: id,
-        orgId: orgId,
-        role: role as Role,
-        username: username || "",
-        email: primaryEmail,
-        profileImage: image_url,
-        isActive: Boolean(orgId),
-      },
-    });
+    // Check if user has organization memberships
+    if (!organization_memberships || organization_memberships.length === 0) {
+      console.log(`User ${id} created without organization membership, skipping member creation for now`);
+      return;
+    }
+
+    // Create member for each organization they belong to
+    for (const membership of organization_memberships) {
+      const orgId = membership.id;
+      const role = membership.role === "org:admin" ? Role.ADMIN : Role.MEMBER;
+
+      // Check if member already exists in this organization
+      const existingMember = await this.getMemberByClerkId(id, orgId);
+
+      if (!existingMember) {
+        console.log(`Creating member for user ${id} in organization ${orgId} with role ${role}`);
+        await prisma.member.create({
+          data: {
+            clerkId: id,
+            orgId: orgId,
+            role: role,
+            username: username || "",
+            email: primaryEmail,
+            profileImage: image_url,
+            isActive: true,
+          },
+        });
+      } else {
+        console.log(`Member already exists for user ${id} in organization ${orgId}, updating details`);
+        await prisma.member.update({
+          where: { id: existingMember.id },
+          data: {
+            username: username || existingMember.username,
+            email: primaryEmail,
+            profileImage: image_url || existingMember.profileImage,
+            role: role,
+            isActive: true,
+            orgId: orgId, // Ensure orgId is properly set
+          },
+        });
+      }
+    }
   }
 
   // Update member from Clerk webhook data
@@ -596,9 +625,10 @@ export class MemberService {
     clerkUserId: string,
     orgId: string,
     action: "created" | "updated" | "deleted",
+    membershipRole?: string,
   ): Promise<void> {
     if (action === "created") {
-      // Check if this user already exists as a member
+      // Check if this user already exists as a member in this organization
       const existingMember = await this.getMemberByClerkId(clerkUserId, orgId);
 
       if (!existingMember) {
@@ -611,7 +641,7 @@ export class MemberService {
             data: {
               clerkId: clerkUserId,
               orgId,
-              role: memberInOtherOrg.role || Role.MEMBER,
+              role: memberInOtherOrg.role || (membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER),
               username: memberInOtherOrg.username,
               email: memberInOtherOrg.email,
               profileImage: memberInOtherOrg.profileImage,
@@ -624,7 +654,7 @@ export class MemberService {
             data: {
               clerkId: clerkUserId,
               orgId,
-              role: Role.MEMBER,
+              role: membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER,
               username: `${clerkUserId}@temp.local`, // Temporary username
               email: `${clerkUserId}@temp.local`, // Temporary email
               isActive: true,
@@ -632,10 +662,26 @@ export class MemberService {
           });
         }
       } else {
-        // Reactivate existing member
+        // Member already exists - update with organization membership details
+        console.log(`Member already exists for user ${clerkUserId} in org ${orgId}, updating with membership details`);
         await prisma.member.update({
           where: { id: existingMember.id },
-          data: { isActive: true },
+          data: {
+            isActive: true,
+            role: membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER,
+            orgId: orgId, // Ensure orgId is properly set
+          },
+        });
+      }
+    } else if (action === "updated") {
+      // Update member role if membership role changed
+      const member = await this.getMemberByClerkId(clerkUserId, orgId);
+      if (member && membershipRole) {
+        await prisma.member.update({
+          where: { id: member.id },
+          data: {
+            role: membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER,
+          },
         });
       }
     } else if (action === "deleted") {

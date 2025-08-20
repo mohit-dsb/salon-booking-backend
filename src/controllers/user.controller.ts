@@ -11,43 +11,48 @@ export class UserController {
       console.log("Webhook received, verifying...");
       const evt = await verifyWebhook(req);
       console.log("Webhook verified successfully, event type:", evt.type);
+      console.log("Event data keys:", Object.keys(evt.data));
 
       if (evt.type === "user.created") {
-        console.log("Processing user.created event");
+        console.log("Processing user.created event for user:", evt.data.id);
         await this.memberService.createMemberFromWebhook(evt.data);
       }
 
       if (evt.type === "user.updated") {
-        console.log("Processing user.updated event");
+        console.log("Processing user.updated event for user:", evt.data.id);
         await this.memberService.updateMemberFromWebhook(evt.data.id, evt.data);
       }
 
       if (evt.type === "user.deleted" && evt.data.deleted) {
-        console.log("Processing user.deleted event");
+        console.log("Processing user.deleted event for user:", evt.data.id);
         await this.memberService.deleteMemberFromWebhook(evt.data.id as string);
       }
 
       // Handle organization membership events for members
       if (evt.type === "organizationMembership.created") {
         console.log("Processing organizationMembership.created event");
-        const { organization, public_user_data } = evt.data;
+        const { organization, public_user_data, role } = evt.data;
+        console.log("Organization ID:", organization?.id, "User ID:", public_user_data?.user_id, "Role:", role);
         if (organization?.id && public_user_data?.user_id) {
           await this.memberService.handleOrganizationMembership(
             public_user_data.user_id,
             organization.id,
-            'created'
+            'created',
+            role
           );
         }
       }
 
       if (evt.type === "organizationMembership.updated") {
         console.log("Processing organizationMembership.updated event");
-        const { organization, public_user_data } = evt.data;
+        const { organization, public_user_data, role } = evt.data;
+        console.log("Organization ID:", organization?.id, "User ID:", public_user_data?.user_id, "Role:", role);
         if (organization?.id && public_user_data?.user_id) {
           await this.memberService.handleOrganizationMembership(
             public_user_data.user_id,
             organization.id,
-            'updated'
+            'updated',
+            role
           );
         }
       }
@@ -55,6 +60,7 @@ export class UserController {
       if (evt.type === "organizationMembership.deleted") {
         console.log("Processing organizationMembership.deleted event");
         const { organization, public_user_data } = evt.data;
+        console.log("Organization ID:", organization?.id, "User ID:", public_user_data?.user_id);
         if (organization?.id && public_user_data?.user_id) {
           await this.memberService.handleOrganizationMembership(
             public_user_data.user_id,

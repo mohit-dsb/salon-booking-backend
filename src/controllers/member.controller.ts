@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { MemberService } from "@/services/member.service";
+import { parsePaginationParams } from "@/utils/pagination";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
-import { parsePaginationParams } from "@/utils/pagination";
 
 export class MemberController {
   private memberService = new MemberService();
@@ -16,8 +16,8 @@ export class MemberController {
 
     res.status(201).json({
       success: true,
+      data: member,
       message: "Member created successfully",
-      data: member
     });
   });
 
@@ -25,22 +25,22 @@ export class MemberController {
   public getAllMembers = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId } = getAuthWithOrgId(req);
     const pagination = parsePaginationParams(req.query);
-    
+
     // Extract filters from query parameters
     const filters: {
       isActive?: boolean;
       search?: string;
       serviceId?: string;
     } = {};
-    
+
     if (req.query.isActive !== undefined) {
-      filters.isActive = req.query.isActive === 'true';
+      filters.isActive = req.query.isActive === "true";
     }
-    
+
     if (req.query.search) {
       filters.search = req.query.search as string;
     }
-    
+
     if (req.query.serviceId) {
       filters.serviceId = req.query.serviceId as string;
     }
@@ -51,7 +51,7 @@ export class MemberController {
       success: true,
       message: "Members retrieved successfully",
       data: result.members,
-      pagination: result.pagination
+      pagination: result.pagination,
     });
   });
 
@@ -65,7 +65,7 @@ export class MemberController {
     res.status(200).json({
       success: true,
       message: "Member retrieved successfully",
-      data: member
+      data: member,
     });
   });
 
@@ -80,7 +80,7 @@ export class MemberController {
     res.status(200).json({
       success: true,
       message: "Member updated successfully",
-      data: member
+      data: member,
     });
   });
 
@@ -93,7 +93,7 @@ export class MemberController {
 
     res.status(200).json({
       success: true,
-      message: "Member deleted successfully"
+      message: "Member deleted successfully",
     });
   });
 
@@ -107,7 +107,7 @@ export class MemberController {
 
     res.status(200).json({
       success: true,
-      message: "Services assigned successfully"
+      message: "Services assigned successfully",
     });
   });
 
@@ -121,7 +121,7 @@ export class MemberController {
     res.status(200).json({
       success: true,
       message: "Members retrieved successfully",
-      data: members
+      data: members,
     });
   });
 
@@ -134,7 +134,7 @@ export class MemberController {
     res.status(200).json({
       success: true,
       message: "Member statistics retrieved successfully",
-      data: stats
+      data: stats,
     });
   });
 
@@ -145,16 +145,16 @@ export class MemberController {
 
     // Get current member status
     const currentMember = await this.memberService.getMemberById(id, orgId);
-    
+
     // Toggle the status
     const member = await this.memberService.updateMember(id, orgId, {
-      isActive: !currentMember.isActive
+      isActive: !currentMember.isActive,
     });
 
     res.status(200).json({
       success: true,
-      message: `Member ${member.isActive ? 'activated' : 'deactivated'} successfully`,
-      data: member
+      message: `Member ${member.isActive ? "activated" : "deactivated"} successfully`,
+      data: member,
     });
   });
 
@@ -163,20 +163,20 @@ export class MemberController {
     const { orgId } = getAuthWithOrgId(req);
     const { q } = req.query;
 
-    if (!q || typeof q !== 'string') {
+    if (!q || typeof q !== "string") {
       throw new AppError("Search query is required", 400);
     }
 
     const pagination = parsePaginationParams(req.query);
     const result = await this.memberService.getAllMembers(orgId, pagination, {
-      search: q
+      search: q,
     });
 
     res.status(200).json({
       success: true,
       message: "Search completed successfully",
       data: result.members,
-      pagination: result.pagination
+      pagination: result.pagination,
     });
   });
 
@@ -193,28 +193,33 @@ export class MemberController {
     res.status(200).json({
       success: true,
       message: "Member profile retrieved successfully",
-      data: member
+      data: member,
     });
   });
 
   // Update member profile (for the logged-in member)
   public updateMemberProfile = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId, userId } = getAuthWithOrgId(req);
-    
+
     const currentMember = await this.memberService.getMemberByClerkId(userId as string, orgId);
-    
+
     if (!currentMember) {
       throw new AppError("Member profile not found", 404);
     }
 
     // Allow members to update only certain fields
     const allowedFields = [
-      'phone', 'bio', 'profileImage', 'workingHours', 
-      'dateOfBirth', 'address', 'emergencyContact'
+      "phone",
+      "bio",
+      "profileImage",
+      "workingHours",
+      "dateOfBirth",
+      "address",
+      "emergencyContact",
     ];
-    
+
     const updateData: Record<string, unknown> = {};
-    Object.keys(req.body).forEach(key => {
+    Object.keys(req.body).forEach((key) => {
       if (allowedFields.includes(key)) {
         updateData[key] = req.body[key];
       }
@@ -225,7 +230,7 @@ export class MemberController {
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-      data: member
+      data: member,
     });
   });
 }

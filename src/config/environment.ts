@@ -17,6 +17,7 @@ export const env = cleanEnv(process.env, {
   // Clerk configuration
   CLERK_PUBLISHABLE_KEY: str(),
   CLERK_SECRET_KEY: str(),
+  CLERK_WEBHOOK_SECRET: str({ default: "" }),
   // Redis configuration
   REDIS_URL: str({ default: "redis://localhost:6379" }),
   CACHE_TTL: num({ default: 3600 }), // 1 hour

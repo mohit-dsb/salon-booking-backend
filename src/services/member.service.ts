@@ -116,7 +116,7 @@ export class MemberService {
       await clerkClient.organizations.createOrganizationInvitation({
         organizationId: orgId,
         emailAddress: data.email,
-        role: "basic_member",
+        role: "MEMBER",
       });
 
       // Create member in our database

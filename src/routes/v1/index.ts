@@ -2,14 +2,9 @@ import { Router, Request, Response } from "express";
 import categoryRoutes from "@/routes/v1/category.route";
 import serviceRoutes from "@/routes/v1/service.route";
 import memberRoutes from "@/routes/v1/member.route";
-import { UserController } from "@/controllers/user.controller";
 import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 
 const routerV1 = Router();
-
-const userController = new UserController();
-
-routerV1.post("/sync-clerk-user", userController.syncClerkUser);
 
 routerV1.use("/categories", requireAuthWithOrgId, categoryRoutes);
 routerV1.use("/services", requireAuthWithOrgId, serviceRoutes);

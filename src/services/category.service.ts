@@ -125,7 +125,10 @@ export class CategoryService {
   }
 
   // Get all categories for an organization with pagination
-  public async getCategoriesByOrgPaginated(orgId: string, pagination: PaginationParams): Promise<PaginatedResponse<Category>> {
+  public async getCategoriesByOrgPaginated(
+    orgId: string,
+    pagination: PaginationParams,
+  ): Promise<PaginatedResponse<Category>> {
     const cacheKey = `category:${orgId}:paginated:${pagination.page}:${pagination.limit}:${pagination.sortBy}:${pagination.sortOrder}`;
 
     // Try to get from cache first
@@ -140,7 +143,7 @@ export class CategoryService {
     });
 
     // Build orderBy based on sortBy and sortOrder
-    const orderBy: Record<string, 'asc' | 'desc'> = {};
+    const orderBy: Record<string, "asc" | "desc"> = {};
     orderBy[pagination.sortBy] = pagination.sortOrder;
 
     // If not in cache, fetch from database with pagination
@@ -155,12 +158,7 @@ export class CategoryService {
     });
 
     // Create paginated response
-    const paginatedResponse = createPaginatedResponse(
-      categories,
-      totalItems,
-      pagination.page,
-      pagination.limit
-    );
+    const paginatedResponse = createPaginatedResponse(categories, totalItems, pagination.page, pagination.limit);
 
     // Cache the result for 30 minutes (shorter TTL for paginated data)
     await cacheService.set(cacheKey, paginatedResponse, 1800);

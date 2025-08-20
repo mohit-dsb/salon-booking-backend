@@ -5,7 +5,7 @@ import { morganMiddleware } from "@/utils/logger";
 import { errorHandler } from "@/middlewares/error.middleware";
 import express, { Application, Request, Response } from "express";
 import { securityMiddlewares } from "@/middlewares/security.middleware";
-import { UserController } from "@/controllers/user.controller";
+import { MemberController } from "@/controllers/member.controller";
 
 const app: Application = express();
 
@@ -16,8 +16,8 @@ securityMiddlewares.forEach((middleware) => app.use(middleware));
 app.use(morganMiddleware);
 
 // Webhook routes (before body parsing)
-const userController = new UserController();
-app.post("/api/v1/sync-clerk-user", express.raw({ type: "application/json" }), userController.syncClerkUser);
+const memberController = new MemberController();
+app.post("/api/v1/sync-clerk-user", express.raw({ type: "application/json" }), memberController.syncClerkUser);
 
 // Middleware: Body parsers
 app.use(express.json({ limit: "10mb" }));

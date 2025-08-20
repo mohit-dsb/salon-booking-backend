@@ -87,7 +87,7 @@ export const updateMemberSchema = z.object({
     username: z.string().trim().min(1, "Username is required").max(50, "Username too long").optional(),
     email: z.email("Invalid email format").optional(),
     phone: z.string().trim().min(10, "Phone number too short").max(20, "Phone number too long").optional(),
-    profileImage: z.string().url("Invalid image URL").optional(),
+    profileImage: z.url("Invalid image URL").optional(),
     role: roleEnum.optional(),
     jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
     bio: z.string().trim().max(500, "Bio too long").optional(),

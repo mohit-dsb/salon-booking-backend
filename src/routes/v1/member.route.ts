@@ -20,7 +20,7 @@ router.get("/search", validate(searchMemberSchema), memberController.searchMembe
 
 // Profile routes for current user
 router.get("/profile", memberController.getMemberProfile);
-router.put("/profile", memberController.updateMemberProfile);
+router.patch("/profile", memberController.updateMemberProfile);
 
 // Service-specific routes
 router.get("/by-service/:serviceId", validate(serviceParamsSchema), memberController.getMembersByService);
@@ -31,11 +31,11 @@ router.post("/", validate(createMemberSchema), memberController.createMember);
 
 // Parameterized routes (must come after static routes)
 router.get("/:id", validate(memberParamsSchema), memberController.getMemberById);
-router.put("/:id", validate(memberParamsSchema), validate(updateMemberSchema), memberController.updateMember);
+router.patch("/:id", validate(memberParamsSchema), validate(updateMemberSchema), memberController.updateMember);
 router.delete("/:id", validate(memberParamsSchema), memberController.deleteMember);
 
 // Member service management
-router.put(
+router.patch(
   "/:id/services",
   validate(memberParamsSchema),
   validate(assignServicesSchema),

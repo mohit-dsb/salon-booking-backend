@@ -1,5 +1,7 @@
 import { prisma } from "@/config/prisma";
-import { clerkClient, type UserJSON } from "@clerk/express";
+import type { UserJSON } from "@clerk/express";
+import { cacheService } from "./cache.service";
+import { clerkClient } from "@/config/clerkClient";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
 import { Member, MemberService as PrismaMemberService, Role } from "@prisma/client";
@@ -103,6 +105,45 @@ export class MemberService {
     },
   };
 
+  // Cache key generators
+  private getCacheKey(orgId: string, suffix: string): string {
+    return `member:${orgId}:${suffix}`;
+  }
+
+  private getMemberCacheKey(memberId: string, orgId: string): string {
+    return this.getCacheKey(orgId, `id:${memberId}`);
+  }
+
+  private getMemberByClerkIdCacheKey(clerkId: string, orgId: string): string {
+    return this.getCacheKey(orgId, `clerk:${clerkId}`);
+  }
+
+  private getAllMembersCacheKey(
+    orgId: string,
+    pagination: PaginationParams,
+    filters?: {
+      isActive?: boolean;
+      search?: string;
+      serviceId?: string;
+    },
+  ): string {
+    const filterKey = filters ? `filters:${JSON.stringify(filters)}` : "all";
+    return this.getCacheKey(orgId, `list:${pagination.page}:${pagination.limit}:${filterKey}`);
+  }
+
+  private getMemberStatsCacheKey(orgId: string): string {
+    return this.getCacheKey(orgId, "stats");
+  }
+
+  private getMembersByServiceCacheKey(serviceId: string, orgId: string): string {
+    return this.getCacheKey(orgId, `service:${serviceId}`);
+  }
+
+  // Cache invalidation helper
+  private async invalidateMemberCache(orgId: string): Promise<void> {
+    await cacheService.invalidatePattern(`member:${orgId}:*`);
+  }
+
   // Private helper to validate organization membership
   private async validateOrgMembership(orgId: string): Promise<void> {
     if (!orgId || orgId.trim() === "") {
@@ -185,8 +226,24 @@ export class MemberService {
       if (data.serviceIds && data.serviceIds.length > 0) {
         await this.assignServicesToMember(member.id, orgId, data.serviceIds);
         // Return updated member with services
-        return this.getMemberById(member.id, orgId);
+        const updatedMember = await this.getMemberById(member.id, orgId);
+
+        // Cache the created member
+        const memberCacheKey = this.getMemberCacheKey(member.id, orgId);
+        await cacheService.set(memberCacheKey, updatedMember, 3600); // 1 hour cache
+
+        // Invalidate list caches
+        await this.invalidateMemberCache(orgId);
+
+        return updatedMember;
       }
+
+      // Cache the created member
+      const memberCacheKey = this.getMemberCacheKey(member.id, orgId);
+      await cacheService.set(memberCacheKey, member, 3600); // 1 hour cache
+
+      // Invalidate list caches
+      await this.invalidateMemberCache(orgId);
 
       return member;
     } catch (error) {
@@ -206,6 +263,14 @@ export class MemberService {
       throw new AppError("Member ID is required", 400);
     }
 
+    // Check cache first
+    const cacheKey = this.getMemberCacheKey(id, orgId);
+    const cached = await cacheService.get<MemberWithServices>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
     const member = await prisma.member.findFirst({
       where: { id, orgId },
       include: this.memberInclude,
@@ -214,6 +279,9 @@ export class MemberService {
     if (!member) {
       throw new AppError("Member not found", 404);
     }
+
+    // Cache the result for 1 hour
+    await cacheService.set(cacheKey, member, 3600);
 
     return member;
   }
@@ -226,10 +294,24 @@ export class MemberService {
       throw new AppError("Clerk ID is required", 400);
     }
 
-    return await prisma.member.findFirst({
+    // Check cache first
+    const cacheKey = this.getMemberByClerkIdCacheKey(clerkId, orgId);
+    const cached = await cacheService.get<MemberWithServices | null>(cacheKey);
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const member = await prisma.member.findFirst({
       where: { clerkId, orgId },
       include: this.memberInclude,
     });
+
+    // Cache the result for 1 hour (cache null results with shorter TTL)
+    const ttl = member ? 3600 : 300; // 5 minutes for null results
+    await cacheService.set(cacheKey, member, ttl);
+
+    return member;
   }
 
   // Get all members for an organization with pagination
@@ -246,29 +328,49 @@ export class MemberService {
 
     const { page, limit, skip } = pagination;
 
+    // Check cache first
+    const cacheKey = this.getAllMembersCacheKey(orgId, pagination, filters);
+    const cached = await cacheService.get<{
+      members: MemberWithServices[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    }>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
     // Build where clause
-    const whereConditions = {
-      orgId,
-      // Exclude global users (empty orgId)
-      AND: [{ orgId: { not: "" } }],
-      ...(filters?.isActive !== undefined && { isActive: filters.isActive }),
-      ...(filters?.search &&
-        filters.search.trim() !== "" && {
-          OR: [
-            { username: { contains: filters.search.trim(), mode: "insensitive" as const } },
-            { email: { contains: filters.search.trim(), mode: "insensitive" as const } },
-            { jobTitle: { contains: filters.search.trim(), mode: "insensitive" as const } },
-          ],
-        }),
-      ...(filters?.serviceId &&
-        filters.serviceId.trim() !== "" && {
-          memberServices: {
-            some: {
-              serviceId: filters.serviceId.trim(),
-            },
-          },
-        }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereConditions: Record<string, any> = {
+      // Filter by organization and exclude global users (empty orgId)
+      AND: [{ orgId }, { orgId: { not: "" } }],
     };
+
+    // Add filters conditionally
+    if (filters?.isActive !== undefined) {
+      whereConditions.isActive = filters.isActive;
+    }
+
+    if (filters?.search && filters.search.trim() !== "") {
+      whereConditions.OR = [
+        { username: { contains: filters.search.trim(), mode: "insensitive" as const } },
+        { email: { contains: filters.search.trim(), mode: "insensitive" as const } },
+        { jobTitle: { contains: filters.search.trim(), mode: "insensitive" as const } },
+      ];
+    }
+
+    if (filters?.serviceId && filters.serviceId.trim() !== "") {
+      whereConditions.memberServices = {
+        some: {
+          serviceId: filters.serviceId.trim(),
+        },
+      };
+    }
 
     try {
       const [members, total] = await Promise.all([
@@ -282,7 +384,7 @@ export class MemberService {
         prisma.member.count({ where: whereConditions }),
       ]);
 
-      return {
+      const result = {
         members,
         pagination: {
           page,
@@ -291,6 +393,11 @@ export class MemberService {
           totalPages: Math.ceil(total / limit),
         },
       };
+
+      // Cache the result for 30 minutes (shorter TTL for paginated lists)
+      await cacheService.set(cacheKey, result, 1800);
+
+      return result;
     } catch (error) {
       console.error("Error fetching members:", error);
       throw new AppError("Failed to fetch members", 500);
@@ -325,12 +432,27 @@ export class MemberService {
       if (data.email || data.username) {
         const updateData: {
           username?: string;
-          primaryEmailAddressID?: string;
+          primaryEmailAddressId?: string;
         } = {};
         if (data.username) updateData.username = data.username;
-        if (data.email) updateData.primaryEmailAddressID = data.email;
 
-        await clerkClient.users.updateUser(existingMember.clerkId, updateData);
+        // For email updates, we need to handle it properly
+        if (data.email) {
+          // First, add the new email address and mark it as verified for admin updates
+          const newEmailAddress = await clerkClient.emailAddresses.createEmailAddress({
+            userId: existingMember.clerkId,
+            emailAddress: data.email,
+            verified: true, // Skip verification for admin-created emails
+          });
+
+          // Set the new email as primary
+          updateData.primaryEmailAddressId = newEmailAddress.id;
+        }
+
+        // Update the user with any other changes
+        if (Object.keys(updateData).length > 0) {
+          await clerkClient.users.updateUser(existingMember.clerkId, updateData);
+        }
       }
 
       // Extract serviceIds before updating member
@@ -355,7 +477,12 @@ export class MemberService {
         await this.assignServicesToMember(id, orgId, serviceIds);
       }
 
-      return this.getMemberById(id, orgId);
+      const updatedMember = await this.getMemberById(id, orgId);
+
+      // Invalidate all member-related caches for this organization
+      await this.invalidateMemberCache(orgId);
+
+      return updatedMember;
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
@@ -378,6 +505,9 @@ export class MemberService {
       await prisma.member.delete({
         where: { id },
       });
+
+      // Invalidate all member-related caches for this organization
+      await this.invalidateMemberCache(orgId);
     } catch (_error) {
       throw new AppError("Failed to delete member", 500);
     }
@@ -415,11 +545,22 @@ export class MemberService {
         })),
       });
     }
+
+    // Invalidate member-related caches as service assignments have changed
+    await this.invalidateMemberCache(orgId);
   }
 
   // Get members by service
   public async getMembersByService(serviceId: string, orgId: string): Promise<MemberWithServices[]> {
-    return await prisma.member.findMany({
+    // Check cache first
+    const cacheKey = this.getMembersByServiceCacheKey(serviceId, orgId);
+    const cached = await cacheService.get<MemberWithServices[]>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
+    const members = await prisma.member.findMany({
       where: {
         orgId,
         isActive: true,
@@ -446,6 +587,11 @@ export class MemberService {
       },
       orderBy: { username: "asc" },
     });
+
+    // Cache the result for 1 hour
+    await cacheService.set(cacheKey, members, 3600);
+
+    return members;
   }
 
   // Sync member data from Clerk webhook
@@ -486,26 +632,46 @@ export class MemberService {
 
   // Get member statistics
   public async getMemberStats(orgId: string) {
+    // Check cache first
+    const cacheKey = this.getMemberStatsCacheKey(orgId);
+    const cached = await cacheService.get<{
+      totalMembers: number;
+      activeMembers: number;
+      inactiveMembers: number;
+    }>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
     const [totalMembers, activeMembers, inactiveMembers] = await Promise.all([
       prisma.member.count({ where: { orgId } }),
       prisma.member.count({ where: { orgId, isActive: true } }),
       prisma.member.count({ where: { orgId, isActive: false } }),
     ]);
 
-    return {
+    const stats = {
       totalMembers,
       activeMembers,
       inactiveMembers,
     };
+
+    // Cache the result for 15 minutes (stats change less frequently)
+    await cacheService.set(cacheKey, stats, 900);
+
+    return stats;
   }
 
   // Toggle member status
   public async toggleMemberStatus(id: string, orgId: string): Promise<MemberWithServices> {
     const currentMember = await this.getMemberById(id, orgId);
 
-    return await this.updateMember(id, orgId, {
+    const updatedMember = await this.updateMember(id, orgId, {
       isActive: !currentMember.isActive,
     });
+
+    // Note: updateMember already invalidates cache, so no need to do it again
+    return updatedMember;
   }
 
   // Search members with pagination
@@ -600,6 +766,8 @@ export class MemberService {
         });
         console.log(`Updated existing global user record for ${id}`);
       }
+
+      // No cache invalidation needed for global users as they're not org-specific
       return;
     }
 
@@ -624,6 +792,9 @@ export class MemberService {
             isActive: true,
           },
         });
+
+        // Invalidate cache for this organization
+        await this.invalidateMemberCache(orgId);
       } else {
         console.log(`Member already exists for user ${id} in organization ${orgId}, updating details`);
         await prisma.member.update({
@@ -637,6 +808,9 @@ export class MemberService {
             orgId: orgId, // Ensure orgId is properly set
           },
         });
+
+        // Invalidate cache for this organization
+        await this.invalidateMemberCache(orgId);
       }
     }
   }
@@ -665,15 +839,33 @@ export class MemberService {
           profileImage: image_url || member.profileImage,
         },
       });
+
+      // Invalidate cache for each organization
+      if (member.orgId && member.orgId !== "") {
+        await this.invalidateMemberCache(member.orgId);
+      }
     }
   }
 
   // Delete member from Clerk webhook data
   public async deleteMemberFromWebhook(clerkId: string): Promise<void> {
+    // Get all organizations this member belongs to before deletion
+    const members = await prisma.member.findMany({
+      where: { clerkId },
+      select: { orgId: true },
+    });
+
     // Delete all instances of this member across organizations
     await prisma.member.deleteMany({
       where: { clerkId },
     });
+
+    // Invalidate cache for all affected organizations
+    for (const member of members) {
+      if (member.orgId && member.orgId !== "") {
+        await this.invalidateMemberCache(member.orgId);
+      }
+    }
   }
 
   // Check if member exists by Clerk ID (across all organizations)
@@ -723,6 +915,9 @@ export class MemberService {
               isActive: true,
             },
           });
+
+          // Invalidate cache for this organization
+          await this.invalidateMemberCache(orgId);
         } else {
           // Check if they exist in another organization
           const memberInOtherOrg = await this.getMemberByClerkIdAny(clerkUserId);
@@ -740,6 +935,9 @@ export class MemberService {
                 isActive: true,
               },
             });
+
+            // Invalidate cache for this organization
+            await this.invalidateMemberCache(orgId);
           } else {
             // Create a minimal member record - will be updated when they complete profile
             await prisma.member.create({
@@ -752,6 +950,9 @@ export class MemberService {
                 isActive: true,
               },
             });
+
+            // Invalidate cache for this organization
+            await this.invalidateMemberCache(orgId);
           }
         }
       } else {
@@ -765,6 +966,9 @@ export class MemberService {
             orgId: orgId, // Ensure orgId is properly set
           },
         });
+
+        // Invalidate cache for this organization
+        await this.invalidateMemberCache(orgId);
       }
     } else if (action === "updated") {
       // Update member role if membership role changed
@@ -776,6 +980,9 @@ export class MemberService {
             role: membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER,
           },
         });
+
+        // Invalidate cache for this organization
+        await this.invalidateMemberCache(orgId);
       }
     } else if (action === "deleted") {
       // Deactivate member in this organization
@@ -785,6 +992,9 @@ export class MemberService {
           where: { id: member.id },
           data: { isActive: false },
         });
+
+        // Invalidate cache for this organization
+        await this.invalidateMemberCache(orgId);
       }
     }
   }

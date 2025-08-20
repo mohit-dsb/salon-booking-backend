@@ -1,5 +1,8 @@
 import z from "zod";
 
+// Role enum
+export const roleEnum = z.enum(["ADMIN", "MEMBER"]);
+
 // Working hours schema
 const workingHoursSchema = z.object({
   monday: z
@@ -132,6 +135,7 @@ export const createMemberSchema = z.object({
     lastName: z.string().trim().min(1).max(50),
     email: z.email(),
     phone: z.string().min(10).max(20).optional(),
+    role: roleEnum.optional().default("MEMBER"),
     jobTitle: z.string().trim().min(1).max(100).optional(),
     bio: z.string().trim().max(500).optional(),
     workingHours: workingHoursSchema.optional(),
@@ -152,6 +156,7 @@ export const updateMemberSchema = z.object({
     email: z.email().optional(),
     phone: z.string().min(10).max(20).optional(),
     profileImage: z.url().optional(),
+    role: roleEnum.optional(),
     jobTitle: z.string().trim().min(1).max(100).optional(),
     bio: z.string().trim().max(500).optional(),
     workingHours: workingHoursSchema.optional(),
@@ -177,6 +182,7 @@ export const inviteMemberSchema = z.object({
     email: z.email(),
     firstName: z.string().trim().min(1).max(50),
     lastName: z.string().trim().min(1).max(50),
+    role: roleEnum.optional().default("MEMBER"),
     jobTitle: z.string().trim().min(1).max(100).optional(),
     serviceIds: z.array(z.string()).optional(),
   }),

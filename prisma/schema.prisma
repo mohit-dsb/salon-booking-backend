@@ -13,15 +13,6 @@ enum Role {
   MEMBER
 }
 
-model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId   String   @unique
-  role      Role     @default(MEMBER)
-  orgId     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Category {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String // Original name with proper casing for display
@@ -67,6 +58,7 @@ model Member {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   clerkId           String   @unique
   orgId             String
+  role              Role     @default(MEMBER)
   firstName         String
   lastName          String
   email             String

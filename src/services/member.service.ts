@@ -1,8 +1,8 @@
 import { prisma } from "@/config/prisma";
-import { clerkClient } from "@clerk/express";
+import { clerkClient, type UserJSON } from "@clerk/express";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
-import { Member, MemberService as PrismaMemberService } from "@prisma/client";
+import { Member, MemberService as PrismaMemberService, Role } from "@prisma/client";
 
 // Type definitions for better type safety
 export interface WorkingHours {
@@ -517,5 +517,150 @@ export class MemberService {
       activeMembers,
       inactiveMembers,
     };
+  }
+
+  // ========== USER-RELATED METHODS (replacing UserService) ==========
+
+  // Create member from Clerk webhook data
+  public async createMemberFromWebhook(userData: UserJSON): Promise<void> {
+    const { id, email_addresses, first_name, last_name, image_url, organization_memberships } = userData;
+
+    // Extract primary email
+    const primaryEmail = email_addresses?.find(
+      (email) => email.id === userData.primary_email_address_id,
+    )?.email_address;
+
+    if (!primaryEmail) {
+      console.warn(`No primary email found for user ${id}, skipping member creation`);
+      return;
+    }
+
+    const orgId = organization_memberships?.[0]?.id || "";
+    const role = organization_memberships?.[0]?.role || Role.MEMBER;
+    await prisma.member.create({
+      data: {
+        clerkId: id,
+        orgId: orgId,
+        role: role as Role,
+        firstName: first_name || "",
+        lastName: last_name || "",
+        email: primaryEmail,
+        profileImage: image_url,
+        isActive: Boolean(orgId),
+      },
+    });
+  }
+
+  // Update member from Clerk webhook data
+  public async updateMemberFromWebhook(clerkId: string, userData: UserJSON): Promise<void> {
+    const { email_addresses, first_name, last_name, image_url } = userData;
+
+    // Extract primary email
+    const primaryEmail = email_addresses?.find(
+      (email) => email.id === userData.primary_email_address_id,
+    )?.email_address;
+
+    // Find all members with this clerkId (they might be in multiple organizations)
+    const members = await prisma.member.findMany({
+      where: { clerkId },
+    });
+
+    // Update all instances of this member across organizations
+    for (const member of members) {
+      await prisma.member.update({
+        where: { id: member.id },
+        data: {
+          firstName: first_name || member.firstName,
+          lastName: last_name || member.lastName,
+          email: primaryEmail || member.email,
+          profileImage: image_url || member.profileImage,
+        },
+      });
+    }
+  }
+
+  // Delete member from Clerk webhook data
+  public async deleteMemberFromWebhook(clerkId: string): Promise<void> {
+    // Delete all instances of this member across organizations
+    await prisma.member.deleteMany({
+      where: { clerkId },
+    });
+  }
+
+  // Check if member exists by Clerk ID (across all organizations)
+  public async memberExistsByClerkId(clerkId: string): Promise<boolean> {
+    const member = await prisma.member.findFirst({
+      where: { clerkId },
+      select: { id: true },
+    });
+    return !!member;
+  }
+
+  // Get member by Clerk ID (first match across organizations)
+  public async getMemberByClerkIdAny(clerkId: string): Promise<Member | null> {
+    return await prisma.member.findFirst({
+      where: { clerkId },
+    });
+  }
+
+  // Handle organization membership events
+  public async handleOrganizationMembership(
+    clerkUserId: string,
+    orgId: string,
+    action: "created" | "updated" | "deleted",
+  ): Promise<void> {
+    if (action === "created") {
+      // Check if this user already exists as a member
+      const existingMember = await this.getMemberByClerkId(clerkUserId, orgId);
+
+      if (!existingMember) {
+        // Check if they exist in another organization
+        const memberInOtherOrg = await this.getMemberByClerkIdAny(clerkUserId);
+
+        if (memberInOtherOrg) {
+          // Create a new member record for this organization based on existing data
+          await prisma.member.create({
+            data: {
+              clerkId: clerkUserId,
+              orgId,
+              role: Role.MEMBER,
+              firstName: memberInOtherOrg.firstName,
+              lastName: memberInOtherOrg.lastName,
+              email: memberInOtherOrg.email,
+              profileImage: memberInOtherOrg.profileImage,
+              isActive: true,
+            },
+          });
+        } else {
+          // Create a minimal member record - will be updated when they complete profile
+          await prisma.member.create({
+            data: {
+              clerkId: clerkUserId,
+              orgId,
+              role: Role.MEMBER,
+              firstName: "New",
+              lastName: "Member",
+              email: `${clerkUserId}@temp.local`, // Temporary email
+              isActive: true,
+            },
+          });
+        }
+      } else {
+        // Reactivate existing member
+        await prisma.member.update({
+          where: { id: existingMember.id },
+          data: { isActive: true },
+        });
+      }
+    } else if (action === "deleted") {
+      // Deactivate member in this organization
+      const member = await this.getMemberByClerkId(clerkUserId, orgId);
+      if (member) {
+        await prisma.member.update({
+          where: { id: member.id },
+          data: { isActive: false },
+        });
+      }
+    }
   }
 }

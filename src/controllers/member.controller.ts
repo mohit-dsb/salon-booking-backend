@@ -26,7 +26,7 @@ export class MemberController {
     const { orgId } = getAuthWithOrgId(req);
     const pagination = parsePaginationParams(req.query);
 
-    // Extract filters from query parameters
+    // Extract filters from query parameters (validated by middleware)
     const filters: {
       isActive?: boolean;
       search?: string;
@@ -143,13 +143,7 @@ export class MemberController {
     const { orgId } = getAuthWithOrgId(req);
     const { id } = req.params;
 
-    // Get current member status
-    const currentMember = await this.memberService.getMemberById(id, orgId);
-
-    // Toggle the status
-    const member = await this.memberService.updateMember(id, orgId, {
-      isActive: !currentMember.isActive,
-    });
+    const member = await this.memberService.toggleMemberStatus(id, orgId);
 
     res.status(200).json({
       success: true,
@@ -163,14 +157,8 @@ export class MemberController {
     const { orgId } = getAuthWithOrgId(req);
     const { q } = req.query;
 
-    if (!q || typeof q !== "string") {
-      throw new AppError("Search query is required", 400);
-    }
-
     const pagination = parsePaginationParams(req.query);
-    const result = await this.memberService.getAllMembers(orgId, pagination, {
-      search: q,
-    });
+    const result = await this.memberService.searchMembers(orgId, q as string, pagination);
 
     res.status(200).json({
       success: true,
@@ -201,31 +189,7 @@ export class MemberController {
   public updateMemberProfile = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId, userId } = getAuthWithOrgId(req);
 
-    const currentMember = await this.memberService.getMemberByClerkId(userId as string, orgId);
-
-    if (!currentMember) {
-      throw new AppError("Member profile not found", 404);
-    }
-
-    // Allow members to update only certain fields
-    const allowedFields = [
-      "phone",
-      "bio",
-      "profileImage",
-      "workingHours",
-      "dateOfBirth",
-      "address",
-      "emergencyContact",
-    ];
-
-    const updateData: Record<string, unknown> = {};
-    Object.keys(req.body).forEach((key) => {
-      if (allowedFields.includes(key)) {
-        updateData[key] = req.body[key];
-      }
-    });
-
-    const member = await this.memberService.updateMember(currentMember.id, orgId, updateData);
+    const member = await this.memberService.updateMemberProfile(userId as string, orgId, req.body);
 
     res.status(200).json({
       success: true,

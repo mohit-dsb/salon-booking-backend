@@ -40,6 +40,7 @@ export interface CreateMemberData {
   username: string;
   email: string;
   phone?: string;
+  role?: Role;
   jobTitle?: string;
   bio?: string;
   workingHours?: WorkingHours;
@@ -57,6 +58,7 @@ export interface UpdateMemberData {
   email?: string;
   phone?: string;
   profileImage?: string;
+  role?: Role;
   jobTitle?: string;
   bio?: string;
   workingHours?: WorkingHours;
@@ -84,8 +86,49 @@ export interface MemberWithServices extends Member {
 }
 
 export class MemberService {
+  // Private helper to build member include object (for reusability)
+  private readonly memberInclude = {
+    memberServices: {
+      include: {
+        service: {
+          include: {
+            category: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
+  // Private helper to validate organization membership
+  private async validateOrgMembership(orgId: string): Promise<void> {
+    if (!orgId || orgId.trim() === "") {
+      throw new AppError("Organization ID is required", 400);
+    }
+  }
+
+  // Private helper to parse date strings
+  private parseDate(dateString?: string): Date | undefined {
+    if (!dateString) return undefined;
+
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      throw new AppError("Invalid date format", 400);
+    }
+    return date;
+  }
   // Create a new member and sync with Clerk
   public async createMember(orgId: string, data: CreateMemberData): Promise<MemberWithServices> {
+    await this.validateOrgMembership(orgId);
+
+    // Validate required fields
+    if (!data.email || !data.username) {
+      throw new AppError("Email and username are required", 400);
+    }
+
     // First, check if member with this email already exists in the organization
     const existingMember = await prisma.member.findUnique({
       where: {
@@ -104,7 +147,7 @@ export class MemberService {
       // Create user in Clerk with minimal information
       const clerkUser = await clerkClient.users.createUser({
         emailAddress: [data.email],
-        username: data.username || "",
+        username: data.username,
         skipPasswordRequirement: true, // They'll set password via invitation email
         skipPasswordChecks: true,
       });
@@ -113,7 +156,7 @@ export class MemberService {
       await clerkClient.organizations.createOrganizationInvitation({
         organizationId: orgId,
         emailAddress: data.email,
-        role: "MEMBER",
+        role: data.role === Role.ADMIN ? "admin" : "basic_member",
       });
 
       // Create member in our database
@@ -121,6 +164,7 @@ export class MemberService {
         data: {
           clerkId: clerkUser.id,
           orgId,
+          role: data.role || Role.MEMBER,
           username: data.username,
           email: data.email,
           phone: data.phone,
@@ -129,61 +173,42 @@ export class MemberService {
           workingHours: data.workingHours,
           commissionRate: data.commissionRate,
           hourlyRate: data.hourlyRate,
-          dateOfBirth: data.dateOfBirth,
+          dateOfBirth: typeof data.dateOfBirth === "string" ? this.parseDate(data.dateOfBirth) : data.dateOfBirth,
           address: data.address,
           emergencyContact: data.emergencyContact,
-          startDate: data.startDate || new Date(),
+          startDate: typeof data.startDate === "string" ? this.parseDate(data.startDate) : data.startDate || new Date(),
         },
-        include: {
-          memberServices: {
-            include: {
-              service: {
-                include: {
-                  category: {
-                    select: {
-                      name: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+        include: this.memberInclude,
       });
 
       // Assign services if provided
       if (data.serviceIds && data.serviceIds.length > 0) {
         await this.assignServicesToMember(member.id, orgId, data.serviceIds);
+        // Return updated member with services
+        return this.getMemberById(member.id, orgId);
       }
 
-      return this.getMemberById(member.id, orgId);
+      return member;
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
+      console.error("Error creating member:", error);
       throw new AppError("Failed to create member", 500);
     }
   }
 
   // Get member by ID with services
   public async getMemberById(id: string, orgId: string): Promise<MemberWithServices> {
+    await this.validateOrgMembership(orgId);
+
+    if (!id || id.trim() === "") {
+      throw new AppError("Member ID is required", 400);
+    }
+
     const member = await prisma.member.findFirst({
       where: { id, orgId },
-      include: {
-        memberServices: {
-          include: {
-            service: {
-              include: {
-                category: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      include: this.memberInclude,
     });
 
     if (!member) {
@@ -195,23 +220,15 @@ export class MemberService {
 
   // Get member by Clerk ID
   public async getMemberByClerkId(clerkId: string, orgId: string): Promise<MemberWithServices | null> {
+    await this.validateOrgMembership(orgId);
+
+    if (!clerkId || clerkId.trim() === "") {
+      throw new AppError("Clerk ID is required", 400);
+    }
+
     return await prisma.member.findFirst({
       where: { clerkId, orgId },
-      include: {
-        memberServices: {
-          include: {
-            service: {
-              include: {
-                category: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      include: this.memberInclude,
     });
   }
 
@@ -225,82 +242,65 @@ export class MemberService {
       serviceId?: string;
     },
   ) {
+    await this.validateOrgMembership(orgId);
+
     const { page, limit, skip } = pagination;
 
     // Build where clause
-    const where: {
-      orgId: string;
-      isActive?: boolean;
-      OR?: Array<{
-        username?: { contains: string; mode: "insensitive" };
-        email?: { contains: string; mode: "insensitive" };
-        jobTitle?: { contains: string; mode: "insensitive" };
-      }>;
-      memberServices?: {
-        some: {
-          serviceId: string;
-        };
-      };
-    } = { orgId };
-
-    if (filters?.isActive !== undefined) {
-      where.isActive = filters.isActive;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        { username: { contains: filters.search, mode: "insensitive" } },
-        { email: { contains: filters.search, mode: "insensitive" } },
-        { jobTitle: { contains: filters.search, mode: "insensitive" } },
-      ];
-    }
-
-    if (filters?.serviceId) {
-      where.memberServices = {
-        some: {
-          serviceId: filters.serviceId,
-        },
-      };
-    }
-
-    const [members, total] = await Promise.all([
-      prisma.member.findMany({
-        where,
-        include: {
+    const whereConditions = {
+      orgId,
+      // Exclude global users (empty orgId)
+      AND: [{ orgId: { not: "" } }],
+      ...(filters?.isActive !== undefined && { isActive: filters.isActive }),
+      ...(filters?.search &&
+        filters.search.trim() !== "" && {
+          OR: [
+            { username: { contains: filters.search.trim(), mode: "insensitive" as const } },
+            { email: { contains: filters.search.trim(), mode: "insensitive" as const } },
+            { jobTitle: { contains: filters.search.trim(), mode: "insensitive" as const } },
+          ],
+        }),
+      ...(filters?.serviceId &&
+        filters.serviceId.trim() !== "" && {
           memberServices: {
-            include: {
-              service: {
-                include: {
-                  category: {
-                    select: {
-                      name: true,
-                    },
-                  },
-                },
-              },
+            some: {
+              serviceId: filters.serviceId.trim(),
             },
           },
-        },
-        orderBy: { createdAt: "desc" },
-        skip,
-        take: limit,
-      }),
-      prisma.member.count({ where }),
-    ]);
-
-    return {
-      members,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+        }),
     };
+
+    try {
+      const [members, total] = await Promise.all([
+        prisma.member.findMany({
+          where: whereConditions,
+          include: this.memberInclude,
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit,
+        }),
+        prisma.member.count({ where: whereConditions }),
+      ]);
+
+      return {
+        members,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching members:", error);
+      throw new AppError("Failed to fetch members", 500);
+    }
   }
 
   // Update member
   public async updateMember(id: string, orgId: string, data: UpdateMemberData): Promise<MemberWithServices> {
+    await this.validateOrgMembership(orgId);
+
     // Check if member exists
     const existingMember = await this.getMemberById(id, orgId);
 
@@ -336,29 +336,18 @@ export class MemberService {
       // Extract serviceIds before updating member
       const { serviceIds, ...memberData } = data;
 
+      // Parse dates properly
+      const parsedData = {
+        ...memberData,
+        dateOfBirth:
+          typeof memberData.dateOfBirth === "string" ? this.parseDate(memberData.dateOfBirth) : memberData.dateOfBirth,
+        endDate: typeof memberData.endDate === "string" ? this.parseDate(memberData.endDate) : memberData.endDate,
+      };
+
       // Update member in database
       await prisma.member.update({
         where: { id },
-        data: {
-          ...memberData,
-          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
-          endDate: data.endDate ? new Date(data.endDate) : undefined,
-        },
-        include: {
-          memberServices: {
-            include: {
-              service: {
-                include: {
-                  category: {
-                    select: {
-                      name: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+        data: parsedData,
       });
 
       // Update service assignments if provided
@@ -371,6 +360,7 @@ export class MemberService {
       if (error instanceof AppError) {
         throw error;
       }
+      console.error("Error updating member:", error);
       throw new AppError("Failed to update member", 500);
     }
   }
@@ -509,6 +499,56 @@ export class MemberService {
     };
   }
 
+  // Toggle member status
+  public async toggleMemberStatus(id: string, orgId: string): Promise<MemberWithServices> {
+    const currentMember = await this.getMemberById(id, orgId);
+
+    return await this.updateMember(id, orgId, {
+      isActive: !currentMember.isActive,
+    });
+  }
+
+  // Search members with pagination
+  public async searchMembers(orgId: string, query: string, pagination: PaginationParams) {
+    return await this.getAllMembers(orgId, pagination, {
+      search: query,
+    });
+  }
+
+  // Update member profile with restricted fields
+  public async updateMemberProfile(
+    clerkId: string,
+    orgId: string,
+    updateData: Record<string, unknown>,
+  ): Promise<MemberWithServices> {
+    const currentMember = await this.getMemberByClerkId(clerkId, orgId);
+
+    if (!currentMember) {
+      throw new AppError("Member profile not found", 404);
+    }
+
+    // Allow members to update only certain fields
+    const allowedFields = [
+      "username",
+      "phone",
+      "bio",
+      "profileImage",
+      "workingHours",
+      "dateOfBirth",
+      "address",
+      "emergencyContact",
+    ];
+
+    const filteredUpdateData: Record<string, unknown> = {};
+    Object.keys(updateData).forEach((key) => {
+      if (allowedFields.includes(key)) {
+        filteredUpdateData[key] = updateData[key];
+      }
+    });
+
+    return await this.updateMember(currentMember.id, orgId, filteredUpdateData);
+  }
+
   // ========== USER-RELATED METHODS ==========
 
   // Create member from Clerk webhook data
@@ -527,7 +567,39 @@ export class MemberService {
 
     // Check if user has organization memberships
     if (!organization_memberships || organization_memberships.length === 0) {
-      console.log(`User ${id} created without organization membership, skipping member creation for now`);
+      console.log(`User ${id} created without organization membership, creating a global user record`);
+
+      // Create a global user record without organization (orgId will be empty)
+      // This will be updated later when they're added to an organization via organizationMembership.created
+      const existingGlobalUser = await prisma.member.findFirst({
+        where: { clerkId: id, orgId: "" },
+      });
+
+      if (!existingGlobalUser) {
+        await prisma.member.create({
+          data: {
+            clerkId: id,
+            orgId: "", // Empty orgId for users not yet in any organization
+            role: Role.MEMBER, // Default role
+            username: username || "",
+            email: primaryEmail,
+            profileImage: image_url,
+            isActive: false, // Inactive until they join an organization
+          },
+        });
+        console.log(`Created global user record for ${id} without organization`);
+      } else {
+        // Update existing global user record
+        await prisma.member.update({
+          where: { id: existingGlobalUser.id },
+          data: {
+            username: username || existingGlobalUser.username,
+            email: primaryEmail,
+            profileImage: image_url || existingGlobalUser.profileImage,
+          },
+        });
+        console.log(`Updated existing global user record for ${id}`);
+      }
       return;
     }
 
@@ -613,10 +685,13 @@ export class MemberService {
     return !!member;
   }
 
-  // Get member by Clerk ID (first match across organizations)
+  // Get member by Clerk ID (first match across organizations, excluding global users)
   public async getMemberByClerkIdAny(clerkId: string): Promise<Member | null> {
     return await prisma.member.findFirst({
-      where: { clerkId },
+      where: {
+        clerkId,
+        orgId: { not: "" }, // Exclude global users (empty orgId)
+      },
     });
   }
 
@@ -632,34 +707,52 @@ export class MemberService {
       const existingMember = await this.getMemberByClerkId(clerkUserId, orgId);
 
       if (!existingMember) {
-        // Check if they exist in another organization
-        const memberInOtherOrg = await this.getMemberByClerkIdAny(clerkUserId);
+        // Check if they exist as a global user (empty orgId) or in another organization
+        const globalUser = await prisma.member.findFirst({
+          where: { clerkId: clerkUserId, orgId: "" },
+        });
 
-        if (memberInOtherOrg) {
-          // Create a new member record for this organization based on existing data
-          await prisma.member.create({
+        if (globalUser) {
+          console.log(`Found global user record for ${clerkUserId}, converting to organization member`);
+          // Update the global user record to be part of this organization
+          await prisma.member.update({
+            where: { id: globalUser.id },
             data: {
-              clerkId: clerkUserId,
-              orgId,
-              role: memberInOtherOrg.role || (membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER),
-              username: memberInOtherOrg.username,
-              email: memberInOtherOrg.email,
-              profileImage: memberInOtherOrg.profileImage,
+              orgId: orgId,
+              role: membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER,
               isActive: true,
             },
           });
         } else {
-          // Create a minimal member record - will be updated when they complete profile
-          await prisma.member.create({
-            data: {
-              clerkId: clerkUserId,
-              orgId,
-              role: membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER,
-              username: `${clerkUserId}@temp.local`, // Temporary username
-              email: `${clerkUserId}@temp.local`, // Temporary email
-              isActive: true,
-            },
-          });
+          // Check if they exist in another organization
+          const memberInOtherOrg = await this.getMemberByClerkIdAny(clerkUserId);
+
+          if (memberInOtherOrg) {
+            // Create a new member record for this organization based on existing data
+            await prisma.member.create({
+              data: {
+                clerkId: clerkUserId,
+                orgId,
+                role: memberInOtherOrg.role || (membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER),
+                username: memberInOtherOrg.username,
+                email: memberInOtherOrg.email,
+                profileImage: memberInOtherOrg.profileImage,
+                isActive: true,
+              },
+            });
+          } else {
+            // Create a minimal member record - will be updated when they complete profile
+            await prisma.member.create({
+              data: {
+                clerkId: clerkUserId,
+                orgId,
+                role: membershipRole === "org:admin" ? Role.ADMIN : Role.MEMBER,
+                username: `${clerkUserId}@temp.local`, // Temporary username
+                email: `${clerkUserId}@temp.local`, // Temporary email
+                isActive: true,
+              },
+            });
+          }
         }
       } else {
         // Member already exists - update with organization membership details

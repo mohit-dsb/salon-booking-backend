@@ -12,9 +12,9 @@ interface AuthWithOrgId {
 export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFunction) => {
   const auth = getAuth(req);
 
-  // if (!auth.isAuthenticated) {
-  //   return next(new AppError("Authentication required", 401));
-  // }
+  if (!auth.isAuthenticated) {
+    return next(new AppError("Authentication required", 401));
+  }
 
   // Method 1: From environment (single tenant):TODO REMOVE THIS VARIABLE IN PRODUCTION
   let orgId = process.env.ORG_ID || null;
@@ -30,7 +30,7 @@ export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFun
   }
 
   // Method 4: From user's default organization (if you store it in your DB)
-  // You could also query your Member model here to get the user's orgId
+  // You could also query your User model here to get the user's orgId
 
   if (!orgId) {
     return next(new AppError("Organization ID is required. Please ensure you're part of an organization.", 401));
@@ -51,5 +51,5 @@ export const getAuthWithOrgId = (req: Request): AuthWithOrgId => {
   if (!auth?.orgId) {
     throw new AppError("Organization ID is required", 401);
   }
-  return { orgId: process.env.ORG_ID! };
+  return auth;
 };

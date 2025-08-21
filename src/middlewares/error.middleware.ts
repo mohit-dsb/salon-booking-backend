@@ -16,6 +16,8 @@ interface MongoDuplicateKeyError extends Error {
 interface ErrorResponse {
   success: boolean;
   message: string;
+  errorCode?: string;
+  details?: unknown;
   stack?: string;
   error?: Error;
 }
@@ -35,11 +37,15 @@ const isMongoDuplicateKeyError = (error: unknown): error is MongoDuplicateKeyErr
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly isOperational: boolean;
+  public readonly errorCode?: string;
+  public readonly details?: unknown;
 
-  constructor(message: string, statusCode: number) {
+  constructor(message: string, statusCode: number, errorCode?: string, details?: unknown) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = true;
+    this.errorCode = errorCode;
+    this.details = details;
 
     // Only call captureStackTrace if it exists (Node.js specific)
     if (Error.captureStackTrace) {
@@ -92,11 +98,20 @@ export const errorHandler = (err: AppError | Error, req: Request, res: Response,
   const response: ErrorResponse = {
     success: false,
     message,
-    ...(env.NODE_ENV === "development" && {
-      stack: error.stack,
-      error: err,
-    }),
   };
+
+  if (error.errorCode) {
+    response.errorCode = error.errorCode;
+  }
+
+  if (error.details) {
+    response.details = error.details;
+  }
+
+  if (env.NODE_ENV === "development") {
+    response.stack = error.stack;
+    response.error = err;
+  }
 
   res.status(statusCode).json(response);
 };

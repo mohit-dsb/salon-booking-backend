@@ -1,7 +1,9 @@
+import { logger } from "@/utils/logger";
+import { verifyWebhook } from "@clerk/express/webhooks";
+import { handleError } from "@/utils/errorHandler";
 import { Request, Response, NextFunction } from "express";
 import { MemberService } from "@/services/member.service";
 import { parsePaginationParams } from "@/utils/pagination";
-import { verifyWebhook } from "@clerk/express/webhooks";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
 
@@ -201,31 +203,34 @@ export class MemberController {
 
   public syncClerkUser = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     try {
-      console.log("Webhook received, verifying...");
+      logger.info("Webhook received, verifying...");
       const evt = await verifyWebhook(req);
-      console.log("Webhook verified successfully, event type:", evt.type);
-      console.log("Event data keys:", Object.keys(evt.data));
+      logger.info("Webhook verified successfully", { eventType: evt.type, dataKeys: Object.keys(evt.data) });
 
       if (evt.type === "user.created") {
-        console.log("Processing user.created event for user:", evt.data.id);
+        logger.info("Processing user.created event", { userId: evt.data.id });
         await this.memberService.createMemberFromWebhook(evt.data);
       }
 
       if (evt.type === "user.updated") {
-        console.log("Processing user.updated event for user:", evt.data.id);
+        logger.info("Processing user.updated event", { userId: evt.data.id });
         await this.memberService.updateMemberFromWebhook(evt.data.id, evt.data);
       }
 
       if (evt.type === "user.deleted" && evt.data.deleted) {
-        console.log("Processing user.deleted event for user:", evt.data.id);
+        logger.info("Processing user.deleted event", { userId: evt.data.id });
         await this.memberService.deleteMemberFromWebhook(evt.data.id as string);
       }
 
       // Handle organization membership events for members
       if (evt.type === "organizationMembership.created") {
-        console.log("Processing organizationMembership.created event");
+        logger.info("Processing organizationMembership.created event");
         const { organization, public_user_data, role } = evt.data;
-        console.log("Organization ID:", organization?.id, "User ID:", public_user_data?.user_id, "Role:", role);
+        logger.debug("Organization membership details", { 
+          organizationId: organization?.id, 
+          userId: public_user_data?.user_id, 
+          role 
+        });
         if (organization?.id && public_user_data?.user_id) {
           await this.memberService.handleOrganizationMembership(
             public_user_data.user_id,
@@ -237,9 +242,13 @@ export class MemberController {
       }
 
       if (evt.type === "organizationMembership.updated") {
-        console.log("Processing organizationMembership.updated event");
+        logger.info("Processing organizationMembership.updated event");
         const { organization, public_user_data, role } = evt.data;
-        console.log("Organization ID:", organization?.id, "User ID:", public_user_data?.user_id, "Role:", role);
+        logger.debug("Organization membership update details", { 
+          organizationId: organization?.id, 
+          userId: public_user_data?.user_id, 
+          role 
+        });
         if (organization?.id && public_user_data?.user_id) {
           await this.memberService.handleOrganizationMembership(
             public_user_data.user_id,
@@ -251,19 +260,32 @@ export class MemberController {
       }
 
       if (evt.type === "organizationMembership.deleted") {
-        console.log("Processing organizationMembership.deleted event");
+        logger.info("Processing organizationMembership.deleted event");
         const { organization, public_user_data } = evt.data;
-        console.log("Organization ID:", organization?.id, "User ID:", public_user_data?.user_id);
+        logger.debug("Organization membership deletion details", { 
+          organizationId: organization?.id, 
+          userId: public_user_data?.user_id 
+        });
         if (organization?.id && public_user_data?.user_id) {
           await this.memberService.handleOrganizationMembership(public_user_data.user_id, organization.id, "deleted");
         }
       }
 
-      console.log("Webhook processed successfully");
+      logger.info("Webhook processed successfully");
       res.sendStatus(200);
     } catch (error) {
-      console.error("Webhook verification failed:", error);
-      res.status(400).json({ error: "Webhook verification failed" });
+      // Handle Clerk webhook verification errors with proper messaging
+      try {
+        handleError(error, "webhook verification", "Webhook verification failed");
+      } catch (handledError) {
+        if (handledError instanceof AppError) {
+          logger.error("Webhook verification failed:", handledError.message);
+          res.status(handledError.statusCode).json({ error: handledError.message });
+        } else {
+          logger.error("Webhook verification failed:", error);
+          res.status(400).json({ error: "Webhook verification failed" });
+        }
+      }
     }
   });
 }

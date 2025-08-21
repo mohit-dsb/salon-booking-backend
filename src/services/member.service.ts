@@ -1,9 +1,11 @@
+import { logger } from "@/utils/logger";
 import { prisma } from "@/config/prisma";
 import type { UserJSON } from "@clerk/express";
 import { cacheService } from "./cache.service";
 import { clerkClient } from "@/config/clerkClient";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
+import { handleError, executeClerkOperation } from "@/utils/errorHandler";
 import { Member, MemberService as PrismaMemberService, Role } from "@prisma/client";
 
 // Type definitions for better type safety
@@ -185,20 +187,28 @@ export class MemberService {
     }
 
     try {
-      // Create user in Clerk with minimal information
-      const clerkUser = await clerkClient.users.createUser({
-        emailAddress: [data.email],
-        username: data.username,
-        skipPasswordRequirement: true, // They'll set password via invitation email
-        skipPasswordChecks: true,
-      });
+      const clerkUser = await executeClerkOperation(
+        () =>
+          clerkClient.users.createUser({
+            emailAddress: [data.email],
+            username: data.username,
+            password: "SecureTemp@2024!", // Secure temporary password - user will be invited to change it
+          }),
+        "createUser",
+        "Failed to create user account",
+      );
 
-      // Create invitation for the user to join the organization
-      await clerkClient.organizations.createOrganizationInvitation({
-        organizationId: orgId,
-        emailAddress: data.email,
-        role: data.role === Role.ADMIN ? "admin" : "basic_member",
-      });
+      // Create membership for the user in the organization
+      await executeClerkOperation(
+        () =>
+          clerkClient.organizations.createOrganizationMembership({
+            organizationId: orgId,
+            userId: clerkUser.id,
+            role: "org:member",
+          }),
+        "createOrganizationMembership",
+        "Failed to add user to organization",
+      );
 
       // Create member in our database
       const member = await prisma.member.create({
@@ -246,12 +256,11 @@ export class MemberService {
       await this.invalidateMemberCache(orgId);
 
       return member;
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         throw error;
       }
-      console.error("Error creating member:", error);
-      throw new AppError("Failed to create member", 500);
+      handleError(error, "createMember", "Failed to create member");
     }
   }
 
@@ -399,7 +408,7 @@ export class MemberService {
 
       return result;
     } catch (error) {
-      console.error("Error fetching members:", error);
+      logger.error("Error fetching members:", error);
       throw new AppError("Failed to fetch members", 500);
     }
   }
@@ -439,11 +448,16 @@ export class MemberService {
         // For email updates, we need to handle it properly
         if (data.email) {
           // First, add the new email address and mark it as verified for admin updates
-          const newEmailAddress = await clerkClient.emailAddresses.createEmailAddress({
-            userId: existingMember.clerkId,
-            emailAddress: data.email,
-            verified: true, // Skip verification for admin-created emails
-          });
+          const newEmailAddress = await executeClerkOperation(
+            () =>
+              clerkClient.emailAddresses.createEmailAddress({
+                userId: existingMember.clerkId,
+                emailAddress: data.email!,
+                verified: true, // Skip verification for admin-created emails
+              }),
+            "createEmailAddress",
+            "Failed to update email address",
+          );
 
           // Set the new email as primary
           updateData.primaryEmailAddressId = newEmailAddress.id;
@@ -451,7 +465,11 @@ export class MemberService {
 
         // Update the user with any other changes
         if (Object.keys(updateData).length > 0) {
-          await clerkClient.users.updateUser(existingMember.clerkId, updateData);
+          await executeClerkOperation(
+            () => clerkClient.users.updateUser(existingMember.clerkId, updateData),
+            "updateUser",
+            "Failed to update user account",
+          );
         }
       }
 
@@ -487,8 +505,7 @@ export class MemberService {
       if (error instanceof AppError) {
         throw error;
       }
-      console.error("Error updating member:", error);
-      throw new AppError("Failed to update member", 500);
+      handleError(error, "updateMember", "Failed to update member");
     }
   }
 
@@ -499,7 +516,11 @@ export class MemberService {
     try {
       // Remove member from Clerk organization
       // Note: In production, you might want to just disable the user instead
-      await clerkClient.users.deleteUser(member.clerkId);
+      await executeClerkOperation(
+        () => clerkClient.users.deleteUser(member.clerkId),
+        "deleteUser",
+        "Failed to remove user account",
+      );
 
       // Delete member from database (this will cascade delete memberServices)
       await prisma.member.delete({
@@ -508,8 +529,11 @@ export class MemberService {
 
       // Invalidate all member-related caches for this organization
       await this.invalidateMemberCache(orgId);
-    } catch (_error) {
-      throw new AppError("Failed to delete member", 500);
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      handleError(error, "deleteMember", "Failed to delete member");
     }
   }
 
@@ -592,42 +616,6 @@ export class MemberService {
     await cacheService.set(cacheKey, members, 3600);
 
     return members;
-  }
-
-  // Sync member data from Clerk webhook
-  public async syncMemberFromClerk(
-    clerkUserId: string,
-    orgId: string,
-    userData: {
-      username?: string;
-      emailAddresses?: Array<{ emailAddress: string }>;
-      imageUrl?: string;
-    },
-  ): Promise<void> {
-    const existingMember = await prisma.member.findFirst({
-      where: { clerkId: clerkUserId, orgId },
-    });
-
-    if (existingMember) {
-      // Update existing member with Clerk data
-      await prisma.member.update({
-        where: { id: existingMember.id },
-        data: {
-          username: userData.username || existingMember.username,
-          email: userData.emailAddresses?.[0]?.emailAddress || existingMember.email,
-          profileImage: userData.imageUrl || existingMember.profileImage,
-        },
-      });
-    }
-  }
-
-  // Check if member exists
-  public async memberExists(clerkId: string, orgId: string): Promise<boolean> {
-    const member = await prisma.member.findFirst({
-      where: { clerkId, orgId },
-      select: { id: true },
-    });
-    return !!member;
   }
 
   // Get member statistics
@@ -727,13 +715,13 @@ export class MemberService {
     )?.email_address;
 
     if (!primaryEmail) {
-      console.warn(`No primary email found for user ${id}, skipping member creation`);
+      logger.warn(`No primary email found for user ${id}, skipping member creation`);
       return;
     }
 
     // Check if user has organization memberships
     if (!organization_memberships || organization_memberships.length === 0) {
-      console.log(`User ${id} created without organization membership, creating a global user record`);
+      logger.info(`User ${id} created without organization membership, creating a global user record`);
 
       // Create a global user record without organization (orgId will be empty)
       // This will be updated later when they're added to an organization via organizationMembership.created
@@ -753,7 +741,7 @@ export class MemberService {
             isActive: false, // Inactive until they join an organization
           },
         });
-        console.log(`Created global user record for ${id} without organization`);
+        logger.info(`Created global user record for ${id} without organization`);
       } else {
         // Update existing global user record
         await prisma.member.update({
@@ -764,7 +752,7 @@ export class MemberService {
             profileImage: image_url || existingGlobalUser.profileImage,
           },
         });
-        console.log(`Updated existing global user record for ${id}`);
+        logger.info(`Updated existing global user record for ${id}`);
       }
 
       // No cache invalidation needed for global users as they're not org-specific
@@ -780,7 +768,7 @@ export class MemberService {
       const existingMember = await this.getMemberByClerkId(id, orgId);
 
       if (!existingMember) {
-        console.log(`Creating member for user ${id} in organization ${orgId} with role ${role}`);
+        logger.info(`Creating member for user ${id} in organization ${orgId} with role ${role}`);
         await prisma.member.create({
           data: {
             clerkId: id,
@@ -796,7 +784,7 @@ export class MemberService {
         // Invalidate cache for this organization
         await this.invalidateMemberCache(orgId);
       } else {
-        console.log(`Member already exists for user ${id} in organization ${orgId}, updating details`);
+        logger.info(`Member already exists for user ${id} in organization ${orgId}, updating details`);
         await prisma.member.update({
           where: { id: existingMember.id },
           data: {
@@ -868,15 +856,6 @@ export class MemberService {
     }
   }
 
-  // Check if member exists by Clerk ID (across all organizations)
-  public async memberExistsByClerkId(clerkId: string): Promise<boolean> {
-    const member = await prisma.member.findFirst({
-      where: { clerkId },
-      select: { id: true },
-    });
-    return !!member;
-  }
-
   // Get member by Clerk ID (first match across organizations, excluding global users)
   public async getMemberByClerkIdAny(clerkId: string): Promise<Member | null> {
     return await prisma.member.findFirst({
@@ -905,7 +884,7 @@ export class MemberService {
         });
 
         if (globalUser) {
-          console.log(`Found global user record for ${clerkUserId}, converting to organization member`);
+          logger.info(`Found global user record for ${clerkUserId}, converting to organization member`);
           // Update the global user record to be part of this organization
           await prisma.member.update({
             where: { id: globalUser.id },
@@ -957,7 +936,7 @@ export class MemberService {
         }
       } else {
         // Member already exists - update with organization membership details
-        console.log(`Member already exists for user ${clerkUserId} in org ${orgId}, updating with membership details`);
+        logger.info(`Member already exists for user ${clerkUserId} in org ${orgId}, updating with membership details`);
         await prisma.member.update({
           where: { id: existingMember.id },
           data: {

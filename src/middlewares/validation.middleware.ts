@@ -2,20 +2,27 @@ import { z, ZodError } from "zod";
 import { AppError } from "./error.middleware";
 import type { Request, Response, NextFunction } from "express";
 
+// Generic validation function for different types
 export const validate = (schema: z.ZodObject<z.ZodRawShape>) => {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
-      schema.parse({
-        body: req.body,
-        query: req.query,
-        params: req.params,
-      });
+      // For most schemas, we validate the body. For query schemas, we validate the query.
+      // Determine what to validate based on the request method and content
+      let dataToValidate;
+
+      if (req.method === 'GET') {
+        dataToValidate = req.query;
+      } else {
+        dataToValidate = req.body;
+      }
+
+      schema.parse(dataToValidate);
       next();
     } catch (error) {
       if (error instanceof ZodError) {
         // Get the first error only
         const firstIssue = error.issues[0];
-        const fieldPath = firstIssue.path.filter((p) => p !== "body" && p !== "query" && p !== "params").join(".");
+        const fieldPath = firstIssue.path.join(".");
         const fieldName = fieldPath || "field";
 
         // Customize error message based on error type and message content

@@ -88,11 +88,16 @@ export class ClientService {
       throw new AppError("Email, first name, and last name are required", 400);
     }
 
+    // Sanitize and normalize input
+    const normalizedEmail = data.email.toLowerCase().trim();
+    const normalizedFirstName = data.firstName.trim();
+    const normalizedLastName = data.lastName.trim();
+
     // Check if client with this email already exists in the organization
     const existingClient = await prisma.client.findUnique({
       where: {
         email_orgId: {
-          email: data.email,
+          email: normalizedEmail,
           orgId,
         },
       },
@@ -105,14 +110,14 @@ export class ClientService {
     try {
       // Parse dates if provided
       const createData: Prisma.ClientCreateInput = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
+        email: normalizedEmail,
         orgId,
       };
 
-      if (data.phone) createData.phone = data.phone;
-      if (data.notes) createData.notes = data.notes;
+      if (data.phone) createData.phone = data.phone.trim();
+      if (data.notes) createData.notes = data.notes.trim();
       if (data.dateOfBirth) createData.dateOfBirth = this.parseDate(data.dateOfBirth);
       if (data.address) createData.address = data.address as Prisma.InputJsonValue;
       if (data.preferences) createData.preferences = data.preferences as Prisma.InputJsonValue;

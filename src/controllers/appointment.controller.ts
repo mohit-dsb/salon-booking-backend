@@ -1,6 +1,6 @@
 import type { AppointmentStatus } from "@prisma/client";
-import type { Request, Response, NextFunction } from "express";
 import { parsePaginationParams } from "@/utils/pagination";
+import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppointmentService } from "@/services/appointment.service";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
@@ -23,19 +23,19 @@ export class AppointmentController {
   });
 
   // Create walk-in appointment (now uses the same method as regular appointments)
-  public async createWalkInAppointment(req: Request, res: Response): Promise<void> {
-    const { orgId } = req.params;
+  public createWalkInAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { orgId } = getAuthWithOrgId(req);
     const appointmentData = req.body;
     const { userId } = res.locals;
 
     const appointment = await this.appointmentService.createAppointment(orgId, appointmentData, userId as string);
-    
+
     res.status(201).json({
       success: true,
       data: appointment,
       message: "Walk-in appointment created successfully",
     });
-  }
+  });
 
   // Get all appointments with pagination and filters
   public getAllAppointments = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
@@ -290,6 +290,25 @@ export class AppointmentController {
       success: true,
       data: appointment,
       message: "Appointment started successfully",
+    });
+  });
+
+  // Convert walk-in appointment to regular appointment with client
+  public convertWalkInAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { orgId } = getAuthWithOrgId(req);
+    const { id } = req.params;
+    const { clientId } = req.body;
+
+    if (!clientId) {
+      throw new AppError("Client ID is required", 400);
+    }
+
+    const appointment = await this.appointmentService.convertWalkInAppointment(id, orgId, clientId);
+
+    res.status(200).json({
+      success: true,
+      data: appointment,
+      message: "Walk-in appointment converted to regular appointment successfully",
     });
   });
 }

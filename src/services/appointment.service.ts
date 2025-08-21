@@ -137,22 +137,22 @@ export class AppointmentService {
       throw new AppError("Service not found", 404);
     }
 
-    // If clientId is provided, validate the client exists
-    if (data.clientId) {
-      const client = await prisma.client.findFirst({ where: { id: data.clientId, orgId } });
-      if (!client) {
-        throw new AppError("Client not found", 404);
-      }
-    }
+    // Validate client and member service in parallel
+    const [client, memberService] = await Promise.all([
+      data.clientId ? prisma.client.findFirst({ where: { id: data.clientId, orgId } }) : Promise.resolve(null),
+      prisma.memberService.findFirst({
+        where: {
+          memberId: data.memberId,
+          serviceId: data.serviceId,
+          orgId,
+        },
+      }),
+    ]);
 
-    // Check if member provides this service
-    const memberService = await prisma.memberService.findFirst({
-      where: {
-        memberId: data.memberId,
-        serviceId: data.serviceId,
-        orgId,
-      },
-    });
+    // If clientId was provided, validate the client exists
+    if (data.clientId && !client) {
+      throw new AppError("Client not found", 404);
+    }
 
     if (!memberService) {
       throw new AppError("This member does not provide the selected service", 400);
@@ -869,4 +869,94 @@ export class AppointmentService {
 
     return appointments;
   }
+
+  // Convert walk-in appointment to regular appointment with client
+  public async convertWalkInAppointment(
+    appointmentId: string,
+    orgId: string,
+    clientId: string,
+  ): Promise<AppointmentWithDetails> {
+    await this.validateOrgMembership(orgId);
+
+    // Validate the appointment exists and is a walk-in
+    const appointment = await prisma.appointment.findFirst({
+      where: { id: appointmentId, orgId, clientId: null },
+    });
+
+    if (!appointment) {
+      throw new AppError("Walk-in appointment not found", 404);
+    }
+
+    // Validate the client exists
+    const client = await prisma.client.findFirst({
+      where: { id: clientId, orgId },
+    });
+
+    if (!client) {
+      throw new AppError("Client not found", 404);
+    }
+
+    try {
+      const updatedAppointment = await prisma.appointment.update({
+        where: { id: appointmentId },
+        data: {
+          clientId,
+          walkInClientName: null,
+          walkInClientPhone: null,
+        },
+        include: {
+          client: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              phone: true,
+            },
+          },
+          member: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
+          },
+          service: {
+            select: {
+              id: true,
+              name: true,
+              duration: true,
+              price: true,
+            },
+          },
+          bookedByMember: {
+            select: {
+              id: true,
+              username: true,
+            },
+          },
+        },
+      });
+
+      // Invalidate relevant caches
+      await this.invalidateAppointmentCache(orgId);
+
+      logger.info("Walk-in appointment converted to regular appointment", {
+        appointmentId,
+        clientId,
+        orgId,
+      });
+
+      return updatedAppointment as AppointmentWithDetails;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      handleError(error, "convertWalkInAppointment", "Failed to convert walk-in appointment");
+    }
+  }
+
+  // Export service instance
 }
+
+export const appointmentService = new AppointmentService();

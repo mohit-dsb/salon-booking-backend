@@ -30,7 +30,6 @@ export class ClientController {
     const filters: {
       isActive?: boolean;
       search?: string;
-      isWalkIn?: boolean;
     } = {};
 
     if (req.query.isActive !== undefined) {
@@ -39,10 +38,6 @@ export class ClientController {
 
     if (req.query.search) {
       filters.search = req.query.search as string;
-    }
-
-    if (req.query.isWalkIn !== undefined) {
-      filters.isWalkIn = req.query.isWalkIn === "true";
     }
 
     const result = await this.clientService.getAllClients(orgId, pagination, filters);
@@ -100,13 +95,13 @@ export class ClientController {
   // Search clients
   public searchClients = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId } = getAuthWithOrgId(req);
-    const { q } = req.query;
+    const { query } = req.params;
 
-    if (!q || typeof q !== "string") {
+    if (!query || typeof query !== "string") {
       throw new AppError("Search query is required", 400);
     }
 
-    const clients = await this.clientService.searchClients(orgId, q);
+    const clients = await this.clientService.searchClients(orgId, query);
 
     res.status(200).json({
       success: true,

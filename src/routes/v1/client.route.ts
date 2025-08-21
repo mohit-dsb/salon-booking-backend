@@ -33,7 +33,7 @@ router.get("/:id", clientController.getClientById);
  * @desc    Update client
  * @access  Private (Member)
  */
-router.put("/:id", validate(updateClientSchema), clientController.updateClient);
+router.patch("/:id", validate(updateClientSchema), clientController.updateClient);
 
 /**
  * @route   DELETE /api/v1/clients/:id

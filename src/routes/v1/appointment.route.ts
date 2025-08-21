@@ -6,6 +6,10 @@ import {
   createAppointmentSchema,
   updateAppointmentSchema,
   appointmentQuerySchema,
+  rescheduleAppointmentSchema,
+  cancelAppointmentSchema,
+  checkAvailabilitySchema,
+  convertWalkInAppointmentSchema,
 } from "@/validations/appointment.schema";
 
 const router = Router();
@@ -44,14 +48,14 @@ router.get("/:id", appointmentController.getAppointmentById);
  * @desc    Update appointment
  * @access  Private (Member)
  */
-router.put("/:id", validate(updateAppointmentSchema), appointmentController.updateAppointment);
+router.patch("/:id", validate(updateAppointmentSchema), appointmentController.updateAppointment);
 
 /**
- * @route   DELETE /api/v1/appointments/:id
- * @desc    Cancel appointment (using PATCH instead of DELETE)
+ * @route   PATCH /api/v1/appointments/:id/cancel
+ * @desc    Cancel appointment
  * @access  Private (Member)
  */
-router.patch("/:id/cancel", appointmentController.cancelAppointment);
+router.patch("/:id/cancel", validate(cancelAppointmentSchema), appointmentController.cancelAppointment);
 
 /**
  * @route   PATCH /api/v1/appointments/:id/confirm
@@ -75,13 +79,6 @@ router.patch("/:id/start", appointmentController.startAppointment);
 router.patch("/:id/complete", appointmentController.completeAppointment);
 
 /**
- * @route   PATCH /api/v1/appointments/:id/cancel
- * @desc    Cancel appointment
- * @access  Private (Member)
- */
-router.patch("/:id/cancel", appointmentController.cancelAppointment);
-
-/**
  * @route   PATCH /api/v1/appointments/:id/no-show
  * @desc    Mark appointment as no-show
  * @access  Private (Member)
@@ -89,18 +86,25 @@ router.patch("/:id/cancel", appointmentController.cancelAppointment);
 router.patch("/:id/no-show", appointmentController.markNoShow);
 
 /**
+ * @route   PATCH /api/v1/appointments/:id/convert
+ * @desc    Convert walk-in appointment to regular appointment with client
+ * @access  Private (Member)
+ */
+router.patch("/:id/convert", validate(convertWalkInAppointmentSchema), appointmentController.convertWalkInAppointment);
+
+/**
  * @route   POST /api/v1/appointments/:id/reschedule
  * @desc    Reschedule appointment
  * @access  Private (Member)
  */
-router.post("/:id/reschedule", appointmentController.rescheduleAppointment);
+router.post("/:id/reschedule", validate(rescheduleAppointmentSchema), appointmentController.rescheduleAppointment);
 
 /**
  * @route   GET /api/v1/appointments/availability/check
  * @desc    Check member availability for a specific time slot
  * @access  Private (Member)
  */
-router.get("/availability/check", appointmentController.checkAvailability);
+router.get("/availability/check", validate(checkAvailabilitySchema), appointmentController.checkAvailability);
 
 /**
  * @route   GET /api/v1/appointments/member/:memberId

@@ -3,18 +3,18 @@ import { paginationQuerySchema } from "./pagination.schema";
 
 // Client validation schemas
 export const createClientSchema = z.object({
-  firstName: z.string().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
-  lastName: z.string().min(1, "Last name is required").max(50, "Last name must be less than 50 characters"),
-  email: z.email("Invalid email format"),
-  phone: z.string().optional(),
+  firstName: z.string().min(1, "First name is required").max(50, "First name must be less than 50 characters").trim(),
+  lastName: z.string().min(1, "Last name is required").max(50, "Last name must be less than 50 characters").trim(),
+  email: z.email("Invalid email format").toLowerCase(),
+  phone: z.string().max(20, "Phone must be less than 20 characters").optional(),
   dateOfBirth: z.iso.datetime().optional(),
   address: z
     .object({
-      street: z.string().optional(),
-      city: z.string().optional(),
-      state: z.string().optional(),
-      zipCode: z.string().optional(),
-      country: z.string().optional(),
+      street: z.string().max(100, "Street must be less than 100 characters").optional(),
+      city: z.string().max(50, "City must be less than 50 characters").optional(),
+      state: z.string().max(50, "State must be less than 50 characters").optional(),
+      zipCode: z.string().max(20, "Zip code must be less than 20 characters").optional(),
+      country: z.string().max(50, "Country must be less than 50 characters").optional(),
     })
     .optional(),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),

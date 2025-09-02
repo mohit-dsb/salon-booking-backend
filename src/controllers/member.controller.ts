@@ -53,8 +53,8 @@ export class MemberController {
     res.status(200).json({
       success: true,
       message: "Members retrieved successfully",
-      data: result.members,
-      pagination: result.pagination,
+      data: result.data,
+      meta: result.meta,
     });
   });
 
@@ -166,8 +166,8 @@ export class MemberController {
     res.status(200).json({
       success: true,
       message: "Search completed successfully",
-      data: result.members,
-      pagination: result.pagination,
+      data: result.data,
+      meta: result.meta,
     });
   });
 
@@ -226,10 +226,10 @@ export class MemberController {
       if (evt.type === "organizationMembership.created") {
         logger.info("Processing organizationMembership.created event");
         const { organization, public_user_data, role } = evt.data;
-        logger.debug("Organization membership details", { 
-          organizationId: organization?.id, 
-          userId: public_user_data?.user_id, 
-          role 
+        logger.debug("Organization membership details", {
+          organizationId: organization?.id,
+          userId: public_user_data?.user_id,
+          role,
         });
         if (organization?.id && public_user_data?.user_id) {
           await this.memberService.handleOrganizationMembership(
@@ -244,10 +244,10 @@ export class MemberController {
       if (evt.type === "organizationMembership.updated") {
         logger.info("Processing organizationMembership.updated event");
         const { organization, public_user_data, role } = evt.data;
-        logger.debug("Organization membership update details", { 
-          organizationId: organization?.id, 
-          userId: public_user_data?.user_id, 
-          role 
+        logger.debug("Organization membership update details", {
+          organizationId: organization?.id,
+          userId: public_user_data?.user_id,
+          role,
         });
         if (organization?.id && public_user_data?.user_id) {
           await this.memberService.handleOrganizationMembership(
@@ -262,9 +262,9 @@ export class MemberController {
       if (evt.type === "organizationMembership.deleted") {
         logger.info("Processing organizationMembership.deleted event");
         const { organization, public_user_data } = evt.data;
-        logger.debug("Organization membership deletion details", { 
-          organizationId: organization?.id, 
-          userId: public_user_data?.user_id 
+        logger.debug("Organization membership deletion details", {
+          organizationId: organization?.id,
+          userId: public_user_data?.user_id,
         });
         if (organization?.id && public_user_data?.user_id) {
           await this.memberService.handleOrganizationMembership(public_user_data.user_id, organization.id, "deleted");

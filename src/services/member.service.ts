@@ -5,6 +5,7 @@ import { cacheService } from "./cache.service";
 import { clerkClient } from "@/config/clerkClient";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
+import { createPaginatedResponse, type PaginatedResponse } from "@/utils/pagination";
 import { handleError, executeClerkOperation } from "@/utils/errorHandler";
 import { Member, MemberService as PrismaMemberService, Role } from "@prisma/client";
 
@@ -332,22 +333,14 @@ export class MemberService {
       search?: string;
       serviceId?: string;
     },
-  ) {
+  ): Promise<PaginatedResponse<MemberWithServices>> {
     await this.validateOrgMembership(orgId);
 
     const { page, limit, skip } = pagination;
 
     // Check cache first
     const cacheKey = this.getAllMembersCacheKey(orgId, pagination, filters);
-    const cached = await cacheService.get<{
-      members: MemberWithServices[];
-      pagination: {
-        page: number;
-        limit: number;
-        total: number;
-        totalPages: number;
-      };
-    }>(cacheKey);
+    const cached = await cacheService.get<PaginatedResponse<MemberWithServices>>(cacheKey);
 
     if (cached) {
       return cached;
@@ -393,15 +386,7 @@ export class MemberService {
         prisma.member.count({ where: whereConditions }),
       ]);
 
-      const result = {
-        members,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
-      };
+      const result = createPaginatedResponse(members, total, page, limit);
 
       // Cache the result for 30 minutes (shorter TTL for paginated lists)
       await cacheService.set(cacheKey, result, 1800);
@@ -663,7 +648,11 @@ export class MemberService {
   }
 
   // Search members with pagination
-  public async searchMembers(orgId: string, query: string, pagination: PaginationParams) {
+  public async searchMembers(
+    orgId: string,
+    query: string,
+    pagination: PaginationParams,
+  ): Promise<PaginatedResponse<MemberWithServices>> {
     return await this.getAllMembers(orgId, pagination, {
       search: query,
     });

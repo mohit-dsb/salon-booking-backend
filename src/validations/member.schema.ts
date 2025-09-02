@@ -115,6 +115,15 @@ export const assignServicesSchema = z.object({
   }),
 });
 
+export const bulkDeleteMembersSchema = z.object({
+  body: z.object({
+    memberIds: z
+      .array(z.string().min(1, "Member ID cannot be empty"))
+      .min(1, "At least one member ID is required")
+      .max(5, "Cannot delete more than 5 members at once"),
+  }),
+});
+
 export const inviteMemberSchema = z.object({
   body: z.object({
     ...baseUserFields,

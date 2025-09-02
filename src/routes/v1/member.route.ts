@@ -7,6 +7,7 @@ import {
   assignServicesSchema,
   memberQuerySchema,
   searchMemberSchema,
+  bulkDeleteMembersSchema,
 } from "@/validations/member.schema";
 
 const router = Router();
@@ -26,6 +27,7 @@ router.get("/by-service/:serviceId", memberController.getMembersByService);
 // Main CRUD operations
 router.get("/", validate(memberQuerySchema), memberController.getAllMembers);
 router.post("/", validate(createMemberSchema), memberController.createMember);
+router.delete("/bulk", validate(bulkDeleteMembersSchema), memberController.bulkDeleteMembers);
 
 // Parameterized routes (must come after static routes)
 router.get("/:id", memberController.getMemberById);

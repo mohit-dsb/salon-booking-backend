@@ -100,6 +100,32 @@ export class MemberController {
     });
   });
 
+  // Bulk delete members
+  public bulkDeleteMembers = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { orgId } = getAuthWithOrgId(req);
+    const { memberIds } = req.body;
+
+    const result = await this.memberService.bulkDeleteMembers(memberIds, orgId);
+
+    const totalRequested = memberIds.length;
+    const successCount = result.deleted.length;
+    const failedCount = result.failed.length;
+
+    res.status(200).json({
+      success: true,
+      message: `Bulk delete completed. ${successCount}/${totalRequested} members deleted successfully.`,
+      data: {
+        summary: {
+          total: totalRequested,
+          deleted: successCount,
+          failed: failedCount,
+        },
+        deleted: result.deleted,
+        failed: result.failed,
+      },
+    });
+  });
+
   // Assign services to member
   public assignServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId } = getAuthWithOrgId(req);

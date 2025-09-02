@@ -522,6 +522,51 @@ export class MemberService {
     }
   }
 
+  // Bulk delete members
+  public async bulkDeleteMembers(
+    memberIds: string[],
+    orgId: string,
+  ): Promise<{
+    deleted: string[];
+    failed: Array<{ id: string; error: string }>;
+  }> {
+    await this.validateOrgMembership(orgId);
+
+    if (memberIds.length === 0) {
+      throw new AppError("At least one member ID is required", 400);
+    }
+
+    if (memberIds.length > 50) {
+      throw new AppError("Cannot delete more than 50 members at once", 400);
+    }
+
+    const deleted: string[] = [];
+    const failed: Array<{ id: string; error: string }> = [];
+
+    // Process deletions one by one to handle individual failures
+    for (const memberId of memberIds) {
+      try {
+        await this.deleteMember(memberId, orgId);
+        deleted.push(memberId);
+      } catch (error) {
+        const errorMessage = error instanceof AppError ? error.message : "Unknown error occurred";
+        failed.push({ id: memberId, error: errorMessage });
+        logger.error(`Failed to delete member ${memberId}:`, error);
+      }
+    }
+
+    // Invalidate all member-related caches for this organization
+    await this.invalidateMemberCache(orgId);
+
+    logger.info(`Bulk delete completed. Deleted: ${deleted.length}, Failed: ${failed.length}`, {
+      orgId,
+      deleted,
+      failed: failed.map((f) => f.id),
+    });
+
+    return { deleted, failed };
+  }
+
   // Assign services to member
   public async assignServicesToMember(memberId: string, orgId: string, serviceIds: string[]): Promise<void> {
     // Verify member exists

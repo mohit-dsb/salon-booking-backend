@@ -81,3 +81,66 @@ export type AppointmentQueryParams = z.infer<typeof appointmentQuerySchema>;
 export type RescheduleAppointmentData = z.infer<typeof rescheduleAppointmentSchema>;
 export type CancelAppointmentData = z.infer<typeof cancelAppointmentSchema>;
 export type CheckAvailabilityData = z.infer<typeof checkAvailabilitySchema>;
+
+// Analytics and Reporting Schemas
+
+// Base analytics query schema with common filtering options
+export const analyticsBaseSchema = z.object({
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be in YYYY-MM-DD format")
+    .optional(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be in YYYY-MM-DD format")
+    .optional(),
+  memberId: z.string().optional(),
+  serviceId: z.string().optional(),
+  categoryId: z.string().optional(),
+  period: z
+    .enum([
+      "today",
+      "yesterday",
+      "this_week",
+      "last_week",
+      "this_month",
+      "last_month",
+      "this_year",
+      "last_year",
+      "custom",
+    ])
+    .optional(),
+  timezone: z.string().optional(), // e.g., "America/New_York"
+});
+
+// Appointment summary analytics schema
+export const appointmentSummarySchema = analyticsBaseSchema.extend({
+  groupBy: z.enum(["day", "week", "month", "member", "service", "status"]).optional().default("day"),
+  includeMetrics: z
+    .array(z.enum(["revenue", "utilization", "cancellation_rate", "no_show_rate", "conversion_rate"]))
+    .optional(),
+});
+
+// Appointment list analytics schema
+export const appointmentListSchema = analyticsBaseSchema.extend({
+  status: z.array(z.enum(["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"])).optional(),
+  isWalkIn: z.enum(["true", "false"]).optional(),
+  sortBy: z.enum(["startTime", "createdAt", "revenue", "member", "service"]).optional().default("startTime"),
+  sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+  includeDetails: z.array(z.enum(["client", "member", "service", "revenue", "duration"])).optional(),
+  search: z.string().optional(), // Search by client name, member name, or service name
+  ...paginationQuerySchema.shape,
+});
+
+// Cancellations and no-shows analytics schema
+export const cancellationNoShowSchema = analyticsBaseSchema.extend({
+  analysisType: z.enum(["cancellations", "no_shows", "both"]).optional().default("both"),
+  groupBy: z.enum(["day", "week", "month", "member", "service", "reason"]).optional().default("day"),
+  includeReasons: z.boolean().optional().default(true),
+  minCancellationRate: z.number().min(0).max(100).optional(), // Filter members/services with high cancellation rates
+});
+
+// Export types for the analytics schemas
+export type AppointmentSummaryParams = z.infer<typeof appointmentSummarySchema>;
+export type AppointmentListParams = z.infer<typeof appointmentListSchema>;
+export type CancellationNoShowParams = z.infer<typeof cancellationNoShowSchema>;

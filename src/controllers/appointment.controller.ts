@@ -311,4 +311,60 @@ export class AppointmentController {
       message: "Walk-in appointment converted to regular appointment successfully",
     });
   });
+
+  // Analytics and Reporting Methods
+
+  /**
+   * Get appointment summary analytics
+   * Provides overview of appointment trends, patterns, cancellations, and no-shows
+   */
+  public getAppointmentSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { orgId } = getAuthWithOrgId(req);
+    const params = req.query;
+
+    const summary = await this.appointmentService.getAppointmentSummary(orgId, params);
+
+    res.status(200).json({
+      success: true,
+      data: summary,
+      message: "Appointment summary retrieved successfully",
+    });
+  });
+
+  /**
+   * Get detailed appointment list for analytics
+   * Full list of scheduled appointments with filtering and sorting options
+   */
+  public getAppointmentAnalyticsList = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { orgId } = getAuthWithOrgId(req);
+    const params = req.query;
+    const pagination = parsePaginationParams(req.query);
+
+    const appointmentList = await this.appointmentService.getAppointmentAnalyticsList(orgId, params, pagination);
+
+    res.status(200).json({
+      success: true,
+      data: appointmentList.data,
+      pagination: appointmentList.pagination,
+      filters: appointmentList.filters,
+      message: "Appointment analytics list retrieved successfully",
+    });
+  });
+
+  /**
+   * Get cancellations and no-shows analytics
+   * Insights into appointment cancellations and no-shows with trends and patterns
+   */
+  public getCancellationNoShowAnalytics = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { orgId } = getAuthWithOrgId(req);
+    const params = req.query;
+
+    const analytics = await this.appointmentService.getCancellationNoShowAnalytics(orgId, params);
+
+    res.status(200).json({
+      success: true,
+      data: analytics,
+      message: "Cancellation and no-show analytics retrieved successfully",
+    });
+  });
 }

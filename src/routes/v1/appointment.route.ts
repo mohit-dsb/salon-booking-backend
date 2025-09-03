@@ -10,6 +10,9 @@ import {
   cancelAppointmentSchema,
   checkAvailabilitySchema,
   convertWalkInAppointmentSchema,
+  appointmentSummarySchema,
+  appointmentListSchema,
+  cancellationNoShowSchema,
 } from "@/validations/appointment.schema";
 
 const router = Router();
@@ -126,5 +129,32 @@ router.get("/client/:clientId", validate(paginationQuerySchema), appointmentCont
  * @access  Private (Member)
  */
 router.get("/upcoming", appointmentController.getMemberUpcomingAppointments);
+
+// Analytics and Reporting Routes
+
+/**
+ * @route   GET /api/v1/appointments/analytics/summary
+ * @desc    Get appointment summary analytics with trends and patterns
+ * @access  Private (Member)
+ */
+router.get("/analytics/summary", validate(appointmentSummarySchema), appointmentController.getAppointmentSummary);
+
+/**
+ * @route   GET /api/v1/appointments/analytics/list
+ * @desc    Get detailed appointment list for analytics
+ * @access  Private (Member)
+ */
+router.get("/analytics/list", validate(appointmentListSchema), appointmentController.getAppointmentAnalyticsList);
+
+/**
+ * @route   GET /api/v1/appointments/analytics/cancellations
+ * @desc    Get cancellations and no-shows analytics
+ * @access  Private (Member)
+ */
+router.get(
+  "/analytics/cancellations",
+  validate(cancellationNoShowSchema),
+  appointmentController.getCancellationNoShowAnalytics,
+);
 
 export default router;

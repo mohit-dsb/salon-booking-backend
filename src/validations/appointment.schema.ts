@@ -2,24 +2,33 @@ import { z } from "zod";
 import { paginationQuerySchema } from "./pagination.schema";
 
 // Appointment validation schema - clientId is optional for walk-in appointments
-export const createAppointmentSchema = z.object({
-  clientId: z.string().min(1, "Client ID is required").optional(), // Optional for walk-in
-  memberId: z.string().min(1, "Member ID is required"),
-  serviceId: z.string().min(1, "Service ID is required"),
-  startTime: z.iso.datetime("Invalid start time format"),
-  notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
-  internalNotes: z.string().max(500, "Internal notes must be less than 500 characters").optional(),
-  
-  // Walk-in client fields (used when clientId is not provided)
-  walkInClientName: z.string().min(1, "Walk-in client name is required").max(100, "Walk-in client name must be less than 100 characters").optional(),
-  walkInClientPhone: z.string().max(20, "Phone must be less than 20 characters").optional(),
-}).refine((data) => {
-  // Either clientId should be provided OR walkInClientName should be provided
-  return data.clientId || data.walkInClientName;
-}, {
-  message: "Either clientId or walkInClientName must be provided",
-  path: ["clientId"],
-});
+export const createAppointmentSchema = z
+  .object({
+    clientId: z.string().min(1, "Client ID is required").optional(), // Optional for walk-in
+    memberId: z.string().min(1, "Member ID is required"),
+    serviceId: z.string().min(1, "Service ID is required"),
+    startTime: z.iso.datetime("Invalid start time format"),
+    notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
+    internalNotes: z.string().max(500, "Internal notes must be less than 500 characters").optional(),
+
+    // Walk-in client fields (used when clientId is not provided)
+    walkInClientName: z
+      .string()
+      .min(1, "Walk-in client name is required")
+      .max(100, "Walk-in client name must be less than 100 characters")
+      .optional(),
+    walkInClientPhone: z.string().max(20, "Phone must be less than 20 characters").optional(),
+  })
+  .refine(
+    (data) => {
+      // Either clientId should be provided OR walkInClientName should be provided
+      return data.clientId || data.walkInClientName;
+    },
+    {
+      message: "Either clientId or walkInClientName must be provided",
+      path: ["clientId"],
+    },
+  );
 
 export const updateAppointmentSchema = z.object({
   startTime: z.iso.datetime("Invalid start time format").optional(),

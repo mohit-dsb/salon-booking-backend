@@ -10,7 +10,7 @@ export const validate = (schema: z.ZodObject<z.ZodRawShape>) => {
       // Determine what to validate based on the request method and content
       let dataToValidate;
 
-      if (req.method === 'GET') {
+      if (req.method === "GET") {
         dataToValidate = req.query;
       } else {
         dataToValidate = req.body;

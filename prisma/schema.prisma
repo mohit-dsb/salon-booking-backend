@@ -22,6 +22,23 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+enum ShiftStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum RecurrencePattern {
+  DAILY
+  WEEKLY
+  BI_WEEKLY
+  MONTHLY
+  CUSTOM
+}
+
 model Category {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String // Original name with proper casing for display
@@ -56,7 +73,7 @@ model Service {
   // Relationships
   category       Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   memberServices MemberService[]
-  appointments   Appointment[]   // Services can have many appointments
+  appointments   Appointment[] // Services can have many appointments
 
   // Ensure slug is unique within each organization
   @@unique([slug, orgId])
@@ -88,9 +105,11 @@ model Member {
   updatedAt        DateTime  @updatedAt
 
   // Relationships
-  memberServices MemberService[]
-  appointments   Appointment[]   // Appointments assigned to this member
-  bookedAppointments Appointment[] @relation("BookedAppointments") // Appointments booked by this member
+  memberServices     MemberService[]
+  appointments       Appointment[] // Appointments assigned to this member
+  bookedAppointments Appointment[]   @relation("BookedAppointments") // Appointments booked by this member
+  shifts             Shift[]
+  createdShifts      Shift[]         @relation("CreatedShifts")
 
   @@unique([email, orgId])
   @@index([orgId])
@@ -113,19 +132,19 @@ model MemberService {
 }
 
 model Client {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  firstName    String
-  lastName     String
-  email        String
-  phone        String?
-  dateOfBirth  DateTime?
-  address      Json?     // Store address as JSON
-  notes        String?   // Internal notes about the client
-  preferences  Json?     // Client preferences (communication, services, etc.)
-  orgId        String
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  firstName   String
+  lastName    String
+  email       String
+  phone       String?
+  dateOfBirth DateTime?
+  address     Json? // Store address as JSON
+  notes       String? // Internal notes about the client
+  preferences Json? // Client preferences (communication, services, etc.)
+  orgId       String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relationships
   appointments Appointment[]
@@ -137,33 +156,33 @@ model Client {
 }
 
 model Appointment {
-  id              String            @id @default(auto()) @map("_id") @db.ObjectId
-  clientId        String?           @db.ObjectId // Optional for walk-in appointments
-  memberId        String            @db.ObjectId
-  serviceId       String            @db.ObjectId
-  orgId           String
-  status          AppointmentStatus @default(SCHEDULED)
-  startTime       DateTime
-  endTime         DateTime
-  duration        Int               // Duration in minutes (copied from service for historical accuracy)
-  price           Float             // Price at time of booking (copied from service for historical accuracy)
-  notes           String?           // Appointment-specific notes
-  internalNotes   String?           // Internal staff notes
-  cancellationReason String?        // Reason for cancellation if cancelled
-  bookedBy        String            @db.ObjectId // Member who booked the appointment
-  
+  id                 String            @id @default(auto()) @map("_id") @db.ObjectId
+  clientId           String?           @db.ObjectId // Optional for walk-in appointments
+  memberId           String            @db.ObjectId
+  serviceId          String            @db.ObjectId
+  orgId              String
+  status             AppointmentStatus @default(SCHEDULED)
+  startTime          DateTime
+  endTime            DateTime
+  duration           Int // Duration in minutes (copied from service for historical accuracy)
+  price              Float // Price at time of booking (copied from service for historical accuracy)
+  notes              String? // Appointment-specific notes
+  internalNotes      String? // Internal staff notes
+  cancellationReason String? // Reason for cancellation if cancelled
+  bookedBy           String            @db.ObjectId // Member who booked the appointment
+
   // Walk-in appointment fields (used when clientId is null)
-  walkInClientName String?          // Temporary name for walk-in client (e.g., "Walk-in #123")
-  walkInClientPhone String?         // Optional phone for walk-in client
-  
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  walkInClientName  String? // Temporary name for walk-in client (e.g., "Walk-in #123")
+  walkInClientPhone String? // Optional phone for walk-in client
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relationships
-  client    Client? @relation(fields: [clientId], references: [id], onDelete: Cascade) // Optional for walk-ins
-  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  bookedByMember Member @relation("BookedAppointments", fields: [bookedBy], references: [id], onDelete: Cascade)
+  client         Client? @relation(fields: [clientId], references: [id], onDelete: Cascade) // Optional for walk-ins
+  member         Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  service        Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  bookedByMember Member  @relation("BookedAppointments", fields: [bookedBy], references: [id], onDelete: Cascade)
 
   @@index([orgId])
   @@index([clientId])
@@ -172,4 +191,47 @@ model Appointment {
   @@index([startTime])
   @@index([status])
   @@index([bookedBy])
+}
+
+model Shift {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  memberId String @db.ObjectId
+  orgId    String
+
+  // Shift timing
+  date      DateTime // The date of the shift (YYYY-MM-DD)
+  startTime String // Start time in HH:MM format (e.g., "09:00")
+  endTime   String // End time in HH:MM format (e.g., "17:00")
+  duration  Float // Duration in hours (calculated from start/end time)
+
+  // Shift details
+  title       String? // Optional title for the shift
+  description String? // Optional description
+  color       String? // Hex color for calendar display (e.g., "#3B82F6")
+
+  // Shift status
+  status ShiftStatus @default(SCHEDULED)
+
+  // Break information
+  breaks Json? // Array of break periods: [{ startTime: "12:00", endTime: "13:00", title: "Lunch" }]
+
+  // Recurring shift information
+  isRecurring       Boolean            @default(false)
+  recurrencePattern RecurrencePattern?
+  parentShiftId     String?            @db.ObjectId // Reference to parent recurring shift
+
+  // Metadata
+  createdBy String   @db.ObjectId // Member who created the shift
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  member          Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdByMember Member @relation("CreatedShifts", fields: [createdBy], references: [id])
+
+  @@unique([memberId, date, startTime]) // Prevent overlapping shifts
+  @@index([orgId])
+  @@index([memberId])
+  @@index([date])
+  @@index([status])
 }

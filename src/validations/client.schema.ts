@@ -35,6 +35,67 @@ export const clientQuerySchema = z.object({
   ...paginationQuerySchema.shape,
 });
 
+// Analytics validation schemas
+const analyticsBaseSchema = z.object({
+  startDate: z.iso.datetime().optional(),
+  endDate: z.iso.datetime().optional(),
+  period: z
+    .enum(["today", "yesterday", "this_week", "last_week", "this_month", "last_month", "this_year", "last_year"])
+    .optional(),
+  memberId: z.string().optional(),
+  serviceId: z.string().optional(),
+  categoryId: z.string().optional(),
+});
+
+// Client Summary Analytics Schema
+export const clientSummarySchema = analyticsBaseSchema.extend({
+  groupBy: z.enum(["day", "week", "month"]).default("day"),
+  includeMetrics: z.array(z.enum(["revenue", "averageValue", "retention", "growth"])).default([]),
+  includeSegmentation: z.boolean().default(false),
+  compareWithPrevious: z.boolean().default(false),
+});
+
+// Client List Analytics Schema
+export const clientListAnalyticsSchema = z.object({
+  ...paginationQuerySchema.shape,
+  ...analyticsBaseSchema.shape,
+  clientType: z.enum(["new", "returning", "walk_in", "all"]).default("all"),
+  sortBy: z.enum(["name", "email", "totalSpent", "lastVisit", "appointmentCount", "registrationDate"]).default("name"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
+  includeDetails: z.array(z.enum(["appointments", "services", "spending", "preferences", "demographics"])).default([]),
+  minAppointments: z.number().int().min(0).optional(),
+  maxAppointments: z.number().int().min(0).optional(),
+  minSpent: z.number().min(0).optional(),
+  maxSpent: z.number().min(0).optional(),
+  registrationDateFrom: z.iso.datetime().optional(),
+  registrationDateTo: z.iso.datetime().optional(),
+  lastVisitFrom: z.iso.datetime().optional(),
+  lastVisitTo: z.iso.datetime().optional(),
+  ageFrom: z.number().int().min(0).max(150).optional(),
+  ageTo: z.number().int().min(0).max(150).optional(),
+  gender: z.enum(["male", "female", "other", "prefer_not_to_say"]).optional(),
+  communicationPreference: z.enum(["EMAIL", "PHONE", "SMS"]).optional(),
+  isActive: z.boolean().optional(),
+  search: z.string().optional(),
+});
+
+// Client Insights Schema
+export const clientInsightsSchema = z.object({
+  includeAppointmentHistory: z.boolean().default(true),
+  includeSpendingAnalysis: z.boolean().default(true),
+  includeServicePreferences: z.boolean().default(true),
+  includeMemberPreferences: z.boolean().default(true),
+  includeBehaviorPatterns: z.boolean().default(true),
+  includeRecommendations: z.boolean().default(false),
+  historyMonths: z.number().int().min(1).max(60).default(12),
+  compareWithAverage: z.boolean().default(false),
+});
+
 export type CreateClientData = z.infer<typeof createClientSchema>;
 export type UpdateClientData = z.infer<typeof updateClientSchema>;
 export type ClientQueryParams = z.infer<typeof clientQuerySchema>;
+
+// Analytics types
+export type ClientSummaryParams = z.infer<typeof clientSummarySchema>;
+export type ClientListAnalyticsParams = z.infer<typeof clientListAnalyticsSchema>;
+export type ClientInsightsParams = z.infer<typeof clientInsightsSchema>;

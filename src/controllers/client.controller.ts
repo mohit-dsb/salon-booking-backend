@@ -3,6 +3,11 @@ import { parsePaginationParams } from "@/utils/pagination";
 import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
+import type { 
+  ClientSummaryParams, 
+  ClientListAnalyticsParams, 
+  ClientInsightsParams 
+} from "@/validations/client.schema";
 
 export class ClientController {
   private clientService = new ClientService();
@@ -107,6 +112,65 @@ export class ClientController {
       success: true,
       data: clients,
       message: "Search completed successfully",
+    });
+  });
+
+  // Analytics and Reporting Methods
+
+  /**
+   * Get client summary analytics with trends and patterns
+   */
+  public getClientSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { orgId } = getAuthWithOrgId(req);
+    const params = req.query as unknown as ClientSummaryParams;
+
+    const result = await this.clientService.getClientSummary(orgId, params);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: "Client summary analytics retrieved successfully",
+    });
+  });
+
+  /**
+   * Get comprehensive client list with analytics data
+   */
+  public getClientAnalyticsList = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { orgId } = getAuthWithOrgId(req);
+    const params = req.query as unknown as ClientListAnalyticsParams;
+    const pagination = parsePaginationParams(req.query);
+
+    const result = await this.clientService.getClientAnalyticsList(orgId, params, pagination);
+
+    res.status(200).json({
+      success: true,
+      data: result.data,
+      pagination: result.pagination,
+      summary: result.summary,
+      filters: result.filters,
+      message: "Client analytics list retrieved successfully",
+    });
+  });
+
+  /**
+   * Get individual client insights and behavior analysis
+   */
+  public getClientInsights = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { orgId } = getAuthWithOrgId(req);
+    const { clientId } = req.params;
+    const params = req.query as unknown as ClientInsightsParams;
+
+    if (!clientId) {
+      throw new AppError("Client ID is required", 400);
+    }
+
+    const result = await this.clientService.getClientInsights(orgId, clientId, params);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: "Client insights retrieved successfully",
     });
   });
 }

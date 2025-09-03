@@ -5,6 +5,7 @@ import { Client, Prisma } from "@prisma/client";
 import { handleError } from "@/utils/errorHandler";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
+import type { ClientSummaryParams, ClientListAnalyticsParams, ClientInsightsParams } from "@/validations/client.schema";
 
 export interface CreateClientData {
   firstName: string;
@@ -42,6 +43,12 @@ export interface ClientWithAppointments extends Client {
       name: string;
     };
   }>;
+}
+
+interface AppointmentAnalytics {
+  status: string;
+  price?: number;
+  [key: string]: unknown;
 }
 
 export class ClientService {
@@ -424,6 +431,699 @@ export class ClientService {
     await cacheService.set(cacheKey, clients, 300);
 
     return clients;
+  }
+
+  // Analytics and Reporting Methods
+
+  /**
+   * Get client summary analytics with trends and patterns
+   */
+  async getClientSummary(orgId: string, params: ClientSummaryParams) {
+    try {
+      const {
+        startDate,
+        endDate,
+        period,
+        groupBy = "day",
+        includeMetrics = [],
+        includeSegmentation = false,
+        compareWithPrevious = false,
+        memberId,
+        serviceId,
+        categoryId,
+      } = params;
+
+      // Calculate date range based on period or custom dates
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      // Base query conditions for appointments
+      const appointmentWhere: Prisma.AppointmentWhereInput = {
+        orgId,
+        startTime: {
+          gte: dateRange.start,
+          lte: dateRange.end,
+        },
+        ...(memberId && { memberId }),
+        ...(serviceId && { serviceId }),
+        ...(categoryId && { service: { categoryId } }),
+      };
+
+      // Get client statistics
+      const [totalClients, newClients, returningClients, walkInClients, activeClients] = await Promise.all([
+        // Total clients in organization
+        prisma.client.count({ where: { orgId, isActive: true } }),
+
+        // New clients (first appointment in period)
+        this.getNewClientsCount(orgId, dateRange),
+
+        // Returning clients (clients with previous appointments)
+        this.getReturningClientsCount(orgId, dateRange),
+
+        // Walk-in appointments (no clientId)
+        prisma.appointment.count({
+          where: { ...appointmentWhere, clientId: null },
+        }),
+
+        // Active clients (clients with appointments in period)
+        this.getActiveClientsCount(orgId, dateRange),
+      ]);
+
+      // Calculate revenue and appointment metrics if requested
+      let totalRevenue = 0;
+      let averageValue = 0;
+      if (includeMetrics.includes("revenue") || includeMetrics.includes("averageValue")) {
+        const revenueData = await prisma.appointment.aggregate({
+          where: { ...appointmentWhere, status: "COMPLETED" },
+          _sum: { price: true },
+          _count: { id: true },
+        });
+        totalRevenue = revenueData._sum.price || 0;
+        averageValue = revenueData._count.id > 0 ? totalRevenue / revenueData._count.id : 0;
+      }
+
+      // Get trends data if requested
+      let trends: Array<Record<string, unknown>> = [];
+      if (groupBy) {
+        trends = await this.getClientTrends(orgId, appointmentWhere, groupBy, dateRange);
+      }
+
+      // Get client segmentation if requested
+      let segmentation: Record<string, unknown> = {};
+      if (includeSegmentation) {
+        segmentation = await this.getClientSegmentation(orgId, dateRange);
+      }
+
+      // Compare with previous period if requested
+      let comparison: Record<string, unknown> = {};
+      if (compareWithPrevious) {
+        comparison = await this.getPreviousPeriodComparison(orgId, dateRange, params);
+      }
+
+      return {
+        period: {
+          start: dateRange.start,
+          end: dateRange.end,
+          label: this.getPeriodLabel(period, startDate, endDate),
+        },
+        overview: {
+          totalClients,
+          newClients,
+          returningClients,
+          walkInClients,
+          activeClients,
+          totalRevenue,
+          averageValue: Math.round(averageValue * 100) / 100,
+        },
+        trends,
+        segmentation,
+        comparison,
+        filters: {
+          memberId,
+          serviceId,
+          categoryId,
+          groupBy,
+          includeMetrics,
+          includeSegmentation,
+          compareWithPrevious,
+        },
+      };
+    } catch (error) {
+      handleError(error, "getClientSummary", "Failed to get client summary");
+    }
+  }
+
+  /**
+   * Get comprehensive client list with analytics data
+   */
+  async getClientAnalyticsList(orgId: string, params: ClientListAnalyticsParams, pagination: PaginationParams) {
+    try {
+      const {
+        clientType = "all",
+        sortBy = "name",
+        sortOrder = "asc",
+        includeDetails = [],
+        search,
+        isActive,
+        minAppointments,
+        maxAppointments,
+        minSpent,
+        maxSpent,
+        registrationDateFrom,
+        registrationDateTo,
+        lastVisitFrom: _lastVisitFrom,
+        lastVisitTo: _lastVisitTo,
+        ageFrom,
+        ageTo,
+        gender,
+        communicationPreference: _communicationPreference,
+        startDate,
+        endDate,
+        period,
+        memberId: _memberId,
+        serviceId: _serviceId,
+        categoryId: _categoryId,
+      } = params;
+
+      // Calculate date range if specified
+      const dateRange = startDate || endDate || period ? this.calculateDateRange(period, startDate, endDate) : null;
+
+      // Build where clause for clients
+      const clientWhere: Prisma.ClientWhereInput = {
+        orgId,
+        ...(isActive !== undefined && { isActive }),
+        ...(search && {
+          OR: [
+            { firstName: { contains: search, mode: "insensitive" } },
+            { lastName: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } },
+            { phone: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+        ...(registrationDateFrom && { createdAt: { gte: new Date(registrationDateFrom) } }),
+        ...(registrationDateTo && { createdAt: { lte: new Date(registrationDateTo) } }),
+        ...(gender && { gender }),
+        // Note: Communication preference filtering would need a custom implementation
+        // as JSON filtering in Prisma has specific syntax requirements
+      };
+
+      // Add age filters if specified
+      if (ageFrom || ageTo) {
+        const now = new Date();
+        const ageConditions: Record<string, Date> = {};
+
+        if (ageTo) {
+          const minBirthDate = new Date(now.getFullYear() - ageTo, now.getMonth(), now.getDate());
+          ageConditions.gte = minBirthDate;
+        }
+
+        if (ageFrom) {
+          const maxBirthDate = new Date(now.getFullYear() - ageFrom, now.getMonth(), now.getDate());
+          ageConditions.lte = maxBirthDate;
+        }
+
+        if (Object.keys(ageConditions).length > 0) {
+          clientWhere.dateOfBirth = ageConditions;
+        }
+      }
+
+      // Filter by client type (new, returning, walk-in)
+      if (clientType !== "all") {
+        await this.applyClientTypeFilter(clientWhere, clientType, dateRange, orgId);
+      }
+
+      // Build include clause based on requested details
+      const include: Prisma.ClientInclude = {
+        ...(includeDetails.includes("appointments") && {
+          appointments: {
+            select: {
+              id: true,
+              startTime: true,
+              status: true,
+              price: true,
+              service: { select: { name: true, duration: true } },
+              member: { select: { username: true } },
+            },
+            ...(dateRange && {
+              where: {
+                startTime: { gte: dateRange.start, lte: dateRange.end },
+              },
+            }),
+            orderBy: { startTime: "desc" },
+            take: 10, // Limit recent appointments
+          },
+        }),
+        _count: {
+          select: {
+            appointments: {
+              ...(dateRange && {
+                where: {
+                  startTime: { gte: dateRange.start, lte: dateRange.end },
+                },
+              }),
+            },
+          },
+        },
+      };
+
+      // Build orderBy based on sortBy and sortOrder
+      const orderBy: Prisma.ClientOrderByWithRelationInput = this.buildClientOrderBy(sortBy, sortOrder);
+
+      // Apply spending filters by adding having clause through raw query if needed
+      let clientIds: string[] | undefined;
+      if (minSpent || maxSpent || minAppointments || maxAppointments) {
+        clientIds = await this.getFilteredClientIds(orgId, {
+          minSpent,
+          maxSpent,
+          minAppointments,
+          maxAppointments,
+          dateRange,
+        });
+
+        if (clientIds.length === 0) {
+          return {
+            data: [],
+            pagination: {
+              page: pagination.page,
+              limit: pagination.limit,
+              total: 0,
+              totalPages: 0,
+            },
+            summary: this.getEmptyListSummary(),
+            filters: params,
+          };
+        }
+
+        clientWhere.id = { in: clientIds };
+      }
+
+      // Get total count
+      const total = await prisma.client.count({ where: clientWhere });
+
+      // Get clients with pagination
+      const clients = await prisma.client.findMany({
+        where: clientWhere,
+        include,
+        orderBy,
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      });
+
+      // Calculate additional analytics for each client if requested
+      const enrichedClients = await this.enrichClientsWithAnalytics(clients, includeDetails, dateRange);
+
+      // Calculate summary statistics
+      const summary = await this.calculateListSummaryStats(clientWhere, dateRange);
+
+      return {
+        data: enrichedClients,
+        pagination: {
+          page: pagination.page,
+          limit: pagination.limit,
+          total,
+          totalPages: Math.ceil(total / pagination.limit),
+        },
+        summary,
+        filters: params,
+      };
+    } catch (error) {
+      handleError(error, "getClientAnalyticsList", "Failed to get client analytics list");
+    }
+  }
+
+  /**
+   * Get individual client insights and behavior analysis
+   */
+  async getClientInsights(orgId: string, clientId: string, params: ClientInsightsParams) {
+    try {
+      const {
+        includeAppointmentHistory = true,
+        includeSpendingAnalysis = true,
+        includeServicePreferences = true,
+        includeMemberPreferences = true,
+        includeBehaviorPatterns = true,
+        includeRecommendations = false,
+        historyMonths = 12,
+        compareWithAverage = false,
+      } = params;
+
+      // Validate client exists and belongs to organization
+      const client = await prisma.client.findFirst({
+        where: { id: clientId, orgId },
+        include: {
+          appointments: {
+            include: {
+              service: { include: { category: true } },
+              member: true,
+            },
+            orderBy: { startTime: "desc" },
+            take: historyMonths * 4, // Approximate appointments for the period
+          },
+        },
+      });
+
+      if (!client) {
+        throw new AppError("Client not found", 404);
+      }
+
+      const historyStartDate = new Date();
+      historyStartDate.setMonth(historyStartDate.getMonth() - historyMonths);
+
+      const insights: Record<string, unknown> = {
+        client: {
+          id: client.id,
+          name: `${client.firstName} ${client.lastName}`,
+          email: client.email,
+          phone: client.phone,
+          registrationDate: client.createdAt,
+          isActive: client.isActive,
+          preferences: client.preferences,
+        },
+      };
+
+      // Appointment History Analysis
+      if (includeAppointmentHistory) {
+        insights.appointmentHistory = await this.analyzeAppointmentHistory(client.appointments, historyStartDate);
+      }
+
+      // Spending Analysis
+      if (includeSpendingAnalysis) {
+        insights.spendingAnalysis = await this.analyzeClientSpending(client.appointments, historyStartDate);
+      }
+
+      // Service Preferences
+      if (includeServicePreferences) {
+        insights.servicePreferences = await this.analyzeServicePreferences(client.appointments);
+      }
+
+      // Member Preferences
+      if (includeMemberPreferences) {
+        insights.memberPreferences = await this.analyzeMemberPreferences(client.appointments);
+      }
+
+      // Behavior Patterns
+      if (includeBehaviorPatterns) {
+        insights.behaviorPatterns = await this.analyzeBehaviorPatterns(client.appointments, historyStartDate);
+      }
+
+      // Recommendations
+      if (includeRecommendations) {
+        insights.recommendations = await this.generateClientRecommendations(orgId, client, insights);
+      }
+
+      // Compare with average client if requested
+      if (compareWithAverage) {
+        insights.averageComparison = await this.compareWithAverageClient(orgId, insights, historyStartDate);
+      }
+
+      return insights;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      handleError(error, "getClientInsights", "Failed to get client insights");
+    }
+  }
+
+  // Helper methods for analytics
+
+  private calculateDateRange(period?: string, startDate?: string, endDate?: string) {
+    const now = new Date();
+    let start: Date;
+    let end: Date;
+
+    if (period) {
+      switch (period) {
+        case "today":
+          start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+          break;
+        case "yesterday": {
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          start = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+          end = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59);
+          break;
+        }
+        case "this_week": {
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(now.getDate() - now.getDay());
+          start = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate());
+          end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+          break;
+        }
+        case "last_week": {
+          const lastWeekStart = new Date(now);
+          lastWeekStart.setDate(now.getDate() - now.getDay() - 7);
+          const lastWeekEnd = new Date(lastWeekStart);
+          lastWeekEnd.setDate(lastWeekStart.getDate() + 6);
+          start = new Date(lastWeekStart.getFullYear(), lastWeekStart.getMonth(), lastWeekStart.getDate());
+          end = new Date(lastWeekEnd.getFullYear(), lastWeekEnd.getMonth(), lastWeekEnd.getDate(), 23, 59, 59);
+          break;
+        }
+        case "this_month":
+          start = new Date(now.getFullYear(), now.getMonth(), 1);
+          end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+          break;
+        case "last_month":
+          start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+          break;
+        case "this_year":
+          start = new Date(now.getFullYear(), 0, 1);
+          end = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+          break;
+        case "last_year":
+          start = new Date(now.getFullYear() - 1, 0, 1);
+          end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59);
+          break;
+        default:
+          start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          end = now;
+      }
+    } else {
+      start = startDate ? new Date(startDate) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      end = endDate ? new Date(endDate) : now;
+    }
+
+    return { start, end };
+  }
+
+  private getPeriodLabel(period?: string, startDate?: string, endDate?: string): string {
+    if (period) {
+      const labels = {
+        today: "Today",
+        yesterday: "Yesterday",
+        this_week: "This Week",
+        last_week: "Last Week",
+        this_month: "This Month",
+        last_month: "Last Month",
+        this_year: "This Year",
+        last_year: "Last Year",
+      };
+      return labels[period as keyof typeof labels] || "Custom Period";
+    }
+
+    if (startDate && endDate) {
+      return `${startDate} to ${endDate}`;
+    }
+
+    return "Last 30 Days";
+  }
+
+  private async getNewClientsCount(orgId: string, dateRange: { start: Date; end: Date }): Promise<number> {
+    // Clients whose first appointment was in the specified period
+    const clientsWithFirstAppointment = await prisma.client.findMany({
+      where: {
+        orgId,
+        appointments: {
+          some: {
+            startTime: {
+              gte: dateRange.start,
+              lte: dateRange.end,
+            },
+          },
+        },
+      },
+      include: {
+        appointments: {
+          select: { startTime: true },
+          orderBy: { startTime: "asc" },
+          take: 1,
+        },
+      },
+    });
+
+    return clientsWithFirstAppointment.filter(
+      (client) => client.appointments.length > 0 && client.appointments[0].startTime >= dateRange.start,
+    ).length;
+  }
+
+  private async getReturningClientsCount(orgId: string, dateRange: { start: Date; end: Date }): Promise<number> {
+    const returningClients = await prisma.client.count({
+      where: {
+        orgId,
+        appointments: {
+          some: {
+            startTime: {
+              gte: dateRange.start,
+              lte: dateRange.end,
+            },
+          },
+        },
+        AND: {
+          appointments: {
+            some: {
+              startTime: {
+                lt: dateRange.start,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return returningClients;
+  }
+
+  private async getActiveClientsCount(orgId: string, dateRange: { start: Date; end: Date }): Promise<number> {
+    return prisma.client.count({
+      where: {
+        orgId,
+        appointments: {
+          some: {
+            startTime: {
+              gte: dateRange.start,
+              lte: dateRange.end,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  // Placeholder methods for complex analytics (to be implemented based on specific requirements)
+  private async getClientTrends(
+    _orgId: string,
+    _appointmentWhere: Prisma.AppointmentWhereInput,
+    _groupBy: string,
+    _dateRange: { start: Date; end: Date },
+  ) {
+    // Implementation for client trends over time
+    return [];
+  }
+
+  private async getClientSegmentation(_orgId: string, _dateRange: { start: Date; end: Date }) {
+    // Implementation for client segmentation analysis
+    return {};
+  }
+
+  private async getPreviousPeriodComparison(
+    _orgId: string,
+    _dateRange: { start: Date; end: Date },
+    _params: ClientSummaryParams,
+  ) {
+    // Implementation for previous period comparison
+    return {};
+  }
+
+  private async applyClientTypeFilter(
+    _clientWhere: Prisma.ClientWhereInput,
+    _clientType: string,
+    _dateRange: { start: Date; end: Date } | null,
+    _orgId: string,
+  ) {
+    // Implementation for client type filtering
+  }
+
+  private buildClientOrderBy(sortBy: string, sortOrder: string): Prisma.ClientOrderByWithRelationInput {
+    const order = sortOrder as "asc" | "desc";
+
+    switch (sortBy) {
+      case "name":
+        return { firstName: order };
+      case "email":
+        return { email: order };
+      case "registrationDate":
+        return { createdAt: order };
+      case "lastVisit":
+        return { updatedAt: order };
+      default:
+        return { firstName: order };
+    }
+  }
+
+  private async getFilteredClientIds(
+    _orgId: string,
+    _filters: {
+      minSpent?: number;
+      maxSpent?: number;
+      minAppointments?: number;
+      maxAppointments?: number;
+      dateRange?: { start: Date; end: Date } | null;
+    },
+  ): Promise<string[]> {
+    // Implementation for complex filtering by spending and appointment counts
+    return [];
+  }
+
+  private async enrichClientsWithAnalytics(
+    clients: Array<Record<string, unknown>>,
+    _includeDetails: string[],
+    _dateRange: { start: Date; end: Date } | null,
+  ) {
+    // Implementation for enriching client data with analytics
+    return clients;
+  }
+
+  private async calculateListSummaryStats(
+    _clientWhere: Prisma.ClientWhereInput,
+    _dateRange: { start: Date; end: Date } | null,
+  ) {
+    // Implementation for summary statistics
+    return {
+      totalClients: 0,
+      averageSpending: 0,
+      averageAppointments: 0,
+    };
+  }
+
+  private getEmptyListSummary() {
+    return {
+      totalClients: 0,
+      averageSpending: 0,
+      averageAppointments: 0,
+    };
+  }
+
+  private async analyzeAppointmentHistory(appointments: AppointmentAnalytics[], _historyStartDate: Date) {
+    // Implementation for appointment history analysis
+    return {
+      totalAppointments: appointments.length,
+      completedAppointments: appointments.filter((a) => a.status === "COMPLETED").length,
+      cancelledAppointments: appointments.filter((a) => a.status === "CANCELLED").length,
+      noShowAppointments: appointments.filter((a) => a.status === "NO_SHOW").length,
+    };
+  }
+
+  private async analyzeClientSpending(appointments: AppointmentAnalytics[], _historyStartDate: Date) {
+    // Implementation for spending analysis
+    const completedAppointments = appointments.filter((a) => a.status === "COMPLETED");
+    const totalSpent = completedAppointments.reduce((sum: number, a) => sum + (a.price || 0), 0);
+
+    return {
+      totalSpent,
+      averagePerAppointment: completedAppointments.length > 0 ? totalSpent / completedAppointments.length : 0,
+      appointmentCount: completedAppointments.length,
+    };
+  }
+
+  private async analyzeServicePreferences(_appointments: AppointmentAnalytics[]) {
+    // Implementation for service preference analysis
+    return {};
+  }
+
+  private async analyzeMemberPreferences(_appointments: AppointmentAnalytics[]) {
+    // Implementation for member preference analysis
+    return {};
+  }
+
+  private async analyzeBehaviorPatterns(_appointments: AppointmentAnalytics[], _historyStartDate: Date) {
+    // Implementation for behavior pattern analysis
+    return {};
+  }
+
+  private async generateClientRecommendations(
+    _orgId: string,
+    _client: Record<string, unknown>,
+    _insights: Record<string, unknown>,
+  ) {
+    // Implementation for generating recommendations
+    return [];
+  }
+
+  private async compareWithAverageClient(_orgId: string, _insights: Record<string, unknown>, _historyStartDate: Date) {
+    // Implementation for comparing with average client metrics
+    return {};
   }
 }
 

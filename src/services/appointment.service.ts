@@ -4,7 +4,6 @@ import { cacheService } from "./cache.service";
 import { handleError } from "@/utils/errorHandler";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
-import { ClientService } from "./client.service";
 import { Appointment, AppointmentStatus, Prisma } from "@prisma/client";
 
 export interface CreateAppointmentData {
@@ -69,10 +68,15 @@ export interface AvailabilitySlot {
   available: boolean;
 }
 
+export interface WorkingHours {
+  start: number; // Hour of day (0-23)
+  end: number; // Hour of day (0-23)
+  daysOfWeek?: number[]; // 0-6 (Sunday-Saturday)
+}
+
 export class AppointmentService {
   private readonly CACHE_TTL = 1800; // 30 minutes
   private readonly CACHE_PREFIX = "appointment";
-  private clientService = new ClientService();
 
   private getCacheKey(orgId: string, key: string): string {
     return `${this.CACHE_PREFIX}:${orgId}:${key}`;
@@ -689,18 +693,31 @@ export class AppointmentService {
       throw new AppError("This member does not provide the selected service", 400);
     }
 
-    // For simplicity, assume working hours are 9 AM to 6 PM
-    // In a real application, you'd get this from member.workingHours
-    const workingHours = {
-      start: 9, // 9 AM
-      end: 18, // 6 PM
-    };
+    const workingHours = member.workingHours;
+
+    // Parse and validate working hours
+    let memberWorkingHours: WorkingHours;
+    try {
+      if (!workingHours) {
+        // Default working hours: 9 AM to 5 PM
+        memberWorkingHours = { start: 9, end: 17 };
+      } else {
+        memberWorkingHours = workingHours as unknown as WorkingHours;
+        // Validate the structure
+        if (typeof memberWorkingHours.start !== "number" || typeof memberWorkingHours.end !== "number") {
+          memberWorkingHours = { start: 9, end: 17 };
+        }
+      }
+    } catch (_error) {
+      // Fallback to default working hours if parsing fails
+      memberWorkingHours = { start: 9, end: 17 };
+    }
 
     const requestedDate = new Date(date);
     const slots: AvailabilitySlot[] = [];
 
     // Generate time slots in 30-minute intervals
-    for (let hour = workingHours.start; hour < workingHours.end; hour++) {
+    for (let hour = memberWorkingHours.start; hour < memberWorkingHours.end; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         const slotStart = new Date(requestedDate);
         slotStart.setHours(hour, minute, 0, 0);
@@ -708,7 +725,7 @@ export class AppointmentService {
         const slotEnd = new Date(slotStart.getTime() + service.duration * 60000);
 
         // Don't add slots that would extend beyond working hours
-        if (slotEnd.getHours() > workingHours.end) {
+        if (slotEnd.getHours() > memberWorkingHours.end) {
           break;
         }
 

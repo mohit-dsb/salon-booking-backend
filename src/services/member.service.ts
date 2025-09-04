@@ -7,13 +7,18 @@ import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
 import { createPaginatedResponse, type PaginatedResponse } from "@/utils/pagination";
 import { handleError, executeClerkOperation } from "@/utils/errorHandler";
-import { Member, MemberService as PrismaMemberService, Role, Prisma } from "@prisma/client";
+import { Member, MemberService as PrismaMemberService, Role, Prisma, ShiftStatus } from "@prisma/client";
 import type {
   WorkingHoursActivityParams,
   BreakActivityParams,
   AttendanceSummaryParams,
   WagesDetailParams,
   WagesSummaryParams,
+  PaySummaryParams,
+  ScheduledShiftsParams,
+  WorkingHoursSummaryParams,
+  CommissionActivityParams,
+  CommissionSummaryParams,
 } from "@/validations/member.schema";
 
 // Type definitions for better type safety
@@ -1058,7 +1063,6 @@ export class MemberService {
         maxHours,
         shiftStatus,
         includeBreakdown = false,
-        groupBy: _groupBy = "member",
       } = params;
 
       // Calculate date range
@@ -1165,7 +1169,6 @@ export class MemberService {
         maxBreakDuration,
         adherenceThreshold = 90,
         includeViolations = false,
-        groupBy: _groupBy2 = "member",
       } = params;
 
       const dateRange = this.calculateDateRange(period, startDate, endDate);
@@ -1796,5 +1799,1055 @@ export class MemberService {
 
   private async calculateWagesForecasting(_trends: Array<Record<string, unknown>>) {
     return {};
+  }
+
+  // New Analytics and Reporting Methods
+
+  /**
+   * Get pay summary overview for team member compensation
+   */
+  async getPaySummary(orgId: string, params: PaySummaryParams, pagination: PaginationParams) {
+    try {
+      logger.info("Getting pay summary", { orgId, params });
+
+      const {
+        period,
+        startDate,
+        endDate,
+        memberIds,
+        roles,
+        isActive,
+        includeComponents = [],
+        payrollPeriod = "current",
+        groupBy: _groupBy = "member",
+      } = params;
+
+      // Calculate date range
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      // Build member filter
+      const memberWhere: Prisma.MemberWhereInput = {
+        orgId,
+        isActive: isActive ?? true,
+      };
+
+      if (memberIds?.length) {
+        memberWhere.id = { in: memberIds };
+      }
+
+      if (roles?.length) {
+        memberWhere.role = { in: roles };
+      }
+
+      // Get base member data
+      const members = await prisma.member.findMany({
+        where: memberWhere,
+        include: {
+          shifts: {
+            where: {
+              date: {
+                gte: dateRange.start,
+                lte: dateRange.end,
+              },
+            },
+          },
+          appointments: {
+            where: {
+              startTime: {
+                gte: dateRange.start,
+                lte: dateRange.end,
+              },
+            },
+            include: {
+              service: true,
+            },
+          },
+        },
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      });
+
+      // Process pay summary data
+      const payData = await Promise.all(
+        members.map(async (member) => {
+          const compensation = await this.calculateMemberCompensation(member, dateRange, includeComponents);
+
+          return {
+            memberId: member.id,
+            memberName: member.username,
+            role: member.role,
+            jobTitle: member.jobTitle || "Unassigned",
+            payPeriod: payrollPeriod,
+            totalCompensation: compensation.total,
+            baseSalary: compensation.baseSalary,
+            hourlyWages: compensation.hourlyWages,
+            overtime: compensation.overtime,
+            commissions: compensation.commissions,
+            deductions: compensation.deductions,
+            benefits: compensation.benefits,
+            taxes: compensation.taxes,
+            netPay: compensation.netPay,
+            grossPay: compensation.grossPay,
+            lastUpdated: new Date().toISOString(),
+          };
+        }),
+      );
+
+      // Calculate summary metrics
+
+      // Get total count for pagination
+      const totalCount = await prisma.member.count({ where: memberWhere });
+
+      return createPaginatedResponse(payData, totalCount, pagination.page, pagination.limit);
+    } catch (error) {
+      handleError(error, "getPaySummary", "Failed to get pay summary");
+    }
+  }
+
+  /**
+   * Get detailed view of team members scheduled shifts
+   */
+  async getScheduledShifts(orgId: string, params: ScheduledShiftsParams, pagination: PaginationParams) {
+    try {
+      logger.info("Getting scheduled shifts", { orgId, params });
+
+      const { period, startDate, endDate, memberIds, roles, isActive, shiftStatus, groupBy: _groupBy = "day" } = params;
+
+      // Calculate date range
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      // Build shift filters
+      const shiftWhere: Prisma.ShiftWhereInput = {
+        orgId,
+        date: {
+          gte: dateRange.start,
+          lte: dateRange.end,
+        },
+      };
+
+      if (shiftStatus?.length) {
+        // Filter out invalid status values
+        const validStatuses = shiftStatus.filter((status) =>
+          ["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"].includes(status),
+        ) as ShiftStatus[];
+        if (validStatuses.length > 0) {
+          shiftWhere.status = { in: validStatuses };
+        }
+      }
+
+      // Build member filters
+      const memberFilter: Prisma.MemberWhereInput = {
+        orgId,
+        isActive: isActive ?? true,
+      };
+
+      if (memberIds?.length) {
+        memberFilter.id = { in: memberIds };
+      }
+
+      if (roles?.length) {
+        memberFilter.role = { in: roles };
+      }
+
+      shiftWhere.member = memberFilter;
+
+      // Get shifts with related data
+      const shifts = await prisma.shift.findMany({
+        where: shiftWhere,
+        include: {
+          member: {
+            select: {
+              id: true,
+              username: true,
+              role: true,
+              jobTitle: true,
+            },
+          },
+        },
+        orderBy: [{ date: "asc" }, { startTime: "asc" }],
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      });
+
+      // Get appointments for these shifts
+      const appointmentMemberIds = shifts.map((shift) => shift.memberId);
+      const appointments = await prisma.appointment.findMany({
+        where: {
+          memberId: { in: appointmentMemberIds },
+          startTime: {
+            gte: dateRange.start,
+            lte: dateRange.end,
+          },
+        },
+        include: {
+          service: {
+            select: {
+              name: true,
+              duration: true,
+            },
+          },
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      });
+
+      // Process shift data
+      const shiftData = shifts.map((shift) => {
+        const shiftDuration = this.calculateShiftDuration(shift.startTime, shift.endTime);
+        const shiftAppointments = appointments.filter(
+          (apt) =>
+            apt.memberId === shift.memberId &&
+            apt.startTime >= new Date(shift.date.toDateString()) &&
+            apt.startTime <= new Date(shift.date.toDateString() + " 23:59:59"),
+        );
+        const appointmentCount = shiftAppointments.length;
+        const utilizationRate = this.calculateShiftUtilization(shiftAppointments, shiftDuration);
+
+        return {
+          shiftId: shift.id,
+          memberId: shift.member.id,
+          memberName: shift.member.username,
+          jobTitle: shift.member.jobTitle,
+          date: shift.date.toISOString().split("T")[0],
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+          duration: shiftDuration,
+          status: shift.status,
+          title: shift.title,
+          description: shift.description,
+          appointmentCount,
+          utilizationRate,
+          appointments: shiftAppointments.map((apt) => ({
+            id: apt.id,
+            startTime: apt.startTime.toISOString(),
+            endTime: apt.endTime.toISOString(),
+            serviceName: apt.service.name,
+            clientName: `${apt.client?.firstName || "Walk-in"} ${apt.client?.lastName || ""}`.trim(),
+            duration: apt.service.duration,
+          })),
+          breaks: shift.breaks || [],
+        };
+      });
+
+      // Calculate summary metrics
+
+      // Get total count
+      const totalCount = await prisma.shift.count({ where: shiftWhere });
+
+      return createPaginatedResponse(shiftData, totalCount, pagination.page, pagination.limit);
+    } catch (error) {
+      handleError(error, "getScheduledShifts", "Failed to get scheduled shifts");
+    }
+  }
+
+  /**
+   * Get working hours summary with operational hours and productivity overview
+   */
+  async getWorkingHoursSummary(orgId: string, params: WorkingHoursSummaryParams, pagination: PaginationParams) {
+    try {
+      logger.info("Getting working hours summary", { orgId, params });
+
+      const {
+        period,
+        startDate,
+        endDate,
+        memberIds,
+        roles,
+        isActive,
+        includeMetrics = [],
+        hoursType = [],
+        targetHours,
+        groupBy: _groupBy = "member",
+      } = params;
+
+      // Calculate date range
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      // Build member filter
+      const memberWhere: Prisma.MemberWhereInput = {
+        orgId,
+        isActive: isActive ?? true,
+      };
+
+      if (memberIds?.length) {
+        memberWhere.id = { in: memberIds };
+      }
+
+      if (roles?.length) {
+        memberWhere.role = { in: roles };
+      }
+
+      // Get members with their shifts
+      const members = await prisma.member.findMany({
+        where: memberWhere,
+        include: {
+          shifts: {
+            where: {
+              date: {
+                gte: dateRange.start,
+                lte: dateRange.end,
+              },
+            },
+          },
+          appointments: {
+            where: {
+              startTime: {
+                gte: dateRange.start,
+                lte: dateRange.end,
+              },
+            },
+            include: {
+              service: true,
+            },
+          },
+        },
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      });
+
+      // Process working hours data
+      const hoursData = await Promise.all(
+        members.map(async (member) => {
+          const hoursMetrics = await this.calculateWorkingHoursMetrics(member, dateRange, includeMetrics, hoursType);
+
+          return {
+            memberId: member.id,
+            memberName: member.username,
+            jobTitle: member.jobTitle || "Unassigned",
+            role: member.role,
+            totalHours: hoursMetrics.totalHours,
+            regularHours: hoursMetrics.regularHours,
+            overtimeHours: hoursMetrics.overtimeHours,
+            scheduledHours: hoursMetrics.scheduledHours,
+            actualHours: hoursMetrics.actualHours,
+            billableHours: hoursMetrics.billableHours,
+            productiveHours: hoursMetrics.productiveHours,
+            productivity: hoursMetrics.productivity,
+            utilization: hoursMetrics.utilization,
+            efficiency: hoursMetrics.efficiency,
+            laborCost: hoursMetrics.laborCost,
+            averageDaily: hoursMetrics.averageDaily,
+            peakHours: hoursMetrics.peakHours,
+            idleTime: hoursMetrics.idleTime,
+            variance: hoursMetrics.variance,
+          };
+        }),
+      );
+
+      // Calculate comprehensive summary
+      const summary = this.calculateWorkingHoursSummaryMetrics(hoursData, includeMetrics, targetHours);
+
+      // Add trends if requested
+      if (params.includeTrends) {
+        const trends = await this.calculateWorkingHoursTrendsData(orgId, dateRange, memberWhere);
+        (summary as Record<string, unknown>).trends = trends;
+      }
+
+      // Get total count
+      const totalCount = await prisma.member.count({ where: memberWhere });
+
+      return createPaginatedResponse(hoursData, totalCount, pagination.page, pagination.limit);
+    } catch (error) {
+      handleError(error, "getWorkingHoursSummary", "Failed to get working hours summary");
+    }
+  }
+
+  /**
+   * Get full list of sales with commission payable
+   */
+  async getCommissionActivity(orgId: string, params: CommissionActivityParams, pagination: PaginationParams) {
+    try {
+      logger.info("Getting commission activity", { orgId, params });
+
+      const {
+        period,
+        startDate,
+        endDate,
+        memberIds,
+        roles,
+        isActive,
+        commissionTypes: _commissionTypes,
+        minCommissionAmount,
+        maxCommissionAmount,
+      } = params;
+
+      // Calculate date range
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      // Build member filter
+      const memberWhere: Prisma.MemberWhereInput = {
+        orgId,
+        isActive: isActive ?? true,
+      };
+
+      if (memberIds?.length) {
+        memberWhere.id = { in: memberIds };
+      }
+
+      if (roles?.length) {
+        memberWhere.role = { in: roles };
+      }
+
+      // Get appointments (commission transactions) with commission
+      const appointments = await prisma.appointment.findMany({
+        where: {
+          member: memberWhere,
+          startTime: {
+            gte: dateRange.start,
+            lte: dateRange.end,
+          },
+          status: { not: "CANCELLED" },
+        },
+        include: {
+          member: {
+            select: {
+              id: true,
+              username: true,
+              role: true,
+              jobTitle: true,
+              commissionRate: true,
+            },
+          },
+          service: {
+            select: {
+              name: true,
+              price: true,
+              category: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: [{ startTime: "desc" }],
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      });
+
+      // Process commission activity data
+      const commissionData = appointments
+        .filter((appointment) => {
+          const commissionAmount = this.calculateCommissionAmount(appointment);
+          return (
+            commissionAmount > 0 &&
+            (minCommissionAmount === undefined || commissionAmount >= minCommissionAmount) &&
+            (maxCommissionAmount === undefined || commissionAmount <= maxCommissionAmount)
+          );
+        })
+        .map((appointment) => {
+          const commissionAmount = this.calculateCommissionAmount(appointment);
+          const commissionRate = appointment.member.commissionRate || 0;
+
+          return {
+            transactionId: appointment.id,
+            memberId: appointment.member.id,
+            memberName: appointment.member.username,
+            jobTitle: appointment.member.jobTitle,
+            date: appointment.startTime.toISOString().split("T")[0],
+            saleAmount: appointment.price,
+            commissionType: "SERVICE",
+            commissionRate,
+            commissionAmount,
+            netCommission: commissionAmount,
+            payoutStatus: "PENDING",
+            salesChannel: "IN_PERSON",
+            serviceDetails: {
+              serviceName: appointment.service.name,
+              serviceCategory: appointment.service.category?.name || "Uncategorized",
+              clientName: appointment.client
+                ? `${appointment.client.firstName} ${appointment.client.lastName}`
+                : appointment.walkInClientName || "Walk-in",
+              duration: appointment.duration,
+            },
+            productDetails: null,
+            paymentMethod: "CASH", // Default - would need payment info from schema
+            refundAmount: 0,
+            adjustments: [],
+            notes: appointment.notes,
+          };
+        });
+
+      // Calculate summary metrics
+
+      // Get total count
+      const totalAppointments = await prisma.appointment.count({
+        where: {
+          member: memberWhere,
+          startTime: {
+            gte: dateRange.start,
+            lte: dateRange.end,
+          },
+          status: { not: "CANCELLED" },
+        },
+      });
+
+      return createPaginatedResponse(commissionData, totalAppointments, pagination.page, pagination.limit);
+    } catch (error) {
+      handleError(error, "getCommissionActivity", "Failed to get commission activity");
+    }
+  }
+
+  /**
+   * Get overview of commission earned by team members, locations and sales items
+   */
+  async getCommissionSummary(orgId: string, params: CommissionSummaryParams) {
+    try {
+      logger.info("Getting commission summary", { orgId, params });
+
+      const {
+        period,
+        startDate,
+        endDate,
+        memberIds,
+        roles,
+        isActive,
+        includeMetrics = [],
+        groupBy = "member",
+      } = params;
+
+      // Calculate date range
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      // Build member filter
+      const memberWhere: Prisma.MemberWhereInput = {
+        orgId,
+        isActive: isActive ?? true,
+      };
+
+      if (memberIds?.length) {
+        memberWhere.id = { in: memberIds };
+      }
+
+      if (roles?.length) {
+        memberWhere.role = { in: roles };
+      }
+
+      // Get commission data
+      const commissionData = await this.getCommissionDataByGroup(orgId, dateRange, memberWhere, groupBy);
+
+      // Calculate comprehensive metrics
+      const metrics = await this.calculateCommissionSummaryMetrics(commissionData, includeMetrics, orgId, dateRange);
+
+      // Add rankings if requested
+      let rankings = {};
+      if (params.includeRankings) {
+        rankings = await this.calculateCommissionRankings(commissionData, groupBy);
+      }
+
+      // Add trends if requested
+      let trends: Array<Record<string, unknown>> = [];
+      if (params.includeTrends) {
+        trends = await this.calculateCommissionTrends(orgId, dateRange, memberWhere);
+      }
+
+      // Add forecasting if requested
+      let forecasting = {};
+      if (params.includeForecasting) {
+        forecasting = await this.calculateCommissionForecasting(trends, params.goalAmount);
+      }
+
+      return {
+        data: commissionData,
+        metrics,
+        rankings,
+        trends,
+        forecasting,
+        filters: params,
+        generatedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      handleError(error, "getCommissionSummary", "Failed to get commission summary");
+    }
+  }
+
+  // Helper methods for the new analytics functions
+
+  private async calculateMemberCompensation(
+    member: {
+      shifts?: Array<{ startTime: string; endTime: string }>;
+      appointments?: Array<{ service: { price: number } }>;
+      hourlyRate?: number | null;
+      commissionRate?: number | null;
+    },
+    _dateRange: { start: Date; end: Date },
+    _includeComponents: string[],
+  ) {
+    // Calculate base compensation
+    const shifts = (member.shifts || []) as Array<{ startTime: string; endTime: string }>;
+    const totalHours = shifts.reduce((sum: number, shift: { startTime: string; endTime: string }) => {
+      return sum + this.calculateShiftDuration(shift.startTime, shift.endTime);
+    }, 0);
+
+    const hourlyRate = (member.hourlyRate as number) || 0;
+    const baseSalary = 0; // Not in schema
+    const hourlyWages = totalHours * hourlyRate;
+    const overtime = Math.max(totalHours - 40, 0) * hourlyRate * 1.5;
+
+    // Calculate commissions from appointments
+    const commissions = ((member.appointments || []) as Array<{ service: { price: number } }>).reduce(
+      (sum: number, apt: { service: { price: number } }) => {
+        return sum + apt.service.price * (((member.commissionRate as number) || 0) / 100);
+      },
+      0,
+    );
+
+    const grossPay = baseSalary + hourlyWages + overtime + commissions;
+    const taxes = grossPay * 0.22; // Approximate tax rate
+    const deductions = grossPay * 0.05; // Approximate deductions
+    const benefits = grossPay * 0.08; // Approximate benefits
+    const netPay = grossPay - taxes - deductions;
+
+    return {
+      total: grossPay,
+      baseSalary,
+      hourlyWages,
+      overtime,
+      commissions,
+      deductions,
+      benefits,
+      taxes,
+      netPay,
+      grossPay,
+    };
+  }
+
+  private calculateShiftDuration(startTime: string, endTime: string): number {
+    // Convert time strings to minutes and calculate duration
+    const start = this.timeToMinutes(startTime);
+    const end = this.timeToMinutes(endTime);
+    return (end - start) / 60; // Return hours
+  }
+
+  private timeToMinutes(timeString: string): number {
+    const [hours, minutes] = timeString.split(":").map(Number);
+    return hours * 60 + minutes;
+  }
+
+  private calculatePaySummaryMetrics(payData: Record<string, unknown>[], _includeComponents: string[]) {
+    const totalCompensation = payData.reduce((sum, member) => sum + (member.totalCompensation as number), 0);
+    const avgCompensation = totalCompensation / payData.length || 0;
+
+    return {
+      totalMembers: payData.length,
+      totalCompensation,
+      averageCompensation: avgCompensation,
+      totalCommissions: payData.reduce((sum, member) => sum + (member.commissions as number), 0),
+      totalOvertime: payData.reduce((sum, member) => sum + (member.overtime as number), 0),
+      totalBenefits: payData.reduce((sum, member) => sum + (member.benefits as number), 0),
+      totalTaxes: payData.reduce((sum, member) => sum + (member.taxes as number), 0),
+    };
+  }
+
+  private calculateShiftUtilization(appointments: Array<{ duration: number }>, shiftDuration: number): number {
+    const appointmentHours = appointments.reduce((sum, apt) => {
+      return sum + apt.duration / 60; // Convert minutes to hours
+    }, 0);
+    return shiftDuration > 0 ? (appointmentHours / shiftDuration) * 100 : 0;
+  }
+
+  private async calculateWorkingHoursMetrics(
+    member: {
+      shifts?: Array<{ startTime: string; endTime: string }>;
+      appointments?: Array<{ duration: number }>;
+      hourlyRate?: number | null;
+    },
+    _dateRange: { start: Date; end: Date },
+    _includeMetrics: string[],
+    _hoursType: string[],
+  ) {
+    const shifts = (member.shifts || []) as Array<{ startTime: string; endTime: string }>;
+    const totalHours = shifts.reduce((sum: number, shift: { startTime: string; endTime: string }) => {
+      return sum + this.calculateShiftDuration(shift.startTime, shift.endTime);
+    }, 0);
+
+    const regularHours = Math.min(totalHours, 40);
+    const overtimeHours = Math.max(totalHours - 40, 0);
+    const scheduledHours = shifts.length * 8; // Assume 8-hour shifts
+    const actualHours = totalHours;
+
+    // Calculate billable and productive hours
+    const billableHours = ((member.appointments || []) as Array<{ duration: number }>).reduce(
+      (sum: number, apt: { duration: number }) => {
+        return sum + apt.duration / 60;
+      },
+      0,
+    );
+
+    const productivity = actualHours > 0 ? (billableHours / actualHours) * 100 : 0;
+    const utilization = scheduledHours > 0 ? (actualHours / scheduledHours) * 100 : 0;
+    const efficiency = productivity * (utilization / 100);
+
+    return {
+      totalHours,
+      regularHours,
+      overtimeHours,
+      scheduledHours,
+      actualHours,
+      billableHours,
+      productiveHours: billableHours,
+      productivity,
+      utilization,
+      efficiency,
+      laborCost: totalHours * (member.hourlyRate || 0),
+      averageDaily: totalHours / 7,
+      peakHours: this.calculatePeakHours(shifts),
+      idleTime: actualHours - billableHours,
+      variance: actualHours - scheduledHours,
+    };
+  }
+
+  private calculatePeakHours(shifts: Array<{ startTime: string }>): string {
+    // Simplified peak hours calculation
+    const hourCounts: { [key: string]: number } = {};
+
+    shifts.forEach((shift) => {
+      const startHour = shift.startTime.split(":")[0];
+      hourCounts[startHour] = (hourCounts[startHour] || 0) + 1;
+    });
+
+    const peakHour = Object.entries(hourCounts).sort(([, a], [, b]) => b - a)[0]?.[0] || "09";
+
+    return `${peakHour}:00`;
+  }
+
+  private calculateWorkingHoursSummaryMetrics(
+    hoursData: Array<{
+      totalHours: number;
+      overtimeHours: number;
+      productivity: number;
+      utilization: number;
+      laborCost: number;
+    }>,
+    _includeMetrics: string[],
+    targetHours?: number,
+  ) {
+    const totalHours = hoursData.reduce((sum, member) => sum + member.totalHours, 0);
+    const avgHours = totalHours / hoursData.length || 0;
+
+    return {
+      totalMembers: hoursData.length,
+      totalHours,
+      averageHours: avgHours,
+      totalOvertime: hoursData.reduce((sum, member) => sum + member.overtimeHours, 0),
+      averageProductivity: hoursData.reduce((sum, member) => sum + member.productivity, 0) / hoursData.length || 0,
+      averageUtilization: hoursData.reduce((sum, member) => sum + member.utilization, 0) / hoursData.length || 0,
+      totalLaborCost: hoursData.reduce((sum, member) => sum + member.laborCost, 0),
+      targetVariance: targetHours ? avgHours - targetHours : 0,
+    };
+  }
+
+  private calculateCommissionAmount(appointment: {
+    price: number;
+    member?: { commissionRate: number | null };
+  }): number {
+    const price = appointment.price || 0;
+    const commissionRate = appointment.member?.commissionRate || 0;
+    return (price * commissionRate) / 100;
+  }
+
+  private calculateCommissionActivitySummary(
+    commissionData: Array<{ saleAmount: number; commissionAmount: number; payoutStatus: string; salesChannel: string }>,
+    _includeDetails: string[],
+  ) {
+    const totalSales = commissionData.reduce((sum, item) => sum + item.saleAmount, 0);
+    const totalCommissions = commissionData.reduce((sum, item) => sum + item.commissionAmount, 0);
+
+    return {
+      totalTransactions: commissionData.length,
+      totalSales,
+      totalCommissions,
+      averageCommissionRate: totalSales > 0 ? (totalCommissions / totalSales) * 100 : 0,
+      averageSaleAmount: totalSales / commissionData.length || 0,
+      payoutStatusBreakdown: this.groupBy(commissionData, "payoutStatus"),
+      salesChannelBreakdown: this.groupBy(commissionData, "salesChannel"),
+      topPerformers: this.getTopPerformers(commissionData),
+    };
+  }
+
+  private async calculateCommissionSummaryMetrics(
+    commissionData: Array<Record<string, unknown>>,
+    includeMetrics: string[],
+    _orgId: string,
+    _dateRange: { start: Date; end: Date },
+  ) {
+    if (commissionData.length === 0) {
+      return {
+        totalCommissions: 0,
+        averageCommission: 0,
+        commissionRate: 0,
+        salesVolume: 0,
+        conversionRate: 0,
+      };
+    }
+
+    const totalCommissions = commissionData.reduce((sum, item) => sum + (item.totalCommissions as number), 0);
+    const totalSales = commissionData.reduce((sum, item) => sum + (item.totalSales as number), 0);
+    const totalAppointments = commissionData.reduce((sum, item) => sum + (item.appointmentsCount as number), 0);
+
+    const metrics: Record<string, unknown> = {
+      totalCommissions,
+      averageCommission: commissionData.length > 0 ? totalCommissions / commissionData.length : 0,
+      commissionRate: totalSales > 0 ? (totalCommissions / totalSales) * 100 : 0,
+      salesVolume: totalSales,
+      appointmentsCount: totalAppointments,
+    };
+
+    // Add specific metrics if requested
+    if (includeMetrics.includes("conversionRate")) {
+      metrics.conversionRate = 85; // Placeholder - would need more data to calculate actual conversion
+    }
+
+    if (includeMetrics.includes("averageOrderValue")) {
+      metrics.averageOrderValue = totalAppointments > 0 ? totalSales / totalAppointments : 0;
+    }
+
+    return metrics;
+  }
+
+  private async calculateWorkingHoursTrendsData(
+    orgId: string,
+    dateRange: { start: Date; end: Date },
+    memberWhere: Record<string, unknown>,
+  ): Promise<Array<Record<string, unknown>>> {
+    try {
+      // Get shifts data for trend analysis
+      const shifts = await prisma.shift.findMany({
+        where: {
+          orgId,
+          date: {
+            gte: dateRange.start,
+            lte: dateRange.end,
+          },
+          member: memberWhere,
+        },
+        include: {
+          member: {
+            select: {
+              id: true,
+              username: true,
+            },
+          },
+        },
+        orderBy: {
+          date: "asc",
+        },
+      });
+
+      // Group shifts by week/month for trend analysis
+      const trendsData: Array<Record<string, unknown>> = [];
+      const weeklyData = new Map<string, { totalHours: number; shiftsCount: number }>();
+
+      shifts.forEach((shift) => {
+        const weekKey = this.getWeekKey(shift.date);
+        const existing = weeklyData.get(weekKey) || { totalHours: 0, shiftsCount: 0 };
+
+        weeklyData.set(weekKey, {
+          totalHours: existing.totalHours + (shift.duration || 0),
+          shiftsCount: existing.shiftsCount + 1,
+        });
+      });
+
+      // Convert to array format
+      weeklyData.forEach((data, week) => {
+        trendsData.push({
+          period: week,
+          totalHours: data.totalHours,
+          shiftsCount: data.shiftsCount,
+          averageHoursPerShift: data.shiftsCount > 0 ? data.totalHours / data.shiftsCount : 0,
+        });
+      });
+
+      return trendsData;
+    } catch (error) {
+      logger.error("Error calculating working hours trends:", error);
+      return [];
+    }
+  }
+
+  private async getCommissionDataByGroup(
+    orgId: string,
+    dateRange: { start: Date; end: Date },
+    memberWhere: Record<string, unknown>,
+    groupBy: string,
+  ): Promise<Array<Record<string, unknown>>> {
+    try {
+      // Get appointments with commission data
+      const appointments = await prisma.appointment.findMany({
+        where: {
+          orgId,
+          startTime: {
+            gte: dateRange.start,
+            lte: dateRange.end,
+          },
+          status: { not: "CANCELLED" },
+          member: memberWhere,
+        },
+        include: {
+          member: {
+            select: {
+              id: true,
+              username: true,
+              commissionRate: true,
+            },
+          },
+          service: {
+            select: {
+              name: true,
+              price: true,
+              category: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          client: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      });
+
+      // Group data based on groupBy parameter
+      const groupedData = new Map<
+        string,
+        {
+          totalSales: number;
+          totalCommissions: number;
+          appointmentsCount: number;
+          members: Set<string>;
+        }
+      >();
+
+      appointments.forEach((appointment) => {
+        let groupKey: string;
+
+        switch (groupBy) {
+          case "member":
+            groupKey = appointment.member.username;
+            break;
+          case "service":
+            groupKey = appointment.service.name;
+            break;
+          case "period":
+            groupKey = this.getWeekKey(appointment.startTime);
+            break;
+          default:
+            groupKey = "total";
+        }
+
+        const commissionAmount = this.calculateCommissionAmount({
+          price: appointment.price,
+          member: appointment.member,
+        });
+
+        const existing = groupedData.get(groupKey) || {
+          totalSales: 0,
+          totalCommissions: 0,
+          appointmentsCount: 0,
+          members: new Set<string>(),
+        };
+
+        existing.totalSales += appointment.price;
+        existing.totalCommissions += commissionAmount;
+        existing.appointmentsCount += 1;
+        existing.members.add(appointment.member.id);
+
+        groupedData.set(groupKey, existing);
+      });
+
+      // Convert to array format
+      const result: Array<Record<string, unknown>> = [];
+      groupedData.forEach((data, key) => {
+        result.push({
+          groupKey: key,
+          totalSales: data.totalSales,
+          totalCommissions: data.totalCommissions,
+          appointmentsCount: data.appointmentsCount,
+          membersCount: data.members.size,
+          averageCommissionRate: data.totalSales > 0 ? (data.totalCommissions / data.totalSales) * 100 : 0,
+        });
+      });
+
+      return result.sort((a, b) => (b.totalCommissions as number) - (a.totalCommissions as number));
+    } catch (error) {
+      logger.error("Error getting commission data by group:", error);
+      return [];
+    }
+  }
+
+  private getWeekKey(date: Date): string {
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    const weekNumber = Math.ceil(
+      ((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000) + startOfYear.getDay() + 1) / 7,
+    );
+    return `${date.getFullYear()}-W${weekNumber.toString().padStart(2, "0")}`;
+  }
+
+  private async calculateCommissionRankings(_commissionData: Array<Record<string, unknown>>, _groupBy: string) {
+    return {
+      topPerformers: [],
+      rankings: [],
+    };
+  }
+
+  private async calculateCommissionTrends(
+    _orgId: string,
+    _dateRange: { start: Date; end: Date },
+    _memberWhere: Record<string, unknown>,
+  ): Promise<Array<Record<string, unknown>>> {
+    return [];
+  }
+
+  private async calculateCommissionForecasting(_trends: Array<Record<string, unknown>>, _goalAmount?: number) {
+    return {
+      projection: 0,
+      goalProgress: _goalAmount ? 0 : undefined,
+    };
+  }
+
+  private groupBy(array: Array<Record<string, unknown>>, key: string): { [key: string]: number } {
+    return array.reduce((groups: { [key: string]: number }, item) => {
+      const groupKey = String(item[key] || "Unknown");
+      groups[groupKey] = (groups[groupKey] || 0) + 1;
+      return groups;
+    }, {});
+  }
+
+  private getTopPerformers(
+    commissionData: Array<{ saleAmount: number; commissionAmount: number; memberId?: string; memberName?: string }>,
+  ): Array<Record<string, unknown>> {
+    const performerMap = new Map();
+
+    commissionData.forEach((item) => {
+      const existing = performerMap.get(item.memberId) || {
+        memberId: item.memberId,
+        memberName: item.memberName,
+        totalCommissions: 0,
+        transactionCount: 0,
+      };
+
+      existing.totalCommissions += item.commissionAmount;
+      existing.transactionCount += 1;
+      performerMap.set(item.memberId, existing);
+    });
+
+    return Array.from(performerMap.values())
+      .sort((a, b) => b.totalCommissions - a.totalCommissions)
+      .slice(0, 5);
   }
 }

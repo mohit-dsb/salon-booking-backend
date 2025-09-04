@@ -307,9 +307,175 @@ export const wagesSummarySchema = z.object({
   groupBy: z.enum(["department", "location", "role", "period"]).optional(),
 });
 
+// 6. Pay Summary Schema
+export const paySummarySchema = z.object({
+  ...analyticsBaseSchema.shape,
+
+  // Specific filters for pay summary
+  includeComponents: z
+    .array(
+      z.enum([
+        "totalCompensation",
+        "baseSalary",
+        "hourlyWages",
+        "overtime",
+        "commissions",
+        "bonuses",
+        "deductions",
+        "benefits",
+        "taxes",
+        "netPay",
+        "grossPay",
+      ]),
+    )
+    .optional(),
+
+  payrollPeriod: z.enum(["current", "last", "year-to-date", "custom"]).optional(),
+  includeProjections: z.boolean().optional(),
+  includeYearOverYear: z.boolean().optional(),
+  includeBenchmarks: z.boolean().optional(),
+  groupBy: z.enum(["member", "department", "role", "location", "payType"]).optional(),
+});
+
+// 7. Scheduled Shifts Schema
+export const scheduledShiftsSchema = z.object({
+  ...analyticsBaseSchema.shape,
+
+  // Specific filters for scheduled shifts
+  shiftStatus: z
+    .array(z.enum(["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW", "PENDING"]))
+    .optional(),
+
+  shiftTypes: z.array(z.string()).optional(),
+  locations: z.array(z.string()).optional(),
+
+  includeDetails: z
+    .array(
+      z.enum([
+        "shiftCoverage",
+        "staffingLevels",
+        "conflicts",
+        "openShifts",
+        "swapRequests",
+        "overtimeShifts",
+        "preferences",
+      ]),
+    )
+    .optional(),
+
+  minimumStaffing: z.number().min(1, "Minimum staffing must be at least 1").optional(),
+  includeAvailability: z.boolean().optional(),
+  includePreferences: z.boolean().optional(),
+  conflictsOnly: z.boolean().optional(),
+  groupBy: z.enum(["day", "week", "month", "location", "department", "shift_type"]).optional(),
+});
+
+// 8. Working Hours Summary Schema
+export const workingHoursSummarySchema = z.object({
+  ...analyticsBaseSchema.shape,
+
+  // Specific filters for working hours summary
+  includeMetrics: z
+    .array(
+      z.enum([
+        "totalHours",
+        "regularHours",
+        "overtimeHours",
+        "productivity",
+        "utilization",
+        "efficiency",
+        "laborCost",
+        "averageHours",
+        "peakHours",
+        "idleTime",
+      ]),
+    )
+    .optional(),
+
+  hoursType: z.array(z.enum(["scheduled", "actual", "billable", "productive"])).optional(),
+  includeTrends: z.boolean().optional(),
+  includeComparisons: z.boolean().optional(),
+  includeGoals: z.boolean().optional(),
+  targetHours: z.number().min(0, "Target hours must be positive").optional(),
+  groupBy: z.enum(["day", "week", "month", "member", "department", "location", "service"]).optional(),
+});
+
+// 10. Commission Activity Schema
+export const commissionActivitySchema = z.object({
+  ...analyticsBaseSchema.shape,
+
+  // Specific filters for commission activity
+  commissionTypes: z.array(z.enum(["SERVICE", "PRODUCT", "PACKAGE", "MEMBERSHIP", "GIFT_CARD"])).optional(),
+
+  salesChannels: z.array(z.enum(["IN_PERSON", "ONLINE", "PHONE", "MOBILE_APP"])).optional(),
+
+  includeDetails: z
+    .array(
+      z.enum([
+        "transactionDetails",
+        "itemBreakdown",
+        "paymentMethods",
+        "refunds",
+        "adjustments",
+        "splits",
+        "overrides",
+        "customerInfo",
+      ]),
+    )
+    .optional(),
+
+  minCommissionAmount: z.number().min(0, "Minimum commission amount must be positive").optional(),
+  maxCommissionAmount: z.number().min(0, "Maximum commission amount must be positive").optional(),
+
+  payoutStatus: z.array(z.enum(["PENDING", "PAID", "DISPUTED", "CANCELLED"])).optional(),
+  includeRefunds: z.boolean().optional(),
+  includeAdjustments: z.boolean().optional(),
+  transactionIds: z.array(z.string()).optional(),
+  groupBy: z.enum(["member", "date", "service", "product", "location", "commissionType"]).optional(),
+});
+
+// 11. Commission Summary Schema
+export const commissionSummarySchema = z.object({
+  ...analyticsBaseSchema.shape,
+
+  // Specific filters for commission summary
+  includeMetrics: z
+    .array(
+      z.enum([
+        "totalCommissions",
+        "averageCommission",
+        "commissionRate",
+        "topPerformers",
+        "salesVolume",
+        "conversionRate",
+        "repeatCustomers",
+        "newCustomers",
+        "refundRate",
+      ]),
+    )
+    .optional(),
+
+  locations: z.array(z.string()).optional(),
+  serviceCategories: z.array(z.string()).optional(),
+
+  includeRankings: z.boolean().optional(),
+  includeGoals: z.boolean().optional(),
+  includeTrends: z.boolean().optional(),
+  includeForecasting: z.boolean().optional(),
+
+  minimumSales: z.number().min(0, "Minimum sales must be positive").optional(),
+  goalAmount: z.number().min(0, "Goal amount must be positive").optional(),
+  groupBy: z.enum(["member", "location", "service", "period", "commissionType", "salesItem"]).optional(),
+});
+
 // Export type definitions for use in controllers and services
 export type WorkingHoursActivityParams = z.infer<typeof workingHoursActivitySchema>;
 export type BreakActivityParams = z.infer<typeof breakActivitySchema>;
 export type AttendanceSummaryParams = z.infer<typeof attendanceSummarySchema>;
 export type WagesDetailParams = z.infer<typeof wagesDetailSchema>;
 export type WagesSummaryParams = z.infer<typeof wagesSummarySchema>;
+export type PaySummaryParams = z.infer<typeof paySummarySchema>;
+export type ScheduledShiftsParams = z.infer<typeof scheduledShiftsSchema>;
+export type WorkingHoursSummaryParams = z.infer<typeof workingHoursSummarySchema>;
+export type CommissionActivityParams = z.infer<typeof commissionActivitySchema>;
+export type CommissionSummaryParams = z.infer<typeof commissionSummarySchema>;

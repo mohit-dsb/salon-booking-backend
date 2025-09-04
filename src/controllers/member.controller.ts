@@ -12,6 +12,11 @@ import type {
   AttendanceSummaryParams,
   WagesDetailParams,
   WagesSummaryParams,
+  PaySummaryParams,
+  ScheduledShiftsParams,
+  WorkingHoursSummaryParams,
+  CommissionActivityParams,
+  CommissionSummaryParams,
 } from "@/validations/member.schema";
 
 // Initialize service instance - can be mocked easily for testing
@@ -483,6 +488,111 @@ export const getWagesSummary = asyncHandler(async (req: Request, res: Response, 
   res.status(200).json({
     success: true,
     message: "Wages summary retrieved successfully",
+    data: result,
+    filters: params,
+  });
+});
+
+// New Analytics and Reporting Functions
+
+/**
+ * Get pay summary overview for team member compensation
+ * @route GET /api/v1/members/analytics/pay-summary
+ * @access Private (Admin/Member)
+ */
+export const getPaySummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const params = req.query as unknown as PaySummaryParams;
+  const pagination = parsePaginationParams(req.query);
+
+  const result = await memberService.getPaySummary(orgId, params, pagination);
+
+  res.status(200).json({
+    success: true,
+    message: "Pay summary retrieved successfully",
+    data: result.data,
+    meta: result.meta,
+    filters: params,
+  });
+});
+
+/**
+ * Get detailed view of team members scheduled shifts
+ * @route GET /api/v1/members/analytics/scheduled-shifts
+ * @access Private (Admin/Member)
+ */
+export const getScheduledShifts = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const params = req.query as unknown as ScheduledShiftsParams;
+  const pagination = parsePaginationParams(req.query);
+
+  const result = await memberService.getScheduledShifts(orgId, params, pagination);
+
+  res.status(200).json({
+    success: true,
+    message: "Scheduled shifts retrieved successfully",
+    data: result.data,
+    meta: result.meta,
+    filters: params,
+  });
+});
+
+/**
+ * Get working hours summary with operational hours and productivity overview
+ * @route GET /api/v1/members/analytics/working-hours-summary
+ * @access Private (Admin/Member)
+ */
+export const getWorkingHoursSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const params = req.query as unknown as WorkingHoursSummaryParams;
+  const pagination = parsePaginationParams(req.query);
+
+  const result = await memberService.getWorkingHoursSummary(orgId, params, pagination);
+
+  res.status(200).json({
+    success: true,
+    message: "Working hours summary retrieved successfully",
+    data: result.data,
+    meta: result.meta,
+    filters: params,
+  });
+});
+
+/**
+ * Get full list of sales with commission payable
+ * @route GET /api/v1/members/analytics/commission-activity
+ * @access Private (Admin/Member)
+ */
+export const getCommissionActivity = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const params = req.query as unknown as CommissionActivityParams;
+  const pagination = parsePaginationParams(req.query);
+
+  const result = await memberService.getCommissionActivity(orgId, params, pagination);
+
+  res.status(200).json({
+    success: true,
+    message: "Commission activity retrieved successfully",
+    data: result.data,
+    meta: result.meta,
+    filters: params,
+  });
+});
+
+/**
+ * Get overview of commission earned by team members, locations and sales items
+ * @route GET /api/v1/members/analytics/commission-summary
+ * @access Private (Admin/Member)
+ */
+export const getCommissionSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const params = req.query as unknown as CommissionSummaryParams;
+
+  const result = await memberService.getCommissionSummary(orgId, params);
+
+  res.status(200).json({
+    success: true,
+    message: "Commission summary retrieved successfully",
     data: result,
     filters: params,
   });

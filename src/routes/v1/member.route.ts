@@ -13,6 +13,11 @@ import {
   attendanceSummarySchema,
   wagesDetailSchema,
   wagesSummarySchema,
+  paySummarySchema,
+  scheduledShiftsSchema,
+  workingHoursSummarySchema,
+  commissionActivitySchema,
+  commissionSummarySchema,
 } from "@/validations/member.schema";
 
 const router = Router();
@@ -80,5 +85,42 @@ router.get("/analytics/wages/detail", validate(wagesDetailSchema), memberControl
  * @access  Private (Admin/Member)
  */
 router.get("/analytics/wages/summary", validate(wagesSummarySchema), memberController.getWagesSummary);
+
+// New Analytics and Reporting Routes
+
+/**
+ * @route   GET /api/v1/members/analytics/pay-summary
+ * @desc    Get pay summary overview for team member compensation
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/pay-summary", validate(paySummarySchema), memberController.getPaySummary);
+
+/**
+ * @route   GET /api/v1/members/analytics/scheduled-shifts
+ * @desc    Get detailed view of team members scheduled shifts
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/scheduled-shifts", validate(scheduledShiftsSchema), memberController.getScheduledShifts);
+
+/**
+ * @route   GET /api/v1/members/analytics/working-hours-summary
+ * @desc    Get working hours summary with operational hours and productivity overview
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/working-hours-summary", validate(workingHoursSummarySchema), memberController.getWorkingHoursSummary);
+
+/**
+ * @route   GET /api/v1/members/analytics/commission-activity
+ * @desc    Get full list of sales with commission payable
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/commission-activity", validate(commissionActivitySchema), memberController.getCommissionActivity);
+
+/**
+ * @route   GET /api/v1/members/analytics/commission-summary
+ * @desc    Get overview of commission earned by team members, locations and sales items
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/commission-summary", validate(commissionSummarySchema), memberController.getCommissionSummary);
 
 export default router;

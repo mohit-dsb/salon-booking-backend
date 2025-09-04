@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
-import { ClientController } from "@/controllers/client.controller";
+import * as clientController from "@/controllers/client.controller";
 import { paginationQuerySchema } from "@/validations/pagination.schema";
 import {
   createClientSchema,
@@ -11,7 +11,6 @@ import {
 } from "@/validations/client.schema";
 
 const router = Router();
-const clientController = new ClientController();
 
 /**
  * @route   POST /api/v1/clients
@@ -35,7 +34,7 @@ router.get("/", validate(paginationQuerySchema), clientController.getAllClients)
 router.get("/:id", clientController.getClientById);
 
 /**
- * @route   PUT /api/v1/clients/:id
+ * @route   PATCH /api/v1/clients/:id
  * @desc    Update client
  * @access  Private (Member)
  */

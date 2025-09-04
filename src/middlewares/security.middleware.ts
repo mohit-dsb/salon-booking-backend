@@ -23,7 +23,7 @@ export const securityMiddlewares = [
     origin:
       env.NODE_ENV === "production" ? ["https://yourapp.com"] : ["http://localhost:3000", "http://localhost:3001"],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    methods: ["GET", "POST", "PATCH", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 

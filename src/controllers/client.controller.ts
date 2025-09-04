@@ -5,168 +5,195 @@ import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
 import type { ClientSummaryParams, ClientListAnalyticsParams, ClientInsightsParams } from "@/validations/client.schema";
 
-export class ClientController {
-  private clientService = new ClientService();
+// Create service instance
+const clientService = new ClientService();
 
-  // Create a new client
-  public createClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
-    const clientData = req.body;
+/**
+ * Create a new client
+ * @route POST /api/v1/clients
+ * @access Private (Member)
+ */
+export const createClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const clientData = req.body;
 
-    const client = await this.clientService.createClient(orgId, clientData);
+  const client = await clientService.createClient(orgId, clientData);
 
-    res.status(201).json({
-      success: true,
-      data: client,
-      message: "Client created successfully",
-    });
+  res.status(201).json({
+    success: true,
+    data: client,
+    message: "Client created successfully",
   });
+});
 
-  // Get all clients with pagination and filters
-  public getAllClients = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
-    const pagination = parsePaginationParams(req.query);
+/**
+ * Get all clients with pagination and filters
+ * @route GET /api/v1/clients
+ * @access Private (Member)
+ */
+export const getAllClients = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const pagination = parsePaginationParams(req.query);
 
-    // Extract filters from query parameters (validated by middleware)
-    const filters: {
-      isActive?: boolean;
-      search?: string;
-    } = {};
+  // Extract filters from query parameters (validated by middleware)
+  const filters: {
+    isActive?: boolean;
+    search?: string;
+  } = {};
 
-    if (req.query.isActive !== undefined) {
-      filters.isActive = req.query.isActive === "true";
-    }
+  if (req.query.isActive !== undefined) {
+    filters.isActive = req.query.isActive === "true";
+  }
 
-    if (req.query.search) {
-      filters.search = req.query.search as string;
-    }
+  if (req.query.search) {
+    filters.search = req.query.search as string;
+  }
 
-    const result = await this.clientService.getAllClients(orgId, pagination, filters);
+  const result = await clientService.getAllClients(orgId, pagination, filters);
 
-    res.status(200).json({
-      success: true,
-      data: result.clients,
-      pagination: result.pagination,
-      message: "Clients retrieved successfully",
-    });
+  res.status(200).json({
+    success: true,
+    data: result.clients,
+    pagination: result.pagination,
+    message: "Clients retrieved successfully",
   });
+});
 
-  // Get client by ID
-  public getClientById = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
-    const { id } = req.params;
+/**
+ * Get client by ID
+ * @route GET /api/v1/clients/:id
+ * @access Private (Member)
+ */
+export const getClientById = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const { id } = req.params;
 
-    const client = await this.clientService.getClientById(id, orgId);
+  const client = await clientService.getClientById(id, orgId);
 
-    res.status(200).json({
-      success: true,
-      data: client,
-      message: "Client retrieved successfully",
-    });
+  res.status(200).json({
+    success: true,
+    data: client,
+    message: "Client retrieved successfully",
   });
+});
 
-  // Update client
-  public updateClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
-    const { id } = req.params;
-    const updateData = req.body;
+/**
+ * Update client
+ * @route PATCH /api/v1/clients/:id
+ * @access Private (Member)
+ */
+export const updateClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const { id } = req.params;
+  const updateData = req.body;
 
-    const client = await this.clientService.updateClient(id, orgId, updateData);
+  const client = await clientService.updateClient(id, orgId, updateData);
 
-    res.status(200).json({
-      success: true,
-      data: client,
-      message: "Client updated successfully",
-    });
+  res.status(200).json({
+    success: true,
+    data: client,
+    message: "Client updated successfully",
   });
+});
 
-  // Delete client (soft delete)
-  public deleteClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
-    const { id } = req.params;
+/**
+ * Delete client (soft delete)
+ * @route DELETE /api/v1/clients/:id
+ * @access Private (Member)
+ */
+export const deleteClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const { id } = req.params;
 
-    await this.clientService.deleteClient(id, orgId);
+  await clientService.deleteClient(id, orgId);
 
-    res.status(200).json({
-      success: true,
-      message: "Client deleted successfully",
-    });
+  res.status(200).json({
+    success: true,
+    message: "Client deleted successfully",
   });
+});
 
-  // Search clients
-  public searchClients = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
-    const { query } = req.params;
+/**
+ * Search clients by name, email, or phone
+ * @route GET /api/v1/clients/search/:query
+ * @access Private (Member)
+ */
+export const searchClients = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const { query } = req.params;
 
-    if (!query || typeof query !== "string") {
-      throw new AppError("Search query is required", 400);
-    }
+  if (!query || typeof query !== "string") {
+    throw new AppError("Search query is required", 400);
+  }
 
-    const clients = await this.clientService.searchClients(orgId, query);
+  const clients = await clientService.searchClients(orgId, query);
 
-    res.status(200).json({
-      success: true,
-      data: clients,
-      message: "Search completed successfully",
-    });
+  res.status(200).json({
+    success: true,
+    data: clients,
+    message: "Search completed successfully",
   });
+});
 
-  // Analytics and Reporting Methods
+/**
+ * Get client summary analytics with trends and patterns
+ * @route GET /api/v1/clients/analytics/summary
+ * @access Private (Member)
+ */
+export const getClientSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const params = req.query as unknown as ClientSummaryParams;
 
-  /**
-   * Get client summary analytics with trends and patterns
-   */
-  public getClientSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
-    const params = req.query as unknown as ClientSummaryParams;
+  const result = await clientService.getClientSummary(orgId, params);
 
-    const result = await this.clientService.getClientSummary(orgId, params);
-
-    res.status(200).json({
-      success: true,
-      data: result,
-      message: "Client summary analytics retrieved successfully",
-    });
+  res.status(200).json({
+    success: true,
+    data: result,
+    message: "Client summary analytics retrieved successfully",
   });
+});
 
-  /**
-   * Get comprehensive client list with analytics data
-   */
-  public getClientAnalyticsList = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
-    const params = req.query as unknown as ClientListAnalyticsParams;
-    const pagination = parsePaginationParams(req.query);
+/**
+ * Get comprehensive client list with analytics data
+ * @route GET /api/v1/clients/analytics/list
+ * @access Private (Member)
+ */
+export const getClientAnalyticsList = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const params = req.query as unknown as ClientListAnalyticsParams;
+  const pagination = parsePaginationParams(req.query);
 
-    const result = await this.clientService.getClientAnalyticsList(orgId, params, pagination);
+  const result = await clientService.getClientAnalyticsList(orgId, params, pagination);
 
-    res.status(200).json({
-      success: true,
-      data: result.data,
-      pagination: result.pagination,
-      summary: result.summary,
-      filters: result.filters,
-      message: "Client analytics list retrieved successfully",
-    });
+  res.status(200).json({
+    success: true,
+    data: result.data,
+    pagination: result.pagination,
+    summary: result.summary,
+    filters: result.filters,
+    message: "Client analytics list retrieved successfully",
   });
+});
 
-  /**
-   * Get individual client insights and behavior analysis
-   */
-  public getClientInsights = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
-    const { clientId } = req.params;
-    const params = req.query as unknown as ClientInsightsParams;
+/**
+ * Get individual client insights and behavior analysis
+ * @route GET /api/v1/clients/analytics/insights/:clientId
+ * @access Private (Member)
+ */
+export const getClientInsights = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+  const { orgId } = getAuthWithOrgId(req);
+  const { clientId } = req.params;
+  const params = req.query as unknown as ClientInsightsParams;
 
-    if (!clientId) {
-      throw new AppError("Client ID is required", 400);
-    }
+  if (!clientId) {
+    throw new AppError("Client ID is required", 400);
+  }
 
-    const result = await this.clientService.getClientInsights(orgId, clientId, params);
+  const result = await clientService.getClientInsights(orgId, clientId, params);
 
-    res.status(200).json({
-      success: true,
-      data: result,
-      message: "Client insights retrieved successfully",
-    });
+  res.status(200).json({
+    success: true,
+    data: result,
+    message: "Client insights retrieved successfully",
   });
-}
+});

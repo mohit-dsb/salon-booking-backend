@@ -43,7 +43,7 @@ router.get("/stats", validate(getShiftStatsSchema), shiftController.getShiftStat
 router.get("/:shiftId", shiftController.getShiftById);
 
 // Update a shift
-router.put("/:shiftId", validate(updateShiftSchema), shiftController.updateShift);
+router.patch("/:shiftId", validate(updateShiftSchema), shiftController.updateShift);
 
 // Delete a shift
 router.delete("/:shiftId", shiftController.deleteShift);
@@ -51,7 +51,7 @@ router.delete("/:shiftId", shiftController.deleteShift);
 // ==================== BULK OPERATIONS ROUTES ====================
 
 // Bulk update shifts
-router.put("/bulk/update", validate(bulkUpdateShiftsSchema), shiftController.bulkUpdateShifts);
+router.patch("/bulk/update", validate(bulkUpdateShiftsSchema), shiftController.bulkUpdateShifts);
 
 // Bulk delete shifts
 router.delete("/bulk/delete", validate(bulkDeleteShiftsSchema), shiftController.bulkDeleteShifts);

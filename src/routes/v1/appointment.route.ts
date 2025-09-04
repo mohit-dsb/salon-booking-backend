@@ -47,7 +47,7 @@ router.get("/", validate(appointmentQuerySchema), appointmentController.getAllAp
 router.get("/:id", appointmentController.getAppointmentById);
 
 /**
- * @route   PUT /api/v1/appointments/:id
+ * @route   PATCH /api/v1/appointments/:id
  * @desc    Update appointment
  * @access  Private (Member)
  */

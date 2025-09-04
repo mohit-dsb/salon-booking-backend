@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
-import { MemberController } from "@/controllers/member.controller";
+import * as memberController from "@/controllers/member.controller";
 import {
   createMemberSchema,
   updateMemberSchema,
@@ -8,10 +8,14 @@ import {
   memberQuerySchema,
   searchMemberSchema,
   bulkDeleteMembersSchema,
+  workingHoursActivitySchema,
+  breakActivitySchema,
+  attendanceSummarySchema,
+  wagesDetailSchema,
+  wagesSummarySchema,
 } from "@/validations/member.schema";
 
 const router = Router();
-const memberController = new MemberController();
 
 // Stats and search routes (must come before parameterized routes)
 router.get("/stats", memberController.getMemberStats);
@@ -39,5 +43,42 @@ router.patch("/:id/services", validate(assignServicesSchema), memberController.a
 
 // Member status management
 router.patch("/:id/status", memberController.toggleMemberStatus);
+
+// Analytics and Reporting Routes
+
+/**
+ * @route   GET /api/v1/members/analytics/working-hours
+ * @desc    Get working hours activity analytics for team members
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/working-hours", validate(workingHoursActivitySchema), memberController.getWorkingHoursActivity);
+
+/**
+ * @route   GET /api/v1/members/analytics/breaks
+ * @desc    Get break activity analytics for team members
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/breaks", validate(breakActivitySchema), memberController.getBreakActivity);
+
+/**
+ * @route   GET /api/v1/members/analytics/attendance
+ * @desc    Get attendance summary analytics for team members
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/attendance", validate(attendanceSummarySchema), memberController.getAttendanceSummary);
+
+/**
+ * @route   GET /api/v1/members/analytics/wages/detail
+ * @desc    Get detailed wages information for team members
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/wages/detail", validate(wagesDetailSchema), memberController.getWagesDetail);
+
+/**
+ * @route   GET /api/v1/members/analytics/wages/summary
+ * @desc    Get wages summary analytics for team members
+ * @access  Private (Admin/Member)
+ */
+router.get("/analytics/wages/summary", validate(wagesSummarySchema), memberController.getWagesSummary);
 
 export default router;

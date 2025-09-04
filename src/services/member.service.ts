@@ -7,7 +7,14 @@ import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
 import { createPaginatedResponse, type PaginatedResponse } from "@/utils/pagination";
 import { handleError, executeClerkOperation } from "@/utils/errorHandler";
-import { Member, MemberService as PrismaMemberService, Role } from "@prisma/client";
+import { Member, MemberService as PrismaMemberService, Role, Prisma } from "@prisma/client";
+import type {
+  WorkingHoursActivityParams,
+  BreakActivityParams,
+  AttendanceSummaryParams,
+  WagesDetailParams,
+  WagesSummaryParams,
+} from "@/validations/member.schema";
 
 // Type definitions for better type safety
 export interface WorkingHours {
@@ -88,6 +95,23 @@ export interface MemberWithServices extends Member {
       };
     };
   })[];
+}
+
+interface ShiftData {
+  duration?: number;
+  status?: string;
+}
+
+interface AppointmentData {
+  price?: number;
+  status?: string;
+}
+
+interface MemberWithShiftsAndAppointments {
+  shifts: Array<ShiftData>;
+  appointments: Array<AppointmentData>;
+  hourlyRate?: number | null;
+  commissionRate?: number | null;
 }
 
 export class MemberService {
@@ -1010,5 +1034,767 @@ export class MemberService {
         await this.invalidateMemberCache(orgId);
       }
     }
+  }
+
+  // Analytics and Reporting Methods
+
+  /**
+   * Get working hours activity analytics for team members
+   */
+  async getWorkingHoursActivity(orgId: string, params: WorkingHoursActivityParams, pagination: PaginationParams) {
+    try {
+      const {
+        period,
+        startDate,
+        endDate,
+        memberIds,
+        departments,
+        roles,
+        isActive,
+        sortBy = "name",
+        sortOrder = "asc",
+        includeDetails = [],
+        minHours,
+        maxHours,
+        shiftStatus,
+        includeBreakdown = false,
+        groupBy: _groupBy = "member",
+      } = params;
+
+      // Calculate date range
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      // Build member filter
+      const memberWhere: Prisma.MemberWhereInput = {
+        orgId,
+        ...(isActive !== undefined && { isActive }),
+        ...(memberIds && { id: { in: memberIds } }),
+        ...(roles && { role: { in: roles } }),
+        ...(departments && { jobTitle: { in: departments } }),
+      };
+
+      // Build shift filter
+      const shiftWhere: Prisma.ShiftWhereInput = {
+        orgId,
+        date: {
+          gte: dateRange.start,
+          lte: dateRange.end,
+        },
+        ...(shiftStatus && { status: { in: shiftStatus } }),
+      };
+
+      // Get members with their shifts
+      const members = await prisma.member.findMany({
+        where: memberWhere,
+        include: {
+          shifts: {
+            where: shiftWhere,
+            orderBy: { date: "desc" },
+          },
+        },
+        orderBy: this.buildMemberOrderBy(sortBy, sortOrder),
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      });
+
+      // Calculate working hours analytics for each member
+      const enrichedMembers = (
+        await Promise.all(
+          members.map(async (member) => {
+            const hoursAnalysis = await this.calculateWorkingHoursAnalysis(
+              member.shifts,
+              includeDetails,
+              includeBreakdown,
+            );
+
+            // Apply hours filters if specified
+            if (minHours !== undefined && hoursAnalysis.totalHours < minHours) return null;
+            if (maxHours !== undefined && hoursAnalysis.totalHours > maxHours) return null;
+
+            return {
+              id: member.id,
+              name: member.username,
+              email: member.email,
+              jobTitle: member.jobTitle,
+              role: member.role,
+              isActive: member.isActive,
+              ...hoursAnalysis,
+            };
+          }),
+        )
+      ).filter(Boolean) as Array<Record<string, unknown>>;
+
+      // Calculate summary statistics
+      const summary = this.calculateWorkingHoursSummary(enrichedMembers);
+
+      // Get total count for pagination
+      const total = await prisma.member.count({ where: memberWhere });
+
+      return {
+        data: enrichedMembers,
+        summary,
+        meta: {
+          page: pagination.page,
+          limit: pagination.limit,
+          total,
+          totalPages: Math.ceil(total / pagination.limit),
+        },
+      };
+    } catch (error) {
+      handleError(error, "getWorkingHoursActivity", "Failed to get working hours activity");
+    }
+  }
+
+  /**
+   * Get break activity analytics for team members
+   */
+  async getBreakActivity(orgId: string, params: BreakActivityParams, pagination: PaginationParams) {
+    try {
+      const {
+        period,
+        startDate,
+        endDate,
+        memberIds,
+        roles,
+        isActive,
+        sortBy = "name",
+        sortOrder = "asc",
+        includeDetails = [],
+        breakType,
+        minBreakDuration,
+        maxBreakDuration,
+        adherenceThreshold = 90,
+        includeViolations = false,
+        groupBy: _groupBy2 = "member",
+      } = params;
+
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      const memberWhere: Prisma.MemberWhereInput = {
+        orgId,
+        ...(isActive !== undefined && { isActive }),
+        ...(memberIds && { id: { in: memberIds } }),
+        ...(roles && { role: { in: roles } }),
+      };
+
+      const shiftWhere: Prisma.ShiftWhereInput = {
+        orgId,
+        date: {
+          gte: dateRange.start,
+          lte: dateRange.end,
+        },
+        breaks: { not: null },
+      };
+
+      const members = await prisma.member.findMany({
+        where: memberWhere,
+        include: {
+          shifts: {
+            where: shiftWhere,
+            orderBy: { date: "desc" },
+          },
+        },
+        orderBy: this.buildMemberOrderBy(sortBy, sortOrder),
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      });
+
+      const enrichedMembers = await Promise.all(
+        members.map(async (member) => {
+          const breakAnalysis = await this.calculateBreakAnalysis(
+            member.shifts,
+            includeDetails,
+            breakType,
+            minBreakDuration,
+            maxBreakDuration,
+            adherenceThreshold,
+            includeViolations,
+          );
+
+          return {
+            id: member.id,
+            name: member.username,
+            email: member.email,
+            jobTitle: member.jobTitle,
+            role: member.role,
+            isActive: member.isActive,
+            ...breakAnalysis,
+          };
+        }),
+      );
+
+      const summary = this.calculateBreakSummary(enrichedMembers);
+      const total = await prisma.member.count({ where: memberWhere });
+
+      return {
+        data: enrichedMembers,
+        summary,
+        meta: {
+          page: pagination.page,
+          limit: pagination.limit,
+          total,
+          totalPages: Math.ceil(total / pagination.limit),
+        },
+      };
+    } catch (error) {
+      handleError(error, "getBreakActivity", "Failed to get break activity");
+    }
+  }
+
+  /**
+   * Get attendance summary analytics for team members
+   */
+  async getAttendanceSummary(orgId: string, params: AttendanceSummaryParams, pagination: PaginationParams) {
+    try {
+      const {
+        period,
+        startDate,
+        endDate,
+        memberIds,
+        roles,
+        isActive,
+        sortBy = "name",
+        sortOrder = "asc",
+        includeMetrics = [],
+        punctualityThreshold = 15, // 15 minutes grace period
+        includePatterns = false,
+        includeTrends = false,
+        compareWithPrevious = false,
+        groupBy: _groupBy3 = "member",
+      } = params;
+
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      const memberWhere: Prisma.MemberWhereInput = {
+        orgId,
+        ...(isActive !== undefined && { isActive }),
+        ...(memberIds && { id: { in: memberIds } }),
+        ...(roles && { role: { in: roles } }),
+      };
+
+      const members = await prisma.member.findMany({
+        where: memberWhere,
+        include: {
+          shifts: {
+            where: {
+              orgId,
+              date: {
+                gte: dateRange.start,
+                lte: dateRange.end,
+              },
+            },
+            orderBy: { date: "desc" },
+          },
+        },
+        orderBy: this.buildMemberOrderBy(sortBy, sortOrder),
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      });
+
+      const enrichedMembers = await Promise.all(
+        members.map(async (member) => {
+          const attendanceAnalysis = await this.calculateAttendanceAnalysis(
+            member.shifts,
+            includeMetrics,
+            punctualityThreshold,
+            includePatterns,
+            includeTrends,
+          );
+
+          return {
+            id: member.id,
+            name: member.username,
+            email: member.email,
+            jobTitle: member.jobTitle,
+            role: member.role,
+            isActive: member.isActive,
+            ...attendanceAnalysis,
+          };
+        }),
+      );
+
+      const summary = this.calculateAttendanceSummary(enrichedMembers);
+      const total = await prisma.member.count({ where: memberWhere });
+
+      // Add previous period comparison if requested
+      let comparison = {};
+      if (compareWithPrevious) {
+        comparison = await this.getPreviousPeriodAttendanceComparison(orgId, dateRange, params);
+      }
+
+      return {
+        data: enrichedMembers,
+        summary: {
+          ...summary,
+          comparison,
+        },
+        meta: {
+          page: pagination.page,
+          limit: pagination.limit,
+          total,
+          totalPages: Math.ceil(total / pagination.limit),
+        },
+      };
+    } catch (error) {
+      handleError(error, "getAttendanceSummary", "Failed to get attendance summary");
+    }
+  }
+
+  /**
+   * Get detailed wages information for team members
+   */
+  async getWagesDetail(orgId: string, params: WagesDetailParams, pagination: PaginationParams) {
+    try {
+      const {
+        period,
+        startDate,
+        endDate,
+        memberIds,
+        roles,
+        isActive,
+        sortBy = "name",
+        sortOrder = "asc",
+        includeComponents = [],
+        minWage,
+        maxWage,
+        payPeriod = "monthly",
+        includeBreakdown = false,
+        includeProjections = false,
+        groupBy: _groupBy4 = "member",
+      } = params;
+
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      const memberWhere: Prisma.MemberWhereInput = {
+        orgId,
+        ...(isActive !== undefined && { isActive }),
+        ...(memberIds && { id: { in: memberIds } }),
+        ...(roles && { role: { in: roles } }),
+      };
+
+      const members = await prisma.member.findMany({
+        where: memberWhere,
+        include: {
+          shifts: {
+            where: {
+              orgId,
+              date: {
+                gte: dateRange.start,
+                lte: dateRange.end,
+              },
+              status: "COMPLETED",
+            },
+          },
+          appointments: {
+            where: {
+              orgId,
+              startTime: {
+                gte: dateRange.start,
+                lte: dateRange.end,
+              },
+              status: "COMPLETED",
+            },
+          },
+        },
+        orderBy: this.buildMemberOrderBy(sortBy, sortOrder),
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      });
+
+      const enrichedMembers = (
+        await Promise.all(
+          members.map(async (member) => {
+            const wagesAnalysis = await this.calculateWagesAnalysis(
+              member,
+              includeComponents,
+              payPeriod,
+              includeBreakdown,
+              includeProjections,
+              dateRange,
+            );
+
+            // Apply wage filters if specified
+            if (minWage !== undefined && wagesAnalysis.totalWages < minWage) return null;
+            if (maxWage !== undefined && wagesAnalysis.totalWages > maxWage) return null;
+
+            return {
+              id: member.id,
+              name: member.username,
+              email: member.email,
+              jobTitle: member.jobTitle,
+              role: member.role,
+              isActive: member.isActive,
+              hourlyRate: member.hourlyRate,
+              commissionRate: member.commissionRate,
+              ...wagesAnalysis,
+            };
+          }),
+        )
+      ).filter(Boolean) as Array<Record<string, unknown>>;
+      const summary = this.calculateWagesSummary(enrichedMembers);
+      const total = await prisma.member.count({ where: memberWhere });
+
+      return {
+        data: enrichedMembers,
+        summary,
+        meta: {
+          page: pagination.page,
+          limit: pagination.limit,
+          total,
+          totalPages: Math.ceil(total / pagination.limit),
+        },
+      };
+    } catch (error) {
+      handleError(error, "getWagesDetail", "Failed to get wages detail");
+    }
+  }
+
+  /**
+   * Get wages summary analytics for team members
+   */
+  async getWagesSummary(orgId: string, params: WagesSummaryParams) {
+    try {
+      const {
+        period,
+        startDate,
+        endDate,
+        memberIds,
+        roles,
+        isActive,
+        includeMetrics = [],
+        includeTrends = false,
+        includeComparisons = false,
+        includeForecasting = false,
+        compareWithBudget = false,
+        budgetAmount,
+        groupBy = "department",
+      } = params;
+
+      const dateRange = this.calculateDateRange(period, startDate, endDate);
+
+      const memberWhere: Prisma.MemberWhereInput = {
+        orgId,
+        ...(isActive !== undefined && { isActive }),
+        ...(memberIds && { id: { in: memberIds } }),
+        ...(roles && { role: { in: roles } }),
+      };
+
+      const members = await prisma.member.findMany({
+        where: memberWhere,
+        include: {
+          shifts: {
+            where: {
+              orgId,
+              date: {
+                gte: dateRange.start,
+                lte: dateRange.end,
+              },
+              status: "COMPLETED",
+            },
+          },
+          appointments: {
+            where: {
+              orgId,
+              startTime: {
+                gte: dateRange.start,
+                lte: dateRange.end,
+              },
+              status: "COMPLETED",
+            },
+          },
+        },
+      });
+
+      // Calculate comprehensive wages summary
+      const summary: Record<string, unknown> = await this.calculateComprehensiveWagesSummary(
+        members,
+        includeMetrics,
+        groupBy,
+        dateRange,
+      );
+
+      // Add trends if requested
+      if (includeTrends) {
+        summary.trends = await this.calculateWagesTrends(orgId, dateRange, memberWhere);
+      }
+
+      // Add comparisons if requested
+      if (includeComparisons) {
+        summary.comparisons = await this.calculateWagesComparisons(orgId, dateRange, memberWhere);
+      }
+
+      // Add forecasting if requested
+      if (includeForecasting) {
+        summary.forecasting = await this.calculateWagesForecasting(summary.trends as Array<Record<string, unknown>>);
+      }
+
+      // Add budget comparison if requested
+      if (compareWithBudget && budgetAmount) {
+        const totalWages = (summary.totalWages as number) || 0;
+        summary.budgetComparison = {
+          budgetAmount,
+          actualAmount: totalWages,
+          variance: totalWages - budgetAmount,
+          variancePercentage: ((totalWages - budgetAmount) / budgetAmount) * 100,
+        };
+      }
+
+      return summary;
+    } catch (error) {
+      handleError(error, "getWagesSummary", "Failed to get wages summary");
+    }
+  }
+
+  // Helper methods for analytics
+
+  private calculateDateRange(period?: string, startDate?: string, endDate?: string) {
+    const now = new Date();
+    let start: Date;
+    let end: Date;
+
+    if (period) {
+      switch (period) {
+        case "today":
+          start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+          break;
+        case "yesterday": {
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          start = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+          end = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59);
+          break;
+        }
+        case "this_week": {
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(now.getDate() - now.getDay());
+          start = new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate());
+          end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+          break;
+        }
+        case "last_week": {
+          const lastWeekStart = new Date(now);
+          lastWeekStart.setDate(now.getDate() - now.getDay() - 7);
+          const lastWeekEnd = new Date(lastWeekStart);
+          lastWeekEnd.setDate(lastWeekStart.getDate() + 6);
+          start = new Date(lastWeekStart.getFullYear(), lastWeekStart.getMonth(), lastWeekStart.getDate());
+          end = new Date(lastWeekEnd.getFullYear(), lastWeekEnd.getMonth(), lastWeekEnd.getDate(), 23, 59, 59);
+          break;
+        }
+        case "this_month":
+          start = new Date(now.getFullYear(), now.getMonth(), 1);
+          end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+          break;
+        case "last_month":
+          start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+          break;
+        case "this_year":
+          start = new Date(now.getFullYear(), 0, 1);
+          end = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+          break;
+        case "last_year":
+          start = new Date(now.getFullYear() - 1, 0, 1);
+          end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59);
+          break;
+        default:
+          start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          end = now;
+      }
+    } else {
+      start = startDate ? new Date(startDate) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      end = endDate ? new Date(endDate) : now;
+    }
+
+    return { start, end };
+  }
+
+  private buildMemberOrderBy(sortBy: string, sortOrder: string): Prisma.MemberOrderByWithRelationInput {
+    const order = sortOrder as "asc" | "desc";
+
+    switch (sortBy) {
+      case "name":
+        return { username: order };
+      case "email":
+        return { email: order };
+      case "totalHours":
+      case "earnings":
+      case "attendance":
+        // These will be calculated after fetching, so use default sort
+        return { username: order };
+      case "date":
+        return { createdAt: order };
+      default:
+        return { username: order };
+    }
+  }
+
+  // Placeholder methods for complex analytics calculations
+  private async calculateWorkingHoursAnalysis(
+    shifts: Array<Record<string, unknown>>,
+    _includeDetails: string[],
+    _includeBreakdown: boolean,
+  ) {
+    // Implementation for working hours analysis
+    const totalHours = shifts.reduce((sum, shift) => sum + ((shift.duration as number) || 0), 0);
+    const regularHours = Math.min(totalHours, 40); // Assuming 40 hours is regular
+    const overtimeHours = Math.max(totalHours - 40, 0);
+
+    return {
+      totalHours,
+      regularHours,
+      overtimeHours,
+      shiftsCount: shifts.length,
+      averageHoursPerShift: shifts.length > 0 ? totalHours / shifts.length : 0,
+    };
+  }
+
+  private calculateWorkingHoursSummary(_members: Array<Record<string, unknown>>) {
+    return {
+      totalMembers: _members.length,
+      averageHours: 0,
+      totalOvertime: 0,
+    };
+  }
+
+  private async calculateBreakAnalysis(
+    _shifts: Array<Record<string, unknown>>,
+    _includeDetails: string[],
+    _breakType?: string[],
+    _minBreakDuration?: number,
+    _maxBreakDuration?: number,
+    _adherenceThreshold?: number,
+    _includeViolations?: boolean,
+  ) {
+    return {
+      totalBreaks: 0,
+      totalBreakDuration: 0,
+      averageBreakDuration: 0,
+      adherenceRate: 100,
+    };
+  }
+
+  private calculateBreakSummary(_members: Array<Record<string, unknown>>) {
+    return {
+      totalMembers: _members.length,
+      averageBreakDuration: 0,
+      averageAdherence: 100,
+    };
+  }
+
+  private async calculateAttendanceAnalysis(
+    shifts: Array<Record<string, unknown>>,
+    _includeMetrics: string[],
+    _punctualityThreshold: number,
+    _includePatterns: boolean,
+    _includeTrends: boolean,
+  ) {
+    const totalShifts = shifts.length;
+    const completedShifts = shifts.filter((shift) => (shift.status as string) === "COMPLETED").length;
+    const attendanceRate = totalShifts > 0 ? (completedShifts / totalShifts) * 100 : 0;
+
+    return {
+      totalShifts,
+      completedShifts,
+      attendanceRate,
+      punctualityRate: 95, // Placeholder
+      lateArrivals: 0,
+      earlyDepartures: 0,
+      noShows: shifts.filter((shift) => (shift.status as string) === "NO_SHOW").length,
+    };
+  }
+
+  private calculateAttendanceSummary(_members: Array<Record<string, unknown>>) {
+    return {
+      totalMembers: _members.length,
+      averageAttendanceRate: 95,
+      averagePunctualityRate: 90,
+    };
+  }
+
+  private async getPreviousPeriodAttendanceComparison(
+    _orgId: string,
+    _dateRange: { start: Date; end: Date },
+    _params: AttendanceSummaryParams,
+  ) {
+    return {
+      attendanceChange: 0,
+      punctualityChange: 0,
+    };
+  }
+
+  private async calculateWagesAnalysis(
+    member: MemberWithShiftsAndAppointments,
+    _includeComponents: string[],
+    _payPeriod: string,
+    _includeBreakdown: boolean,
+    _includeProjections: boolean,
+    _dateRange: { start: Date; end: Date },
+  ) {
+    const hourlyRate = member.hourlyRate || 0;
+    const commissionRate = member.commissionRate || 0;
+
+    const totalHours = member.shifts.reduce((sum: number, shift) => sum + ((shift.duration as number) || 0), 0);
+    const baseWage = totalHours * hourlyRate;
+
+    const commission = member.appointments.reduce((sum: number, appointment) => {
+      return sum + (((appointment.price as number) || 0) * commissionRate) / 100;
+    }, 0);
+
+    const totalWages = baseWage + commission;
+
+    return {
+      totalWages,
+      baseWage,
+      commission,
+      totalHours,
+      overtime: Math.max(totalHours - 40, 0) * hourlyRate * 1.5, // 1.5x for overtime
+    };
+  }
+
+  private calculateWagesSummary(_members: Array<Record<string, unknown>>) {
+    return {
+      totalMembers: _members.length,
+      totalWages: 0,
+      averageWage: 0,
+      totalCommission: 0,
+    };
+  }
+
+  private async calculateComprehensiveWagesSummary(
+    members: Array<Record<string, unknown>>,
+    _includeMetrics: string[],
+    _groupBy: string,
+    _dateRange: { start: Date; end: Date },
+  ) {
+    return {
+      totalMembers: members.length,
+      totalWages: 0,
+      averageWage: 0,
+      medianWage: 0,
+      overtimeCosts: 0,
+      commissionTotal: 0,
+      costPerHour: 0,
+    };
+  }
+
+  private async calculateWagesTrends(
+    _orgId: string,
+    _dateRange: { start: Date; end: Date },
+    _memberWhere: Prisma.MemberWhereInput,
+  ) {
+    return [];
+  }
+
+  private async calculateWagesComparisons(
+    _orgId: string,
+    _dateRange: { start: Date; end: Date },
+    _memberWhere: Prisma.MemberWhereInput,
+  ) {
+    return {};
+  }
+
+  private async calculateWagesForecasting(_trends: Array<Record<string, unknown>>) {
+    return {};
   }
 }

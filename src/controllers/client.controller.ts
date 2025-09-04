@@ -3,11 +3,7 @@ import { parsePaginationParams } from "@/utils/pagination";
 import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
-import type { 
-  ClientSummaryParams, 
-  ClientListAnalyticsParams, 
-  ClientInsightsParams 
-} from "@/validations/client.schema";
+import type { ClientSummaryParams, ClientListAnalyticsParams, ClientInsightsParams } from "@/validations/client.schema";
 
 export class ClientController {
   private clientService = new ClientService();

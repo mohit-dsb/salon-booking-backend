@@ -4,6 +4,14 @@ import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppointmentService } from "@/services/appointment.service";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
+import type { AppointmentListParams } from "@/validations/appointment.schema";
+import type { TableResponse, AppointmentTableRow, AppointmentAnalyticsQuery } from "@/types/table.types";
+import {
+  transformAppointmentsToTableData,
+  getAppointmentTableColumns,
+  generateAppointmentFilters,
+  extractAppliedAppointmentFilters,
+} from "@/utils/data-transformation/appointment";
 
 export class AppointmentController {
   private appointmentService = new AppointmentService();
@@ -24,9 +32,8 @@ export class AppointmentController {
 
   // Create walk-in appointment (now uses the same method as regular appointments)
   public createWalkInAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId, userId } = getAuthWithOrgId(req);
     const appointmentData = req.body;
-    const { userId } = res.locals;
 
     const appointment = await this.appointmentService.createAppointment(orgId, appointmentData, userId as string);
 
@@ -127,7 +134,7 @@ export class AppointmentController {
 
   // Cancel appointment
   public cancelAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId, userId } = getAuthWithOrgId(req);
     const { id } = req.params;
     const { cancellationReason } = req.body;
 
@@ -135,7 +142,7 @@ export class AppointmentController {
       throw new AppError("Cancellation reason is required", 400);
     }
 
-    const appointment = await this.appointmentService.cancelAppointment(id, orgId, cancellationReason);
+    const appointment = await this.appointmentService.cancelAppointment(id, orgId, cancellationReason, userId);
 
     res.status(200).json({
       success: true,
@@ -334,19 +341,66 @@ export class AppointmentController {
   /**
    * Get detailed appointment list for analytics
    * Full list of scheduled appointments with filtering and sorting options
+   * Returns data optimized for UI table rendering
    */
   public getAppointmentAnalyticsList = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId } = getAuthWithOrgId(req);
-    const params = req.query;
     const pagination = parsePaginationParams(req.query);
+    const startTime = Date.now();
 
-    const appointmentList = await this.appointmentService.getAppointmentAnalyticsList(orgId, params, pagination);
+    // Use the validated and transformed query parameters from middleware
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const queryParams = (req as any).parsedQuery as AppointmentListParams;
+
+    // Convert to format expected by utility functions
+    const analyticsQuery: AppointmentAnalyticsQuery = {
+      ...queryParams,
+      // Handle status array - for now, take the first status if array is provided
+      status: Array.isArray(queryParams.status) ? queryParams.status[0] : queryParams.status,
+      // Convert string boolean to actual boolean
+      isWalkIn: queryParams.isWalkIn === "true" ? true : queryParams.isWalkIn === "false" ? false : undefined,
+    };
+
+    // Get appointment data from service
+    const appointmentList = await this.appointmentService.getAppointmentAnalyticsList(
+      orgId,
+      analyticsQuery as Record<string, unknown>,
+      pagination,
+    );
+
+    // Transform data for UI consumption
+    const tableData = transformAppointmentsToTableData(appointmentList.data);
+    const columns = getAppointmentTableColumns(queryParams.includeFields, queryParams.excludeFields);
+    const availableFilters = generateAppointmentFilters(appointmentList.data);
+    const appliedFilters = extractAppliedAppointmentFilters(analyticsQuery);
+
+    // Build response
+    const response: TableResponse<AppointmentTableRow> = {
+      tableData,
+      columns,
+      pagination: {
+        page: appointmentList.pagination.page,
+        limit: appointmentList.pagination.limit,
+        total: appointmentList.pagination.total,
+        totalPages: appointmentList.pagination.totalPages,
+        hasNext: appointmentList.pagination.page < appointmentList.pagination.totalPages,
+        hasPrev: appointmentList.pagination.page > 1,
+      },
+      filters: {
+        applied: appliedFilters,
+        available: availableFilters,
+      },
+      metadata: {
+        totalRecords: appointmentList.pagination.total,
+        filteredRecords: tableData.length,
+        lastUpdated: new Date().toISOString(),
+        queryTime: Date.now() - startTime,
+      },
+    };
 
     res.status(200).json({
       success: true,
-      data: appointmentList.data,
-      pagination: appointmentList.pagination,
-      filters: appointmentList.filters,
+      data: response,
       message: "Appointment analytics list retrieved successfully",
     });
   });

@@ -3,7 +3,7 @@ import { AppError } from "./error.middleware";
 import type { Request, Response, NextFunction } from "express";
 
 // Generic validation function for different types
-export const validate = (schema: z.ZodObject<z.ZodRawShape>) => {
+export const validate = (schema: z.ZodSchema) => {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
       // For most schemas, we validate the body. For query schemas, we validate the query.
@@ -16,7 +16,16 @@ export const validate = (schema: z.ZodObject<z.ZodRawShape>) => {
         dataToValidate = req.body;
       }
 
-      schema.parse(dataToValidate);
+      const parsedData = schema.parse(dataToValidate);
+
+      // Attach the parsed data to the request for use in controllers
+      if (req.method === "GET") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (req as any).parsedQuery = parsedData;
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (req as any).parsedBody = parsedData;
+      }
       next();
     } catch (error) {
       if (error instanceof ZodError) {

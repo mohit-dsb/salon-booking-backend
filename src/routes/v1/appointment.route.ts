@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
+import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { paginationQuerySchema } from "@/validations/pagination.schema";
 import { AppointmentController } from "@/controllers/appointment.controller";
 import {
@@ -17,6 +18,9 @@ import {
 
 const router = Router();
 const appointmentController = new AppointmentController();
+
+// Apply auth middleware to all routes
+router.use(requireAuthWithOrgId);
 
 /**
  * @route   POST /api/v1/appointments

@@ -108,6 +108,7 @@ model Member {
   memberServices     MemberService[]
   appointments       Appointment[] // Appointments assigned to this member
   bookedAppointments Appointment[]   @relation("BookedAppointments") // Appointments booked by this member
+  cancelledAppointments Appointment[] @relation("CancelledAppointments") // Appointments cancelled by this member
   shifts             Shift[]
   createdShifts      Shift[]         @relation("CreatedShifts")
 
@@ -169,7 +170,9 @@ model Appointment {
   notes              String? // Appointment-specific notes
   internalNotes      String? // Internal staff notes
   cancellationReason String? // Reason for cancellation if cancelled
+  cancelledAt        DateTime?
   bookedBy           String            @db.ObjectId // Member who booked the appointment
+  cancelledBy        String?           @db.ObjectId // Member who cancelled the appointment
 
   // Walk-in appointment fields (used when clientId is null)
   walkInClientName  String? // Temporary name for walk-in client (e.g., "Walk-in #123")
@@ -183,6 +186,7 @@ model Appointment {
   member         Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
   service        Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   bookedByMember Member  @relation("BookedAppointments", fields: [bookedBy], references: [id], onDelete: Cascade)
+  cancelledByMember Member? @relation("CancelledAppointments", fields: [cancelledBy], references: [id], onDelete: SetNull)
 
   @@index([orgId])
   @@index([clientId])

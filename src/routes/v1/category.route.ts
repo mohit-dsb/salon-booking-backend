@@ -1,10 +1,14 @@
 import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
+import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { CategoryController } from "@/controllers/category.controller";
 import { createCategorySchema, updateCategorySchema } from "@/validations/category.schema";
 
 const categoryRoutes = Router();
 const categoryController = new CategoryController();
+
+// Apply auth middleware to all routes
+categoryRoutes.use(requireAuthWithOrgId);
 
 categoryRoutes
   .route("/")

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
 import * as memberController from "@/controllers/member.controller";
+import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import {
   createMemberSchema,
   updateMemberSchema,
@@ -21,6 +22,9 @@ import {
 } from "@/validations/member.schema";
 
 const router = Router();
+
+// Apply auth middleware to all routes
+router.use(requireAuthWithOrgId);
 
 // Stats and search routes (must come before parameterized routes)
 router.get("/stats", memberController.getMemberStats);
@@ -107,14 +111,22 @@ router.get("/analytics/scheduled-shifts", validate(scheduledShiftsSchema), membe
  * @desc    Get working hours summary with operational hours and productivity overview
  * @access  Private (Admin/Member)
  */
-router.get("/analytics/working-hours-summary", validate(workingHoursSummarySchema), memberController.getWorkingHoursSummary);
+router.get(
+  "/analytics/working-hours-summary",
+  validate(workingHoursSummarySchema),
+  memberController.getWorkingHoursSummary,
+);
 
 /**
  * @route   GET /api/v1/members/analytics/commission-activity
  * @desc    Get full list of sales with commission payable
  * @access  Private (Admin/Member)
  */
-router.get("/analytics/commission-activity", validate(commissionActivitySchema), memberController.getCommissionActivity);
+router.get(
+  "/analytics/commission-activity",
+  validate(commissionActivitySchema),
+  memberController.getCommissionActivity,
+);
 
 /**
  * @route   GET /api/v1/members/analytics/commission-summary

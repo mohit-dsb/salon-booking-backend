@@ -1,10 +1,14 @@
 import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
+import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { ServiceController } from "@/controllers/service.controller";
 import { createServiceSchema, updateServiceSchema } from "@/validations/service.schema";
 
 const serviceRoutes = Router();
 const serviceController = new ServiceController();
+
+// Apply auth middleware to all routes
+serviceRoutes.use(requireAuthWithOrgId);
 
 // Base routes for services
 serviceRoutes

@@ -5,16 +5,15 @@ import memberRoutes from "@/routes/v1/member.route";
 import clientRoutes from "@/routes/v1/client.route";
 import appointmentRoutes from "@/routes/v1/appointment.route";
 import shiftRoutes from "@/routes/v1/shift.route";
-import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 
 const routerV1 = Router();
 
-routerV1.use("/categories", requireAuthWithOrgId, categoryRoutes);
-routerV1.use("/services", requireAuthWithOrgId, serviceRoutes);
-routerV1.use("/members", requireAuthWithOrgId, memberRoutes);
-routerV1.use("/clients", requireAuthWithOrgId, clientRoutes);
-routerV1.use("/appointments", requireAuthWithOrgId, appointmentRoutes);
-routerV1.use("/shifts", shiftRoutes); // Auth middleware is applied within the route file
+routerV1.use("/categories", categoryRoutes);
+routerV1.use("/services", serviceRoutes);
+routerV1.use("/members", memberRoutes);
+routerV1.use("/clients", clientRoutes);
+routerV1.use("/appointments", appointmentRoutes);
+routerV1.use("/shifts", shiftRoutes);
 
 routerV1.get("/", (_req: Request, res: Response) => {
   res.status(200).json({ message: "Welcome to the API" });

@@ -24,6 +24,8 @@ export interface UpdateAppointmentData {
   notes?: string;
   internalNotes?: string;
   cancellationReason?: string;
+  cancelledAt?: string;
+  cancelledBy?: string;
 }
 
 export interface AppointmentFilters {
@@ -573,6 +575,7 @@ export class AppointmentService {
 
       if (data.cancellationReason !== undefined) {
         updateData.cancellationReason = data.cancellationReason;
+        updateData.cancelledAt = new Date().toISOString();
       }
 
       const updatedAppointment = await prisma.appointment.update({
@@ -627,10 +630,17 @@ export class AppointmentService {
   }
 
   // Cancel appointment
-  public async cancelAppointment(id: string, orgId: string, reason: string): Promise<AppointmentWithDetails> {
+  public async cancelAppointment(
+    id: string,
+    orgId: string,
+    reason: string,
+    cancelledBy: string,
+  ): Promise<AppointmentWithDetails> {
     const updateData: UpdateAppointmentData = {
       status: "CANCELLED",
       cancellationReason: reason,
+      cancelledBy,
+      cancelledAt: new Date().toISOString(),
     };
 
     return this.updateAppointment(id, orgId, updateData);
@@ -1154,49 +1164,39 @@ export class AppointmentService {
 
       // Build include object based on includeDetails
       const include: Prisma.AppointmentInclude = {
-        ...(Array.isArray(includeDetails) && includeDetails.includes("client")
-          ? {
-              client: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                  phone: true,
-                },
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        member: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            duration: true,
+            price: true,
+            category: {
+              select: {
+                id: true,
+                name: true,
               },
-            }
-          : {}),
-        ...(Array.isArray(includeDetails) && includeDetails.includes("member")
-          ? {
-              member: {
-                select: {
-                  id: true,
-                  username: true,
-                  email: true,
-                  jobTitle: true,
-                },
-              },
-            }
-          : {}),
-        ...(Array.isArray(includeDetails) && includeDetails.includes("service")
-          ? {
-              service: {
-                select: {
-                  id: true,
-                  name: true,
-                  duration: true,
-                  price: true,
-                  category: {
-                    select: {
-                      id: true,
-                      name: true,
-                    },
-                  },
-                },
-              },
-            }
-          : {}),
+            },
+          },
+        },
+        bookedByMember: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
       };
 
       // Build orderBy based on sortBy and sortOrder

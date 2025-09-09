@@ -251,3 +251,11 @@ export const copyShiftsSchema = z.object({
     .optional(),
   overrideExisting: z.boolean().optional().default(false),
 });
+
+// Type exports
+export type CreateShiftData = z.infer<typeof createShiftSchema>;
+export type CreateRecurringShiftData = z.infer<typeof createRecurringShiftSchema>;
+export type UpdateShiftData = z.infer<typeof updateShiftSchema>;
+export type BulkUpdateShiftsData = z.infer<typeof bulkUpdateShiftsSchema>;
+export type BulkDeleteShiftsData = z.infer<typeof bulkDeleteShiftsSchema>;
+export type CopyShiftsData = z.infer<typeof copyShiftsSchema>;

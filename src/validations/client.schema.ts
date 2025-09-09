@@ -86,9 +86,7 @@ export const clientInsightsSchema = z.object({
   includeServicePreferences: z.boolean().default(true),
   includeMemberPreferences: z.boolean().default(true),
   includeBehaviorPatterns: z.boolean().default(true),
-  includeRecommendations: z.boolean().default(false),
   historyMonths: z.number().int().min(1).max(60).default(12),
-  compareWithAverage: z.boolean().default(false),
 });
 
 export type CreateClientData = z.infer<typeof createClientSchema>;

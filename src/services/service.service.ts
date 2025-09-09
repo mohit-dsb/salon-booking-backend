@@ -3,27 +3,8 @@ import { Service } from "@prisma/client";
 import { createSlug } from "@/utils/slugify";
 import { cacheService } from "./cache.service";
 import { AppError } from "@/middlewares/error.middleware";
+import type { CreateServiceData, UpdateServiceData } from "@/validations/service.schema";
 import { PaginationParams, createPaginatedResponse, PaginatedResponse } from "@/utils/pagination";
-
-// Types for Service operations
-export interface ICreateService {
-  name: string;
-  description?: string;
-  price: number;
-  duration: number;
-  categoryId: string;
-  orgId: string;
-  isActive?: boolean;
-}
-
-export interface IUpdateService {
-  name?: string;
-  description?: string;
-  price?: number;
-  duration?: number;
-  categoryId?: string;
-  isActive?: boolean;
-}
 
 export class ServiceService {
   // Helper method to generate unique slug (handles collisions)
@@ -54,14 +35,14 @@ export class ServiceService {
   }
 
   // Create a new service
-  public async createService(data: ICreateService): Promise<Service> {
-    const slug = await this.generateUniqueSlug(data.name, data.orgId);
+  public async createService(orgId: string, data: CreateServiceData): Promise<Service> {
+    const slug = await this.generateUniqueSlug(data.name, orgId);
 
     // Check if category exists and belongs to the organization
     const category = await prisma.category.findFirst({
       where: {
         id: data.categoryId,
-        orgId: data.orgId,
+        orgId,
       },
     });
 
@@ -69,7 +50,7 @@ export class ServiceService {
       throw new AppError("Category not found or does not belong to your organization", 404);
     }
 
-    if (await this.serviceExists(data.name, data.orgId)) {
+    if (await this.serviceExists(data.name, orgId)) {
       throw new AppError("Service already exists", 400);
     }
 
@@ -81,7 +62,7 @@ export class ServiceService {
         price: data.price,
         duration: data.duration,
         categoryId: data.categoryId,
-        orgId: data.orgId,
+        orgId,
         isActive: data.isActive ?? true,
       },
       include: {
@@ -90,8 +71,8 @@ export class ServiceService {
     });
 
     // Invalidate cache after creation
-    await cacheService.invalidatePattern(`service:${data.orgId}:*`);
-    await cacheService.invalidatePattern(`category:${data.orgId}:*`); // Also invalidate category cache as it includes services
+    await cacheService.invalidatePattern(`service:${orgId}:*`);
+    await cacheService.invalidatePattern(`category:${orgId}:*`); // Also invalidate category cache as it includes services
 
     return service;
   }
@@ -252,7 +233,7 @@ export class ServiceService {
   }
 
   // Update service
-  public async updateService(id: string, orgId: string, data: IUpdateService): Promise<Service> {
+  public async updateService(id: string, orgId: string, data: UpdateServiceData): Promise<Service> {
     const updateData: Record<string, unknown> = { ...data, orgId };
 
     // If name is being updated, also update the slug

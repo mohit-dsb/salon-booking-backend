@@ -16,8 +16,16 @@ export interface AppointmentAnalyticsData {
   internalNotes?: string | null;
   cancellationReason?: string | null;
   cancelledAt?: Date | null;
-  bookedBy: string;
-  cancelledBy?: string | null;
+  bookedByMember: {
+    id: string;
+    username: string;
+    email: string;
+  };
+  cancelledByMember?: {
+    id: string;
+    username: string;
+    email: string;
+  } | null;
   walkInClientName?: string | null;
   walkInClientPhone?: string | null;
   createdAt: Date;
@@ -42,15 +50,5 @@ export interface AppointmentAnalyticsData {
       id: string;
       name: string;
     } | null;
-  } | null;
-  bookedByMember?: {
-    id: string;
-    username: string;
-    name?: string; // Computed field for convenience
-  } | null;
-  cancelledByMember?: {
-    id: string;
-    username: string;
-    name?: string; // Computed field for convenience
   } | null;
 }

@@ -63,73 +63,61 @@ const baseUserFields = {
 };
 
 export const createMemberSchema = z.object({
-  body: z.object({
-    ...baseUserFields,
-    jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
-    bio: z.string().trim().max(500, "Bio too long").optional(),
-    workingHours: workingHoursSchema.optional(),
-    commissionRate: z
-      .number()
-      .min(0, "Commission rate must be positive")
-      .max(100, "Commission rate cannot exceed 100%")
-      .optional(),
-    hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
-    dateOfBirth: z.iso.datetime("Invalid date format").optional(),
-    address: addressSchema.optional(),
-    emergencyContact: emergencyContactSchema.optional(),
-    startDate: z.iso.datetime("Invalid date format").optional(),
-    serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
-  }),
+  ...baseUserFields,
+  jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
+  bio: z.string().trim().max(500, "Bio too long").optional(),
+  workingHours: workingHoursSchema.optional(),
+  commissionRate: z
+    .number()
+    .min(0, "Commission rate must be positive")
+    .max(100, "Commission rate cannot exceed 100%")
+    .optional(),
+  hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
+  dateOfBirth: z.iso.datetime("Invalid date format").optional(),
+  address: addressSchema.optional(),
+  emergencyContact: emergencyContactSchema.optional(),
+  startDate: z.iso.datetime("Invalid date format").optional(),
+  serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
 });
 
 export const updateMemberSchema = z.object({
-  body: z.object({
-    username: z.string().trim().min(1, "Username is required").max(50, "Username too long").optional(),
-    email: z.email("Invalid email format").optional(),
-    phone: z.string().trim().min(10, "Phone number too short").max(20, "Phone number too long").optional(),
-    profileImage: z.url("Invalid image URL").optional(),
-    role: roleEnum.optional(),
-    jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
-    bio: z.string().trim().max(500, "Bio too long").optional(),
-    workingHours: workingHoursSchema.optional(),
-    isActive: z.boolean().optional(),
-    commissionRate: z
-      .number()
-      .min(0, "Commission rate must be positive")
-      .max(100, "Commission rate cannot exceed 100%")
-      .optional(),
-    hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
-    dateOfBirth: z.iso.datetime("Invalid date format").optional(),
-    address: addressSchema.optional(),
-    emergencyContact: emergencyContactSchema.optional(),
-    endDate: z.iso.datetime("Invalid date format").optional(),
-    serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
-  }),
+  username: z.string().trim().min(1, "Username is required").max(50, "Username too long").optional(),
+  email: z.email("Invalid email format").optional(),
+  phone: z.string().trim().min(10, "Phone number too short").max(20, "Phone number too long").optional(),
+  profileImage: z.url("Invalid image URL").optional(),
+  role: roleEnum.optional(),
+  jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
+  bio: z.string().trim().max(500, "Bio too long").optional(),
+  workingHours: workingHoursSchema.optional(),
+  isActive: z.boolean().optional(),
+  commissionRate: z
+    .number()
+    .min(0, "Commission rate must be positive")
+    .max(100, "Commission rate cannot exceed 100%")
+    .optional(),
+  hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
+  dateOfBirth: z.iso.datetime("Invalid date format").optional(),
+  address: addressSchema.optional(),
+  emergencyContact: emergencyContactSchema.optional(),
+  endDate: z.iso.datetime("Invalid date format").optional(),
+  serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
 });
 
 export const assignServicesSchema = z.object({
-  body: z.object({
-    serviceIds: z
-      .array(z.string().min(1, "Service ID cannot be empty"))
-      .min(1, "At least one service must be assigned"),
-  }),
+  serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).min(1, "At least one service must be assigned"),
 });
 
 export const bulkDeleteMembersSchema = z.object({
-  body: z.object({
-    memberIds: z
-      .array(z.string().min(1, "Member ID cannot be empty"))
-      .min(1, "At least one member ID is required")
-      .max(5, "Cannot delete more than 5 members at once"),
-  }),
+  memberIds: z
+    .array(z.string().min(1, "Member ID cannot be empty"))
+    .min(1, "At least one member ID is required")
+    .max(5, "Cannot delete more than 5 members at once"),
 });
 
 export const inviteMemberSchema = z.object({
-  body: z.object({
-    ...baseUserFields,
-    jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
-    serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
-  }),
+  ...baseUserFields,
+  jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
+  serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
 });
 
 // Query parameter validation schemas
@@ -469,6 +457,9 @@ export const commissionSummarySchema = z.object({
 });
 
 // Export type definitions for use in controllers and services
+export type CreateMemberData = z.infer<typeof createMemberSchema>;
+export type UpdateMemberData = z.infer<typeof updateMemberSchema>;
+export type BulkDeleteMembersData = z.infer<typeof bulkDeleteMembersSchema>;
 export type WorkingHoursActivityParams = z.infer<typeof workingHoursActivitySchema>;
 export type BreakActivityParams = z.infer<typeof breakActivitySchema>;
 export type AttendanceSummaryParams = z.infer<typeof attendanceSummarySchema>;

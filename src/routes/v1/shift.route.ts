@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { shiftController } from "@/controllers/shift.controller";
+import * as shiftController from "@/controllers/shift.controller";
 import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { validate } from "@/middlewares/validation.middleware";
 import {

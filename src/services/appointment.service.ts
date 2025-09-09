@@ -4,29 +4,8 @@ import { cacheService } from "./cache.service";
 import { handleError } from "@/utils/errorHandler";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
-import { Appointment, AppointmentStatus, Prisma } from "@prisma/client";
-
-export interface CreateAppointmentData {
-  clientId?: string; // Optional for walk-in appointments
-  memberId: string;
-  serviceId: string;
-  startTime: string;
-  notes?: string;
-  internalNotes?: string;
-  // Walk-in client fields (used when clientId is not provided)
-  walkInClientName?: string;
-  walkInClientPhone?: string;
-}
-
-export interface UpdateAppointmentData {
-  startTime?: string;
-  status?: AppointmentStatus;
-  notes?: string;
-  internalNotes?: string;
-  cancellationReason?: string;
-  cancelledAt?: string;
-  cancelledBy?: string;
-}
+import type { Appointment, AppointmentStatus, Prisma } from "@prisma/client";
+import type { CreateAppointmentData, UpdateAppointmentData } from "@/validations/appointment.schema";
 
 export interface AppointmentFilters {
   clientId?: string;
@@ -61,7 +40,13 @@ export interface AppointmentWithDetails extends Appointment {
   bookedByMember: {
     id: string;
     username: string;
+    email: string;
   };
+  cancelledByMember?: {
+    id: string;
+    username: string;
+    email: string;
+  } | null;
 }
 
 export interface AvailabilitySlot {
@@ -175,9 +160,11 @@ export class AppointmentService {
     try {
       const appointment = await prisma.appointment.create({
         data: {
-          clientId: data.clientId, // Will be undefined for walk-in appointments
-          memberId: data.memberId,
-          serviceId: data.serviceId,
+          ...(data.clientId && {
+            client: {
+              connect: { id: data.clientId },
+            },
+          }),
           orgId,
           startTime,
           endTime,
@@ -185,9 +172,18 @@ export class AppointmentService {
           price: service.price,
           notes: data.notes,
           internalNotes: data.internalNotes,
-          bookedBy,
           walkInClientName,
           walkInClientPhone: data.walkInClientPhone,
+          // Use relation connects instead of direct IDs due to multiple relations
+          member: {
+            connect: { id: data.memberId },
+          },
+          service: {
+            connect: { id: data.serviceId },
+          },
+          bookedByMember: {
+            connect: { id: bookedBy },
+          },
         },
         include: {
           client: data.clientId
@@ -220,6 +216,14 @@ export class AppointmentService {
             select: {
               id: true,
               username: true,
+              email: true,
+            },
+          },
+          cancelledByMember: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
             },
           },
         },
@@ -354,6 +358,14 @@ export class AppointmentService {
           select: {
             id: true,
             username: true,
+            email: true,
+          },
+        },
+        cancelledByMember: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
           },
         },
       },
@@ -509,6 +521,14 @@ export class AppointmentService {
             select: {
               id: true,
               username: true,
+              email: true,
+            },
+          },
+          cancelledByMember: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
             },
           },
         },
@@ -537,6 +557,7 @@ export class AppointmentService {
     id: string,
     orgId: string,
     data: UpdateAppointmentData,
+    updatedBy?: string,
   ): Promise<AppointmentWithDetails> {
     await this.validateOrgMembership(orgId);
 
@@ -575,7 +596,8 @@ export class AppointmentService {
 
       if (data.cancellationReason !== undefined) {
         updateData.cancellationReason = data.cancellationReason;
-        updateData.cancelledAt = new Date().toISOString();
+        updateData.cancelledAt = new Date();
+        updateData.cancelledByMember = updatedBy ? { connect: { id: updatedBy } } : { disconnect: true };
       }
 
       const updatedAppointment = await prisma.appointment.update({
@@ -610,6 +632,14 @@ export class AppointmentService {
             select: {
               id: true,
               username: true,
+              email: true,
+            },
+          },
+          cancelledByMember: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
             },
           },
         },
@@ -639,11 +669,9 @@ export class AppointmentService {
     const updateData: UpdateAppointmentData = {
       status: "CANCELLED",
       cancellationReason: reason,
-      cancelledBy,
-      cancelledAt: new Date().toISOString(),
     };
 
-    return this.updateAppointment(id, orgId, updateData);
+    return this.updateAppointment(id, orgId, updateData, cancelledBy);
   }
 
   // Reschedule appointment
@@ -842,6 +870,14 @@ export class AppointmentService {
           select: {
             id: true,
             username: true,
+            email: true,
+          },
+        },
+        cancelledByMember: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
           },
         },
       },
@@ -889,6 +925,14 @@ export class AppointmentService {
           select: {
             id: true,
             username: true,
+            email: true,
+          },
+        },
+        cancelledByMember: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
           },
         },
       },
@@ -954,12 +998,6 @@ export class AppointmentService {
               name: true,
               duration: true,
               price: true,
-            },
-          },
-          bookedByMember: {
-            select: {
-              id: true,
-              username: true,
             },
           },
         },

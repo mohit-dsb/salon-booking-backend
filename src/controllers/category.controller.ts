@@ -1,17 +1,17 @@
 import { NextFunction, Request, Response } from "express";
-import { CategoryService } from "@/services/category.service";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppError, asyncHandler } from "@/middlewares/error.middleware";
 import { parsePaginationParams, PaginationQuery } from "@/utils/pagination";
+import { CategoryService, type IUpdateCategory, type ICreateCategory } from "@/services/category.service";
 
 export class CategoryController {
   private categoryService = new CategoryService();
 
   public createCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
 
     const categoryData = {
-      ...req.body,
+      ...(req.parsedBody as ICreateCategory),
       orgId: auth.orgId,
     };
 
@@ -20,7 +20,7 @@ export class CategoryController {
   });
 
   public getCategoryById = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
 
     if (!req.params.id) {
       throw new AppError("Category ID is required", 400);
@@ -35,7 +35,7 @@ export class CategoryController {
   });
 
   public getAllCategories = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
 
     // Use paginated response
     const pagination = parsePaginationParams(req.query as PaginationQuery, "createdAt");
@@ -44,7 +44,7 @@ export class CategoryController {
   });
 
   public getCategoryBySlug = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -60,7 +60,7 @@ export class CategoryController {
   });
 
   public deleteCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -78,7 +78,7 @@ export class CategoryController {
   });
 
   public updateCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -91,7 +91,11 @@ export class CategoryController {
       throw new AppError("Category not found", 404);
     }
 
-    const updatedCategory = await this.categoryService.updateCategory(category.id, auth.orgId, req.body);
+    const updatedCategory = await this.categoryService.updateCategory(
+      category.id,
+      auth.orgId,
+      req.parsedBody as IUpdateCategory,
+    );
     res.status(200).json({ success: true, data: updatedCategory });
   });
 }

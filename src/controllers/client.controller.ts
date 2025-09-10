@@ -3,7 +3,13 @@ import { parsePaginationParams } from "@/utils/pagination";
 import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
-import type { ClientSummaryParams, ClientListAnalyticsParams, ClientInsightsParams } from "@/validations/client.schema";
+import type {
+  ClientSummaryParams,
+  ClientListAnalyticsParams,
+  ClientInsightsParams,
+  UpdateClientData,
+  CreateClientData,
+} from "@/validations/client.schema";
 
 // Create service instance
 const clientService = new ClientService();
@@ -14,8 +20,8 @@ const clientService = new ClientService();
  * @access Private (Member)
  */
 export const createClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
-  const clientData = req.body;
+  const { orgId } = await getAuthWithOrgId(req);
+  const clientData = req.parsedBody as CreateClientData;
 
   const client = await clientService.createClient(orgId, clientData);
 
@@ -32,7 +38,7 @@ export const createClient = asyncHandler(async (req: Request, res: Response, _ne
  * @access Private (Member)
  */
 export const getAllClients = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const pagination = parsePaginationParams(req.query);
 
   // Extract filters from query parameters (validated by middleware)
@@ -65,7 +71,7 @@ export const getAllClients = asyncHandler(async (req: Request, res: Response, _n
  * @access Private (Member)
  */
 export const getClientById = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
 
   const client = await clientService.getClientById(id, orgId);
@@ -83,9 +89,9 @@ export const getClientById = asyncHandler(async (req: Request, res: Response, _n
  * @access Private (Member)
  */
 export const updateClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
-  const updateData = req.body;
+  const updateData = req.parsedBody as UpdateClientData;
 
   const client = await clientService.updateClient(id, orgId, updateData);
 
@@ -102,7 +108,7 @@ export const updateClient = asyncHandler(async (req: Request, res: Response, _ne
  * @access Private (Member)
  */
 export const deleteClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
 
   await clientService.deleteClient(id, orgId);
@@ -119,7 +125,7 @@ export const deleteClient = asyncHandler(async (req: Request, res: Response, _ne
  * @access Private (Member)
  */
 export const searchClients = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { query } = req.params;
 
   if (!query || typeof query !== "string") {
@@ -141,7 +147,7 @@ export const searchClients = asyncHandler(async (req: Request, res: Response, _n
  * @access Private (Member)
  */
 export const getClientSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as ClientSummaryParams;
 
   const result = await clientService.getClientSummary(orgId, params);
@@ -159,7 +165,7 @@ export const getClientSummary = asyncHandler(async (req: Request, res: Response,
  * @access Private (Member)
  */
 export const getClientAnalyticsList = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as ClientListAnalyticsParams;
   const pagination = parsePaginationParams(req.query);
 
@@ -181,7 +187,7 @@ export const getClientAnalyticsList = asyncHandler(async (req: Request, res: Res
  * @access Private (Member)
  */
 export const getClientInsights = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { clientId } = req.params;
   const params = req.query as unknown as ClientInsightsParams;
 

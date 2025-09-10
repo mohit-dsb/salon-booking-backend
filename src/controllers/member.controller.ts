@@ -17,6 +17,9 @@ import type {
   WorkingHoursSummaryParams,
   CommissionActivityParams,
   CommissionSummaryParams,
+  BulkDeleteMembersData,
+  CreateMemberData,
+  UpdateMemberData,
 } from "@/validations/member.schema";
 
 // Initialize service instance - can be mocked easily for testing
@@ -30,8 +33,8 @@ const memberService = new MemberService();
  * @access Private (Admin)
  */
 export const createMember = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
-  const memberData = req.body;
+  const { orgId } = await getAuthWithOrgId(req);
+  const memberData = req.parsedBody as CreateMemberData;
 
   const member = await memberService.createMember(orgId, memberData);
 
@@ -48,7 +51,7 @@ export const createMember = asyncHandler(async (req: Request, res: Response, _ne
  * @access Private (Admin/Member)
  */
 export const getAllMembers = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const pagination = parsePaginationParams(req.query);
 
   // Extract filters from query parameters (validated by middleware)
@@ -86,7 +89,7 @@ export const getAllMembers = asyncHandler(async (req: Request, res: Response, _n
  * @access Private (Admin/Member)
  */
 export const getMemberById = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
 
   const member = await memberService.getMemberById(id, orgId);
@@ -104,9 +107,9 @@ export const getMemberById = asyncHandler(async (req: Request, res: Response, _n
  * @access Private (Admin/Member)
  */
 export const updateMember = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
-  const updateData = req.body;
+  const updateData = req.parsedBody as UpdateMemberData;
 
   const member = await memberService.updateMember(id, orgId, updateData);
 
@@ -123,7 +126,7 @@ export const updateMember = asyncHandler(async (req: Request, res: Response, _ne
  * @access Private (Admin)
  */
 export const deleteMember = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
 
   await memberService.deleteMember(id, orgId);
@@ -140,8 +143,8 @@ export const deleteMember = asyncHandler(async (req: Request, res: Response, _ne
  * @access Private (Admin)
  */
 export const bulkDeleteMembers = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
-  const { memberIds } = req.body;
+  const { orgId } = await getAuthWithOrgId(req);
+  const { memberIds } = req.parsedBody as BulkDeleteMembersData;
 
   const result = await memberService.bulkDeleteMembers(memberIds, orgId);
 
@@ -172,9 +175,9 @@ export const bulkDeleteMembers = asyncHandler(async (req: Request, res: Response
  * @access Private (Admin)
  */
 export const assignServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
-  const { serviceIds } = req.body;
+  const { serviceIds } = req.parsedBody as { serviceIds: string[] };
 
   await memberService.assignServicesToMember(id, orgId, serviceIds);
 
@@ -190,7 +193,7 @@ export const assignServices = asyncHandler(async (req: Request, res: Response, _
  * @access Private (Admin/Member)
  */
 export const getMembersByService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { serviceId } = req.params;
 
   const members = await memberService.getMembersByService(serviceId, orgId);
@@ -210,7 +213,7 @@ export const getMembersByService = asyncHandler(async (req: Request, res: Respon
  * @access Private (Admin/Member)
  */
 export const getMemberStats = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
 
   const stats = await memberService.getMemberStats(orgId);
 
@@ -227,7 +230,7 @@ export const getMemberStats = asyncHandler(async (req: Request, res: Response, _
  * @access Private (Admin)
  */
 export const toggleMemberStatus = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
 
   const member = await memberService.toggleMemberStatus(id, orgId);
@@ -245,7 +248,7 @@ export const toggleMemberStatus = asyncHandler(async (req: Request, res: Respons
  * @access Private (Admin/Member)
  */
 export const searchMembers = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const { q } = req.query;
 
   const pagination = parsePaginationParams(req.query);
@@ -267,7 +270,7 @@ export const searchMembers = asyncHandler(async (req: Request, res: Response, _n
  * @access Private (Member)
  */
 export const getMemberProfile = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId, userId } = getAuthWithOrgId(req);
+  const { orgId, userId } = await getAuthWithOrgId(req);
 
   const member = await memberService.getMemberByClerkId(userId as string, orgId);
 
@@ -288,9 +291,9 @@ export const getMemberProfile = asyncHandler(async (req: Request, res: Response,
  * @access Private (Member)
  */
 export const updateMemberProfile = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId, userId } = getAuthWithOrgId(req);
+  const { orgId, userId } = await getAuthWithOrgId(req);
 
-  const member = await memberService.updateMemberProfile(userId as string, orgId, req.body);
+  const member = await memberService.updateMemberProfile(userId as string, orgId, req.parsedBody as UpdateMemberData);
 
   res.status(200).json({
     success: true,
@@ -392,7 +395,7 @@ export const syncClerkUser = asyncHandler(async (req: Request, res: Response, _n
  * @access Private (Admin/Member)
  */
 export const getWorkingHoursActivity = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as WorkingHoursActivityParams;
   const pagination = parsePaginationParams(req.query);
 
@@ -414,7 +417,7 @@ export const getWorkingHoursActivity = asyncHandler(async (req: Request, res: Re
  * @access Private (Admin/Member)
  */
 export const getBreakActivity = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as BreakActivityParams;
   const pagination = parsePaginationParams(req.query);
 
@@ -436,7 +439,7 @@ export const getBreakActivity = asyncHandler(async (req: Request, res: Response,
  * @access Private (Admin/Member)
  */
 export const getAttendanceSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as AttendanceSummaryParams;
   const pagination = parsePaginationParams(req.query);
 
@@ -458,7 +461,7 @@ export const getAttendanceSummary = asyncHandler(async (req: Request, res: Respo
  * @access Private (Admin/Member)
  */
 export const getWagesDetail = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as WagesDetailParams;
   const pagination = parsePaginationParams(req.query);
 
@@ -480,7 +483,7 @@ export const getWagesDetail = asyncHandler(async (req: Request, res: Response, _
  * @access Private (Admin/Member)
  */
 export const getWagesSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as WagesSummaryParams;
 
   const result = await memberService.getWagesSummary(orgId, params);
@@ -501,7 +504,7 @@ export const getWagesSummary = asyncHandler(async (req: Request, res: Response, 
  * @access Private (Admin/Member)
  */
 export const getPaySummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as PaySummaryParams;
   const pagination = parsePaginationParams(req.query);
 
@@ -522,7 +525,7 @@ export const getPaySummary = asyncHandler(async (req: Request, res: Response, _n
  * @access Private (Admin/Member)
  */
 export const getScheduledShifts = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as ScheduledShiftsParams;
   const pagination = parsePaginationParams(req.query);
 
@@ -543,7 +546,7 @@ export const getScheduledShifts = asyncHandler(async (req: Request, res: Respons
  * @access Private (Admin/Member)
  */
 export const getWorkingHoursSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as WorkingHoursSummaryParams;
   const pagination = parsePaginationParams(req.query);
 
@@ -564,7 +567,7 @@ export const getWorkingHoursSummary = asyncHandler(async (req: Request, res: Res
  * @access Private (Admin/Member)
  */
 export const getCommissionActivity = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as CommissionActivityParams;
   const pagination = parsePaginationParams(req.query);
 
@@ -585,7 +588,7 @@ export const getCommissionActivity = asyncHandler(async (req: Request, res: Resp
  * @access Private (Admin/Member)
  */
 export const getCommissionSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = getAuthWithOrgId(req);
+  const { orgId } = await getAuthWithOrgId(req);
   const params = req.query as unknown as CommissionSummaryParams;
 
   const result = await memberService.getCommissionSummary(orgId, params);

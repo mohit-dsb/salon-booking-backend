@@ -9,6 +9,7 @@ declare global {
         orgId?: string;
         [key: string]: unknown;
       };
+      parsedBody?: unknown; // Parsed and validated body
     }
   }
 }

@@ -6,7 +6,7 @@ import { env } from "@/config/environment";
 const logger = winston.createLogger({
   level: env.LOG_LEVEL,
   format: winston.format.combine(
-    winston.format.timestamp(),
+    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
     winston.format.errors({ stack: true }),
     winston.format.json(),
     winston.format.prettyPrint(),

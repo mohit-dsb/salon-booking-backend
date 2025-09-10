@@ -4,7 +4,14 @@ import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppointmentService } from "@/services/appointment.service";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
-import type { AppointmentListParams } from "@/validations/appointment.schema";
+import type {
+  AppointmentListParams,
+  CancelAppointmentData,
+  ConvertWalkInAppointmentData,
+  CreateAppointmentData,
+  RescheduleAppointmentData,
+  UpdateAppointmentData,
+} from "@/validations/appointment.schema";
 import type { TableResponse, AppointmentTableRow, AppointmentAnalyticsQuery } from "@/types/table.types";
 import {
   transformAppointmentsToTableData,
@@ -18,8 +25,8 @@ export class AppointmentController {
 
   // Create a new appointment
   public createAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId, userId } = getAuthWithOrgId(req);
-    const appointmentData = req.body;
+    const { orgId, userId } = await getAuthWithOrgId(req);
+    const appointmentData = req.parsedBody as CreateAppointmentData;
 
     const appointment = await this.appointmentService.createAppointment(orgId, appointmentData, userId as string);
 
@@ -32,8 +39,8 @@ export class AppointmentController {
 
   // Create walk-in appointment (now uses the same method as regular appointments)
   public createWalkInAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId, userId } = getAuthWithOrgId(req);
-    const appointmentData = req.body;
+    const { orgId, userId } = await getAuthWithOrgId(req);
+    const appointmentData = req.parsedBody as CreateAppointmentData;
 
     const appointment = await this.appointmentService.createAppointment(orgId, appointmentData, userId as string);
 
@@ -46,7 +53,7 @@ export class AppointmentController {
 
   // Get all appointments with pagination and filters
   public getAllAppointments = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const pagination = parsePaginationParams(req.query);
 
     // Extract filters from query parameters (validated by middleware)
@@ -105,7 +112,7 @@ export class AppointmentController {
 
   // Get appointment by ID
   public getAppointmentById = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { id } = req.params;
 
     const appointment = await this.appointmentService.getAppointmentById(id, orgId);
@@ -119,9 +126,9 @@ export class AppointmentController {
 
   // Update appointment
   public updateAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { id } = req.params;
-    const updateData = req.body;
+    const updateData = req.parsedBody as UpdateAppointmentData;
 
     const appointment = await this.appointmentService.updateAppointment(id, orgId, updateData);
 
@@ -134,9 +141,9 @@ export class AppointmentController {
 
   // Cancel appointment
   public cancelAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId, userId } = getAuthWithOrgId(req);
+    const { orgId, userId } = await getAuthWithOrgId(req);
     const { id } = req.params;
-    const { cancellationReason } = req.body;
+    const { cancellationReason } = req.parsedBody as CancelAppointmentData;
 
     if (!cancellationReason) {
       throw new AppError("Cancellation reason is required", 400);
@@ -153,9 +160,9 @@ export class AppointmentController {
 
   // Reschedule appointment
   public rescheduleAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { id } = req.params;
-    const { startTime, notes } = req.body;
+    const { startTime, notes } = req.parsedBody as RescheduleAppointmentData;
 
     if (!startTime) {
       throw new AppError("New start time is required", 400);
@@ -172,7 +179,7 @@ export class AppointmentController {
 
   // Check member availability
   public checkAvailability = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { memberId, serviceId, date } = req.query;
 
     if (!memberId || !serviceId || !date) {
@@ -195,7 +202,7 @@ export class AppointmentController {
 
   // Get member's upcoming appointments
   public getMemberUpcomingAppointments = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { memberId } = req.params;
     const { days } = req.query;
 
@@ -212,7 +219,7 @@ export class AppointmentController {
 
   // Get client's appointment history
   public getClientAppointmentHistory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { clientId } = req.params;
 
     const appointments = await this.appointmentService.getClientAppointmentHistory(orgId, clientId);
@@ -226,9 +233,9 @@ export class AppointmentController {
 
   // Mark appointment as completed
   public completeAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { id } = req.params;
-    const { internalNotes } = req.body;
+    const { internalNotes } = req.parsedBody as { internalNotes?: string };
 
     const updateData = {
       status: "COMPLETED" as AppointmentStatus,
@@ -246,9 +253,9 @@ export class AppointmentController {
 
   // Mark appointment as no-show
   public markNoShow = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { id } = req.params;
-    const { internalNotes } = req.body;
+    const { internalNotes } = req.parsedBody as { internalNotes?: string };
 
     const updateData = {
       status: "NO_SHOW" as AppointmentStatus,
@@ -266,7 +273,7 @@ export class AppointmentController {
 
   // Confirm appointment
   public confirmAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { id } = req.params;
 
     const updateData = {
@@ -284,7 +291,7 @@ export class AppointmentController {
 
   // Start appointment (mark as in progress)
   public startAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { id } = req.params;
 
     const updateData = {
@@ -302,9 +309,9 @@ export class AppointmentController {
 
   // Convert walk-in appointment to regular appointment with client
   public convertWalkInAppointment = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const { id } = req.params;
-    const { clientId } = req.body;
+    const { clientId } = req.parsedBody as ConvertWalkInAppointmentData;
 
     if (!clientId) {
       throw new AppError("Client ID is required", 400);
@@ -326,7 +333,7 @@ export class AppointmentController {
    * Provides overview of appointment trends, patterns, cancellations, and no-shows
    */
   public getAppointmentSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const params = req.query;
 
     const summary = await this.appointmentService.getAppointmentSummary(orgId, params);
@@ -344,7 +351,7 @@ export class AppointmentController {
    * Returns data optimized for UI table rendering
    */
   public getAppointmentAnalyticsList = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const pagination = parsePaginationParams(req.query);
     const startTime = Date.now();
 
@@ -410,7 +417,7 @@ export class AppointmentController {
    * Insights into appointment cancellations and no-shows with trends and patterns
    */
   public getCancellationNoShowAnalytics = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const { orgId } = getAuthWithOrgId(req);
+    const { orgId } = await getAuthWithOrgId(req);
     const params = req.query;
 
     const analytics = await this.appointmentService.getCancellationNoShowAnalytics(orgId, params);

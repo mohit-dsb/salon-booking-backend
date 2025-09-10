@@ -5,29 +5,13 @@ import { Client, Prisma } from "@prisma/client";
 import { handleError } from "@/utils/errorHandler";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
-import type { ClientSummaryParams, ClientListAnalyticsParams, ClientInsightsParams } from "@/validations/client.schema";
-
-export interface CreateClientData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  dateOfBirth?: string;
-  address?: Record<string, unknown>;
-  notes?: string;
-  preferences?: Record<string, unknown>;
-}
-
-export interface UpdateClientData {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  dateOfBirth?: string;
-  address?: Record<string, unknown>;
-  notes?: string;
-  preferences?: Record<string, unknown>;
-}
+import type {
+  ClientSummaryParams,
+  ClientListAnalyticsParams,
+  ClientInsightsParams,
+  CreateClientData,
+  UpdateClientData,
+} from "@/validations/client.schema";
 
 export interface ClientFilters {
   search?: string;
@@ -69,35 +53,6 @@ interface PeriodMetrics {
   totalRevenue: number;
   totalAppointments: number;
   averageAppointmentValue: number;
-}
-
-interface ClientInsights {
-  spendingAnalysis?: {
-    totalSpent: number;
-    spendingTrend: string;
-  };
-  appointmentHistory?: {
-    cancellationRate: number;
-    noShowRate: number;
-  };
-  servicePreferences?: {
-    topServices: Array<{
-      serviceName: string;
-      count: number;
-    }>;
-  };
-  behaviorPatterns?: {
-    bookingFrequency: string;
-    preferredDays: Array<{
-      day: string;
-      percentage: number;
-    }>;
-    consistencyScore: number;
-  };
-  averageComparison?: {
-    spendingPercentile: number;
-    visitFrequencyPercentile: number;
-  };
 }
 
 export class ClientService {
@@ -790,9 +745,7 @@ export class ClientService {
         includeServicePreferences = true,
         includeMemberPreferences = true,
         includeBehaviorPatterns = true,
-        includeRecommendations = false,
         historyMonths = 12,
-        compareWithAverage = false,
       } = params;
 
       // Validate client exists and belongs to organization
@@ -852,16 +805,6 @@ export class ClientService {
       // Behavior Patterns
       if (includeBehaviorPatterns) {
         insights.behaviorPatterns = await this.analyzeBehaviorPatterns(client.appointments, historyStartDate);
-      }
-
-      // Recommendations
-      if (includeRecommendations) {
-        insights.recommendations = await this.generateClientRecommendations(orgId, client, insights);
-      }
-
-      // Compare with average client if requested
-      if (compareWithAverage) {
-        insights.averageComparison = await this.compareWithAverageClient(orgId, insights, historyStartDate);
       }
 
       return insights;
@@ -2408,208 +2351,6 @@ export class ClientService {
     // Calculate consistency based on how close actual is to expected
     const consistencyRatio = Math.min(actualAppointments / expectedAppointments, 2); // Cap at 200%
     return Math.round(consistencyRatio * 50); // 0-100 scale
-  }
-
-  private async generateClientRecommendations(
-    orgId: string,
-    client: Record<string, unknown>,
-    insights: ClientInsights,
-  ) {
-    const recommendations: Array<{
-      type: string;
-      priority: "high" | "medium" | "low";
-      title: string;
-      description: string;
-      actionItems: string[];
-    }> = [];
-
-    // Analyze spending patterns
-    const spendingAnalysis = insights.spendingAnalysis;
-    if (spendingAnalysis) {
-      if (spendingAnalysis.totalSpent > 1000) {
-        recommendations.push({
-          type: "loyalty",
-          priority: "high",
-          title: "VIP Client Program",
-          description: "This client has high spending. Consider offering VIP benefits.",
-          actionItems: [
-            "Send personalized thank you note",
-            "Offer complimentary service upgrade",
-            "Invite to exclusive events",
-            "Create custom loyalty package",
-          ],
-        });
-      }
-
-      if (spendingAnalysis.spendingTrend === "decreasing") {
-        recommendations.push({
-          type: "retention",
-          priority: "high",
-          title: "Spending Decline Alert",
-          description: "Client spending has decreased. Focus on retention strategies.",
-          actionItems: [
-            "Schedule follow-up consultation",
-            "Offer special discount or promotion",
-            "Ask for feedback on recent services",
-            "Send personalized care recommendations",
-          ],
-        });
-      }
-    }
-
-    // Analyze appointment patterns
-    const appointmentHistory = insights.appointmentHistory;
-    if (appointmentHistory) {
-      const cancellationRate = appointmentHistory.cancellationRate || 0;
-      const noShowRate = appointmentHistory.noShowRate || 0;
-
-      if (cancellationRate > 20) {
-        recommendations.push({
-          type: "retention",
-          priority: "medium",
-          title: "High Cancellation Rate",
-          description: "Client has cancelled appointments frequently. Improve booking experience.",
-          actionItems: [
-            "Send reminder notifications 24 hours in advance",
-            "Offer flexible rescheduling policy",
-            "Implement confirmation calls",
-            "Ask for cancellation reasons",
-          ],
-        });
-      }
-
-      if (noShowRate > 10) {
-        recommendations.push({
-          type: "engagement",
-          priority: "high",
-          title: "No-Show Prevention",
-          description: "Client has missed appointments. Implement prevention measures.",
-          actionItems: [
-            "Send multiple reminder notifications",
-            "Implement confirmation system",
-            "Offer late cancellation policy",
-            "Schedule buffer time between appointments",
-          ],
-        });
-      }
-    }
-
-    // Analyze service preferences
-    const servicePreferences = insights.servicePreferences;
-    if (servicePreferences && servicePreferences.topServices) {
-      const topService = servicePreferences.topServices[0];
-      if (topService && topService.count > 3) {
-        recommendations.push({
-          type: "upsell",
-          priority: "medium",
-          title: "Service Package Recommendation",
-          description: `Client frequently uses ${topService.serviceName}. Suggest package deal.`,
-          actionItems: [
-            `Create package including ${topService.serviceName}`,
-            "Offer discounted bundle pricing",
-            "Explain long-term benefits",
-            "Schedule consultation for package options",
-          ],
-        });
-      }
-    }
-
-    // Analyze behavior patterns
-    const behaviorPatterns = insights.behaviorPatterns;
-    if (behaviorPatterns) {
-      if (behaviorPatterns.bookingFrequency === "rare") {
-        recommendations.push({
-          type: "engagement",
-          priority: "medium",
-          title: "Increase Visit Frequency",
-          description: "Client visits infrequently. Develop strategies to increase engagement.",
-          actionItems: [
-            "Send regular newsletter with tips",
-            "Offer maintenance reminders",
-            "Create seasonal promotion calendar",
-            "Implement loyalty rewards program",
-          ],
-        });
-      }
-
-      if (behaviorPatterns.consistencyScore < 30) {
-        recommendations.push({
-          type: "engagement",
-          priority: "low",
-          title: "Improve Booking Consistency",
-          description: "Client booking patterns are inconsistent. Help establish routine.",
-          actionItems: [
-            "Suggest regular appointment schedule",
-            "Offer preferred time slots",
-            "Send booking reminders",
-            "Create personalized care plan",
-          ],
-        });
-      }
-
-      // Preferred day/time recommendations
-      if (behaviorPatterns.preferredDays && behaviorPatterns.preferredDays.length > 0) {
-        const preferredDay = behaviorPatterns.preferredDays[0];
-        if (preferredDay.percentage > 50) {
-          recommendations.push({
-            type: "scheduling",
-            priority: "low",
-            title: "Preferred Day Scheduling",
-            description: `Client prefers ${preferredDay.day}s. Prioritize these days for bookings.`,
-            actionItems: [
-              `Reserve ${preferredDay.day} slots for this client`,
-              "Send availability notifications",
-              "Offer priority booking on preferred days",
-            ],
-          });
-        }
-      }
-    }
-
-    // Compare with average client
-    const averageComparison = insights.averageComparison;
-    if (averageComparison) {
-      if (averageComparison.spendingPercentile < 25) {
-        recommendations.push({
-          type: "growth",
-          priority: "medium",
-          title: "Spending Below Average",
-          description: "Client spends less than 75% of other clients. Identify growth opportunities.",
-          actionItems: [
-            "Discuss service upgrade options",
-            "Explain value of premium services",
-            "Offer trial of higher-end services",
-            "Create personalized pricing strategy",
-          ],
-        });
-      }
-
-      if (averageComparison.visitFrequencyPercentile < 25) {
-        recommendations.push({
-          type: "engagement",
-          priority: "medium",
-          title: "Visit Frequency Below Average",
-          description: "Client visits less frequently than most clients.",
-          actionItems: [
-            "Suggest more frequent service schedule",
-            "Explain benefits of regular visits",
-            "Offer maintenance packages",
-            "Send regular care reminders",
-          ],
-        });
-      }
-    }
-
-    // Sort by priority
-    const priorityOrder = { high: 3, medium: 2, low: 1 };
-    recommendations.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
-
-    return recommendations.slice(0, 5); // Return top 5 recommendations
-  }
-
-  private async compareWithAverageClient(_orgId: string, _insights: ClientInsights, _historyStartDate: Date) {
-    // Implementation for comparing with average client metrics
-    return {};
   }
 }
 

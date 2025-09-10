@@ -1,6 +1,7 @@
 import { ServiceService } from "@/services/service.service";
 import type { NextFunction, Request, Response } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
+import type { CreateServiceData, UpdateServiceData } from "@/validations/service.schema";
 import { AppError, asyncHandler } from "@/middlewares/error.middleware";
 import { parsePaginationParams, PaginationQuery } from "@/utils/pagination";
 
@@ -8,19 +9,13 @@ export class ServiceController {
   private serviceService = new ServiceService();
 
   public createService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
-
-    const serviceData = {
-      ...req.body,
-      orgId: auth.orgId,
-    };
-
-    const service = await this.serviceService.createService(serviceData);
+    const auth = await getAuthWithOrgId(req);
+    const service = await this.serviceService.createService(auth.orgId, req.parsedBody as CreateServiceData);
     res.status(201).json({ success: true, data: service });
   });
 
   public getServiceById = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
 
     if (!req.params.id) {
       throw new AppError("Service ID is required", 400);
@@ -36,7 +31,7 @@ export class ServiceController {
   });
 
   public getAllServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     // Use paginated response
     const pagination = parsePaginationParams(req.query as PaginationQuery, "createdAt");
     const result = await this.serviceService.getServicesByOrgPaginated(auth.orgId, pagination);
@@ -44,14 +39,14 @@ export class ServiceController {
   });
 
   public getActiveServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
 
     const services = await this.serviceService.getActiveServicesByOrg(auth.orgId);
     res.status(200).json({ success: true, data: services });
   });
 
   public getServiceBySlug = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -68,7 +63,7 @@ export class ServiceController {
   });
 
   public getServicesByCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { categoryId } = req.params;
 
     if (!categoryId) {
@@ -80,7 +75,7 @@ export class ServiceController {
   });
 
   public updateService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -93,12 +88,16 @@ export class ServiceController {
       throw new AppError("Service not found", 404);
     }
 
-    const service = await this.serviceService.updateService(existingService.id, auth.orgId, req.body);
+    const service = await this.serviceService.updateService(
+      existingService.id,
+      auth.orgId,
+      req.parsedBody as UpdateServiceData,
+    );
     res.status(200).json({ success: true, data: service });
   });
 
   public deleteService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -116,7 +115,7 @@ export class ServiceController {
   });
 
   public deactivateService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -134,7 +133,7 @@ export class ServiceController {
   });
 
   public activateService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { slug } = req.params;
 
     if (!slug) {
@@ -152,7 +151,7 @@ export class ServiceController {
   });
 
   public searchServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { q } = req.query;
 
     if (!q || typeof q !== "string") {
@@ -164,7 +163,7 @@ export class ServiceController {
   });
 
   public getServicesByPriceRange = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { minPrice, maxPrice } = req.query;
 
     const min = minPrice ? parseFloat(minPrice as string) : undefined;
@@ -183,7 +182,7 @@ export class ServiceController {
   });
 
   public getServicesByDuration = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = getAuthWithOrgId(req);
+    const auth = await getAuthWithOrgId(req);
     const { maxDuration } = req.query;
 
     const max = maxDuration ? parseInt(maxDuration as string) : undefined;

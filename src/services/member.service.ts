@@ -19,6 +19,8 @@ import type {
   WorkingHoursSummaryParams,
   CommissionActivityParams,
   CommissionSummaryParams,
+  CreateMemberData,
+  UpdateMemberData,
 } from "@/validations/member.schema";
 
 // Type definitions for better type safety
@@ -53,42 +55,6 @@ export interface EmergencyContact {
   email?: string;
 }
 
-export interface CreateMemberData {
-  username: string;
-  email: string;
-  phone?: string;
-  role?: Role;
-  jobTitle?: string;
-  bio?: string;
-  workingHours?: WorkingHours;
-  commissionRate?: number;
-  hourlyRate?: number;
-  dateOfBirth?: Date;
-  address?: Address;
-  emergencyContact?: EmergencyContact;
-  startDate?: Date;
-  serviceIds?: string[];
-}
-
-export interface UpdateMemberData {
-  username?: string;
-  email?: string;
-  phone?: string;
-  profileImage?: string;
-  role?: Role;
-  jobTitle?: string;
-  bio?: string;
-  workingHours?: WorkingHours;
-  isActive?: boolean;
-  commissionRate?: number;
-  hourlyRate?: number;
-  dateOfBirth?: Date;
-  address?: Address;
-  emergencyContact?: EmergencyContact;
-  endDate?: Date;
-  serviceIds?: string[];
-}
-
 export interface MemberWithServices extends Member {
   memberServices: (PrismaMemberService & {
     service: {
@@ -114,7 +80,7 @@ interface AppointmentData {
 
 interface MemberWithShiftsAndAppointments {
   shifts: Array<ShiftData>;
-  appointments: Array<AppointmentData>;
+  assignedAppointments: Array<AppointmentData>;
   hourlyRate?: number | null;
   commissionRate?: number | null;
 }
@@ -341,12 +307,12 @@ export class MemberService {
       return cached;
     }
 
-    const member = await prisma.member.findFirst({
+    const member = await prisma.member.findUnique({
       where: { clerkId, orgId },
       include: this.memberInclude,
     });
 
-    // Cache the result for 1 hour (cache null results with shorter TTL)
+    // // Cache the result for 1 hour (cache null results with shorter TTL)
     const ttl = member ? 3600 : 300; // 5 minutes for null results
     await cacheService.set(cacheKey, member, ttl);
 
@@ -1388,7 +1354,7 @@ export class MemberService {
               status: "COMPLETED",
             },
           },
-          appointments: {
+          assignedAppointments: {
             where: {
               orgId,
               startTime: {
@@ -1495,7 +1461,7 @@ export class MemberService {
               status: "COMPLETED",
             },
           },
-          appointments: {
+          assignedAppointments: {
             where: {
               orgId,
               startTime: {
@@ -1740,7 +1706,7 @@ export class MemberService {
     const totalHours = member.shifts.reduce((sum: number, shift) => sum + ((shift.duration as number) || 0), 0);
     const baseWage = totalHours * hourlyRate;
 
-    const commission = member.appointments.reduce((sum: number, appointment) => {
+    const commission = member.assignedAppointments.reduce((sum: number, appointment) => {
       return sum + (((appointment.price as number) || 0) * commissionRate) / 100;
     }, 0);
 
@@ -1851,7 +1817,7 @@ export class MemberService {
               },
             },
           },
-          appointments: {
+          assignedAppointments: {
             where: {
               startTime: {
                 gte: dateRange.start,
@@ -2093,7 +2059,7 @@ export class MemberService {
               },
             },
           },
-          appointments: {
+          assignedAppointments: {
             where: {
               startTime: {
                 gte: dateRange.start,
@@ -2433,21 +2399,6 @@ export class MemberService {
   private timeToMinutes(timeString: string): number {
     const [hours, minutes] = timeString.split(":").map(Number);
     return hours * 60 + minutes;
-  }
-
-  private calculatePaySummaryMetrics(payData: Record<string, unknown>[], _includeComponents: string[]) {
-    const totalCompensation = payData.reduce((sum, member) => sum + (member.totalCompensation as number), 0);
-    const avgCompensation = totalCompensation / payData.length || 0;
-
-    return {
-      totalMembers: payData.length,
-      totalCompensation,
-      averageCompensation: avgCompensation,
-      totalCommissions: payData.reduce((sum, member) => sum + (member.commissions as number), 0),
-      totalOvertime: payData.reduce((sum, member) => sum + (member.overtime as number), 0),
-      totalBenefits: payData.reduce((sum, member) => sum + (member.benefits as number), 0),
-      totalTaxes: payData.reduce((sum, member) => sum + (member.taxes as number), 0),
-    };
   }
 
   private calculateShiftUtilization(appointments: Array<{ duration: number }>, shiftDuration: number): number {

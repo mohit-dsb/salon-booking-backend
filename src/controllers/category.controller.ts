@@ -39,7 +39,7 @@ export class CategoryController {
 
     // Use paginated response
     const pagination = parsePaginationParams(req.query as PaginationQuery, "createdAt");
-    const result = await this.categoryService.getCategoriesByOrgPaginated(auth.orgId, pagination);
+    const result = await this.categoryService.getCategoriesByOrg(auth.orgId, pagination);
     res.status(200).json(result);
   });
 

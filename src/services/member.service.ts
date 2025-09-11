@@ -5,8 +5,9 @@ import { cacheService } from "./cache.service";
 import { clerkClient } from "@/config/clerkClient";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
+import { handleError } from "@/utils/errorHandler";
+import { executeClerkOperation } from "@/utils/clerkErrorHandler";
 import { createPaginatedResponse, type PaginatedResponse } from "@/utils/pagination";
-import { handleError, executeClerkOperation } from "@/utils/errorHandler";
 import { Member, MemberService as PrismaMemberService, Role, Prisma, ShiftStatus } from "@prisma/client";
 import type {
   WorkingHoursActivityParams,

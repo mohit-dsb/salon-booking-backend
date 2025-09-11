@@ -136,15 +136,11 @@ export const searchMemberSchema = z.object({
 });
 
 export const memberParamsSchema = z.object({
-  params: z.object({
-    id: z.string().min(1, "Member ID is required"),
-  }),
+  id: z.string().min(1, "Member ID is required"),
 });
 
 export const serviceParamsSchema = z.object({
-  params: z.object({
-    serviceId: z.string().min(1, "Service ID is required"),
-  }),
+  serviceId: z.string().min(1, "Service ID is required"),
 });
 
 // Analytics and Reporting Validation Schemas

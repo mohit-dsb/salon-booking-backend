@@ -32,7 +32,7 @@ export const updateClientSchema = createClientSchema.partial();
 export const clientQuerySchema = z.object({
   search: z.string().optional(),
   isActive: z.enum(["true", "false"]).optional(),
-  ...paginationQuerySchema.shape,
+  ...paginationQuerySchema,
 });
 
 // Analytics validation schemas
@@ -57,7 +57,7 @@ export const clientSummarySchema = analyticsBaseSchema.extend({
 
 // Client List Analytics Schema
 export const clientListAnalyticsSchema = z.object({
-  ...paginationQuerySchema.shape,
+  ...paginationQuerySchema,
   ...analyticsBaseSchema.shape,
   clientType: z.enum(["new", "returning", "walk_in", "all"]).default("all"),
   sortBy: z.enum(["name", "email", "totalSpent", "lastVisit", "appointmentCount", "registrationDate"]).default("name"),

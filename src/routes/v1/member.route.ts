@@ -23,6 +23,8 @@ import {
 
 const router = Router();
 
+// TODO: write decorators for routes and controllers here
+
 // Apply auth middleware to all routes
 router.use(requireAuthWithOrgId);
 

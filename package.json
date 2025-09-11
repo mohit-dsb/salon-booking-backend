@@ -32,7 +32,6 @@
     "envalid": "^8.1.0",
     "express": "^5.1.0",
     "express-rate-limit": "^8.0.1",
-    "helmet": "^8.1.0",
     "morgan": "^1.10.1",
     "prisma": "^6.14.0",
     "redis": "^5.8.1",

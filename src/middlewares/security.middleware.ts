@@ -1,23 +1,9 @@
-import helmet from "helmet";
 import cors from "cors";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import { env } from "@/config/environment";
 
 export const securityMiddlewares = [
-  // Helmet for security headers
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-  }),
-
   // CORS configuration
   cors({
     origin:

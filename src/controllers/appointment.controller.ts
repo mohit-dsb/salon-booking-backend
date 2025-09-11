@@ -356,8 +356,7 @@ export class AppointmentController {
     const startTime = Date.now();
 
     // Use the validated and transformed query parameters from middleware
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const queryParams = (req as any).parsedQuery as AppointmentListParams;
+    const queryParams = req.parsedQuery as AppointmentListParams;
 
     // Convert to format expected by utility functions
     const analyticsQuery: AppointmentAnalyticsQuery = {

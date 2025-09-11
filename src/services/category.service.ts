@@ -99,36 +99,8 @@ export class CategoryService {
     return category;
   }
 
-  // Get all categories for an organization
-  public async getCategoriesByOrg(orgId: string): Promise<Category[]> {
-    const cacheKey = `category:${orgId}:all`;
-
-    // Try to get from cache first
-    const cached = await cacheService.get<Category[]>(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    // If not in cache, fetch from database
-    const categories = await prisma.category.findMany({
-      where: { orgId },
-      include: {
-        services: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    // Cache the result for 1 hour
-    await cacheService.set(cacheKey, categories, 3600);
-
-    return categories;
-  }
-
   // Get all categories for an organization with pagination
-  public async getCategoriesByOrgPaginated(
-    orgId: string,
-    pagination: PaginationParams,
-  ): Promise<PaginatedResponse<Category>> {
+  public async getCategoriesByOrg(orgId: string, pagination: PaginationParams): Promise<PaginatedResponse<Category>> {
     const cacheKey = `category:${orgId}:paginated:${pagination.page}:${pagination.limit}:${pagination.sortBy}:${pagination.sortOrder}`;
 
     // Try to get from cache first
@@ -164,38 +136,6 @@ export class CategoryService {
     await cacheService.set(cacheKey, paginatedResponse, 1800);
 
     return paginatedResponse;
-  }
-
-  // Get only active categories for an organization
-  public async getActiveCategoriesByOrg(orgId: string): Promise<Category[]> {
-    const cacheKey = `category:${orgId}:active`;
-
-    // Try to get from cache first
-    const cached = await cacheService.get<Category[]>(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    // If not in cache, fetch from database
-    const categories = await prisma.category.findMany({
-      where: {
-        orgId,
-        isActive: true,
-      },
-      include: {
-        services: {
-          where: {
-            isActive: true,
-          },
-        },
-      },
-      orderBy: { name: "asc" },
-    });
-
-    // Cache the result for 1 hour
-    await cacheService.set(cacheKey, categories, 3600);
-
-    return categories;
   }
 
   // Update category
@@ -286,20 +226,6 @@ export class CategoryService {
       select: { id: true },
     });
     return !!category;
-  }
-
-  // Get category by name within organization (using slug for exact matching)
-  public async getCategoryByName(name: string, orgId: string): Promise<Category | null> {
-    const slug = createSlug(name);
-    return await prisma.category.findFirst({
-      where: {
-        slug: slug,
-        orgId,
-      },
-      include: {
-        services: true,
-      },
-    });
   }
 
   // Get category by slug within organization

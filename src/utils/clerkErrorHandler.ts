@@ -1,5 +1,5 @@
-import { AppError } from "@/middlewares/error.middleware";
 import { logger } from "./logger";
+import { AppError } from "@/middlewares/error.middleware";
 
 /**
  * Interface for Clerk error structure
@@ -123,11 +123,4 @@ export async function executeClerkOperation<T>(
   } catch (error) {
     handleClerkError(error, context, fallbackMessage);
   }
-}
-
-/**
- * Type guard to check if an error has Clerk error structure
- */
-export function hasClerkErrorStructure(error: unknown): error is ClerkAPIError {
-  return isClerkError(error);
 }

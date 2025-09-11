@@ -110,7 +110,7 @@ model Member {
   bookedAppointments    Appointment[]   @relation("BookedAppointments") // Appointments booked by this member
   cancelledAppointments Appointment[]   @relation("CancelledAppointments") // Appointments cancelled by this member
   shifts                Shift[]         @relation("AssignedShifts") // Shifts assigned to this member
-  createdShifts         Shift[]         @relation("CreatedShifts")
+  createdShifts         Shift[]         @relation("CreatedShifts") 
 
   @@unique([email, orgId])
   @@index([orgId])

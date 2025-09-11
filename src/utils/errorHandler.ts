@@ -221,37 +221,3 @@ export function handleError(error: unknown, context: string, fallbackMessage = "
 
   throw new AppError(errorResponse.message, errorResponse.statusCode, errorResponse.errorCode, errorResponse.details);
 }
-
-/**
- * Wrapper function for Clerk API calls with automatic error handling
- * @param operation - The Clerk API operation to execute
- * @param context - Context description for error logging
- * @param fallbackMessage - Fallback error message
- * @returns The result of the operation
- */
-export async function executeClerkOperation<T>(
-  operation: () => Promise<T>,
-  context: string,
-  fallbackMessage = "Operation failed",
-): Promise<T> {
-  try {
-    return await operation();
-  } catch (error) {
-    handleError(error, context, fallbackMessage);
-  }
-}
-
-/**
- * Legacy function for backward compatibility - now uses universal error handler
- * @deprecated Use handleError instead
- */
-export function handleClerkError(error: unknown, context: string, fallbackMessage = "Operation failed"): never {
-  return handleError(error, context, fallbackMessage);
-}
-
-/**
- * Type guard to check if an error has Clerk error structure
- */
-export function hasClerkErrorStructure(error: unknown): error is ClerkAPIError {
-  return isClerkError(error);
-}

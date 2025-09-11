@@ -10,6 +10,7 @@ declare global {
         [key: string]: unknown;
       };
       parsedBody?: unknown; // Parsed and validated body
+      parsedQuery?: unknown; // Parsed and validated query
     }
   }
 }

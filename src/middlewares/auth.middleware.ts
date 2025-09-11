@@ -1,15 +1,12 @@
 import { getAuth } from "@clerk/express";
 import { AppError } from "@/middlewares/error.middleware";
 import type { Request, Response, NextFunction } from "express";
-import { MemberService } from "@/services/member.service";
 
 // Type for extended auth object
 interface AuthWithOrgId {
   orgId: string;
   [key: string]: unknown;
 }
-
-const memberService = new MemberService();
 
 // Extract orgId from different sources based on your needs
 export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFunction) => {
@@ -22,17 +19,12 @@ export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFun
   // Method 1: From environment (single tenant):TODO REMOVE THIS VARIABLE IN PRODUCTION
   let orgId = process.env.ORG_ID || null;
 
-  // Method 2: From request header (if frontend sends it)
+  // Method 2: From Clerk orgId (multi-tenant)
   if (!orgId) {
-    orgId = req.headers["x-org-id"] as string;
+    orgId = auth.orgId as string;
   }
 
-  // Method 3: From Clerk session claims
-  if (!orgId) {
-    orgId = auth.sessionClaims?.org_id as string;
-  }
-
-  // Method 4: From user's default organization (if you store it in your DB)
+  // Method 3: From user's default organization (if you store it in your DB)
   // You could also query your Member model here to get the user's orgId
 
   if (!orgId) {
@@ -53,22 +45,8 @@ export const getAuthWithOrgId = async (req: Request): Promise<AuthWithOrgId & { 
   if (!auth?.orgId) {
     throw new AppError("Organization ID is required", 401);
   }
-
   if (!auth.userId) {
     throw new AppError("User Authentication is required", 401);
   }
-
-  const member = await memberService.getMemberByClerkId(auth.userId, auth.orgId);
-
-  if (!member) {
-    throw new AppError("Member not found in the organization", 404);
-  }
-
-  if (!member.isActive) {
-    throw new AppError("Member account is inactive. Please contact your administrator.", 403);
-  }
-
-  auth.userId = member.id;
-
   return auth;
 };

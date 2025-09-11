@@ -4,7 +4,7 @@ import type { AppointmentStatus } from "@prisma/client";
 export interface TableColumn {
   key: string;
   label: string;
-  type: "text" | "date" | "number" | "status" | "currency" | "boolean";
+  type: "text" | "date" | "number" | "status" | "currency" | "boolean" | "link";
   sortable: boolean;
   filterable: boolean;
   format?: (value: unknown) => string;
@@ -13,8 +13,14 @@ export interface TableColumn {
 // Appointment table row structure
 export interface AppointmentTableRow {
   id: string;
-  client: string;
-  member: string;
+  client: {
+    id: string;
+    name: string;
+  };
+  member: {
+    id: string;
+    name: string;
+  };
   service: string;
   category: string;
   status: AppointmentStatus;
@@ -24,8 +30,14 @@ export interface AppointmentTableRow {
   price: number;
   notes?: string;
   createdAt: string;
-  cancelledBy?: string;
-  createdBy: string;
+  cancelledBy?: {
+    id: string;
+    name: string;
+  };
+  createdBy: {
+    id: string;
+    name: string;
+  };
   cancelledAt?: string;
 }
 

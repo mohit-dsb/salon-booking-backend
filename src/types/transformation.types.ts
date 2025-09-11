@@ -3,7 +3,6 @@ import type { AppointmentStatus } from "@prisma/client";
 // Type for appointment data with relationships for analytics transformation
 export interface AppointmentAnalyticsData {
   id: string;
-  clientId?: string | null;
   memberId: string;
   serviceId: string;
   orgId: string;
@@ -33,7 +32,7 @@ export interface AppointmentAnalyticsData {
   client?: {
     id: string;
     firstName: string;
-    lastName: string;
+    lastName: string
     name?: string; // Computed field for convenience
   } | null;
   member?: {

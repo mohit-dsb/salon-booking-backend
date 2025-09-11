@@ -47,7 +47,7 @@ export const appointmentQuerySchema = z.object({
   endDate: z.iso.datetime().optional(),
   search: z.string().optional(), // Search by client name or notes
   isWalkIn: z.enum(["true", "false"]).optional(), // Filter by walk-in status
-  ...paginationQuerySchema,
+  ...paginationQuerySchema.shape,
 });
 
 // Convert walk-in appointment to regular appointment with client
@@ -151,7 +151,7 @@ const appointmentListBaseSchema = analyticsBaseSchema.extend({
   search: z.string().optional(), // Search by client name, member name, or service name
   includeFields: z.string().optional(), // Comma-separated list of fields to include
   excludeFields: z.string().optional(), // Comma-separated list of fields to exclude
-  ...paginationQuerySchema,
+  ...paginationQuerySchema.shape,
 });
 
 // Appointment list analytics schema with transformation

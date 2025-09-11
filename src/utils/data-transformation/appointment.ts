@@ -15,22 +15,22 @@ const appointmentDateFormatOptions: Intl.DateTimeFormatOptions = {
 export const DEFAULT_APPOINTMENT_COLUMNS: TableColumn[] = [
   {
     key: "id",
-    label: "ID",
-    type: "text",
+    label: "Appt. ref",
+    type: "link",
     sortable: true,
     filterable: false,
   },
   {
     key: "client",
     label: "Client",
-    type: "text",
+    type: "link",
     sortable: true,
     filterable: true,
   },
   {
     key: "member",
     label: "Team Member",
-    type: "text",
+    type: "link",
     sortable: true,
     filterable: true,
   },
@@ -100,14 +100,14 @@ export const DEFAULT_APPOINTMENT_COLUMNS: TableColumn[] = [
   {
     key: "createdBy",
     label: "Created By",
-    type: "text",
+    type: "link",
     sortable: false,
     filterable: false,
   },
   {
     key: "cancelledBy",
     label: "Cancelled By",
-    type: "text",
+    type: "link",
     sortable: false,
     filterable: false,
   },
@@ -116,12 +116,18 @@ export const DEFAULT_APPOINTMENT_COLUMNS: TableColumn[] = [
 // Transform raw appointment data to table rows
 export const transformAppointmentToTableRow = (appointment: AppointmentAnalyticsData): AppointmentTableRow => ({
   id: appointment.id,
-  client: appointment.walkInClientName
-    ? `Walk-in: ${appointment.walkInClientName}`
-    : appointment.client
-      ? `${appointment.client.firstName} ${appointment.client.lastName}`.trim()
-      : "Unknown Client",
-  member: appointment.member?.username || "Unassigned",
+  client: {
+    id: appointment.client?.id || "walk-in",
+    name: appointment.walkInClientName
+      ? `Walk-in: ${appointment.walkInClientName}`
+      : appointment.client
+        ? `${appointment.client.firstName} ${appointment.client.lastName}`.trim()
+        : "Unknown Client",
+  },
+  member: {
+    id: appointment.member?.id || "unassigned",
+    name: appointment.member?.username || "Unassigned",
+  },
   status: appointment.status,
   createdAt: appointment.createdAt.toLocaleString("en-US", appointmentDateFormatOptions),
   scheduledAt: appointment.startTime.toLocaleString("en-US", appointmentDateFormatOptions),
@@ -140,8 +146,14 @@ export const transformAppointmentToTableRow = (appointment: AppointmentAnalytics
     minute: "2-digit",
     hour12: true,
   })}`,
-  createdBy: appointment.bookedByMember?.username || "Unknown",
-  cancelledBy: appointment.cancelledByMember?.username || undefined,
+  createdBy: {
+    id: appointment.bookedByMember.id,
+    name: appointment.bookedByMember?.username || "Unknown",
+  },
+  cancelledBy: {
+    id: appointment.cancelledByMember?.id || "",
+    name: appointment.cancelledByMember?.username || "Unknown",
+  },
   price: appointment.service?.price || appointment.price || 0,
   notes: appointment.notes || appointment.internalNotes || "",
 });

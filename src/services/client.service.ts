@@ -5,13 +5,7 @@ import { Client, Prisma } from "@prisma/client";
 import { handleError } from "@/utils/errorHandler";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
-import type {
-  ClientSummaryParams,
-  ClientListAnalyticsParams,
-  ClientInsightsParams,
-  CreateClientData,
-  UpdateClientData,
-} from "@/validations/client.schema";
+import type { ClientListAnalyticsParams, CreateClientData, UpdateClientData } from "@/validations/client.schema";
 
 export interface ClientFilters {
   search?: string;
@@ -28,33 +22,6 @@ export interface ClientWithAppointments extends Client {
     };
   }>;
 }
-
-interface AppointmentAnalytics {
-  status: string;
-  price?: number;
-  serviceId?: string;
-  memberId?: string;
-  service?: {
-    name: string;
-    category?: {
-      name: string;
-    };
-  };
-  member?: {
-    username: string;
-  };
-  startTime?: Date;
-  [key: string]: unknown;
-}
-
-interface PeriodMetrics {
-  newClients: number;
-  returningClients: number;
-  totalRevenue: number;
-  totalAppointments: number;
-  averageAppointmentValue: number;
-}
-
 export class ClientService {
   private readonly CACHE_TTL = 3600; // 1 hour
   private readonly CACHE_PREFIX = "client";
@@ -94,21 +61,11 @@ export class ClientService {
   public async createClient(orgId: string, data: CreateClientData): Promise<Client> {
     await this.validateOrgMembership(orgId);
 
-    // Validate required fields
-    if (!data.email || !data.firstName || !data.lastName) {
-      throw new AppError("Email, first name, and last name are required", 400);
-    }
-
-    // Sanitize and normalize input
-    const normalizedEmail = data.email.toLowerCase().trim();
-    const normalizedFirstName = data.firstName.trim();
-    const normalizedLastName = data.lastName.trim();
-
     // Check if client with this email already exists in the organization
     const existingClient = await prisma.client.findUnique({
       where: {
         email_orgId: {
-          email: normalizedEmail,
+          email: data.email,
           orgId,
         },
       },
@@ -121,17 +78,44 @@ export class ClientService {
     try {
       // Parse dates if provided
       const createData: Prisma.ClientCreateInput = {
-        firstName: normalizedFirstName,
-        lastName: normalizedLastName,
-        email: normalizedEmail,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
         orgId,
+        gender: data.gender,
       };
 
+      // Basic optional fields
       if (data.phone) createData.phone = data.phone.trim();
-      if (data.notes) createData.notes = data.notes.trim();
       if (data.dateOfBirth) createData.dateOfBirth = this.parseDate(data.dateOfBirth);
       if (data.address) createData.address = data.address as Prisma.InputJsonValue;
-      if (data.preferences) createData.preferences = data.preferences as Prisma.InputJsonValue;
+
+      // Additional info fields
+      if (data.clientSource === "Walk-in") {
+        createData.clientSource = "WALK_IN";
+      }
+      if (data.referredBy) {
+        createData.referredBy = {
+          connect: { id: data.referredBy.trim() },
+        };
+      }
+      if (data.preferredLanguage) createData.preferredLanguage = data.preferredLanguage.trim();
+      if (data.occupation) createData.occupation = data.occupation.trim();
+      if (data.country) createData.country = data.country.trim();
+
+      // Additional contact details
+      if (data.additionalEmail) createData.additionalEmail = data.additionalEmail.toLowerCase().trim();
+      if (data.additionalPhone) createData.additionalPhone = data.additionalPhone.trim();
+
+      // Notification preferences (with defaults from schema)
+      if (data.notifyByEmail !== undefined) createData.notifyByEmail = data.notifyByEmail;
+      if (data.notifyBySMS !== undefined) createData.notifyBySMS = data.notifyBySMS;
+      if (data.notifyByWhatsapp !== undefined) createData.notifyByWhatsapp = data.notifyByWhatsapp;
+
+      // Marketing preferences (with defaults from schema)
+      if (data.allowEmailMarketing !== undefined) createData.allowEmailMarketing = data.allowEmailMarketing;
+      if (data.allowSMSMarketing !== undefined) createData.allowSMSMarketing = data.allowSMSMarketing;
+      if (data.allowWhatsappMarketing !== undefined) createData.allowWhatsappMarketing = data.allowWhatsappMarketing;
 
       const client = await prisma.client.create({
         data: createData,
@@ -315,11 +299,17 @@ export class ClientService {
     }
 
     try {
-      // Parse dates properly
+      // Parse dates properly and handle special fields
       const parsedData = {
         ...data,
         dateOfBirth: data.dateOfBirth ? this.parseDate(data.dateOfBirth) : undefined,
       };
+
+      // Handle clientSource enum conversion
+      if (data.clientSource === "Walk-in") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (parsedData as any).clientSource = "WALK_IN";
+      }
 
       // Remove undefined values
       const cleanData = Object.fromEntries(Object.entries(parsedData).filter(([_, value]) => value !== undefined));
@@ -440,153 +430,11 @@ export class ClientService {
   // Analytics and Reporting Methods
 
   /**
-   * Get client summary analytics with trends and patterns
-   */
-  async getClientSummary(orgId: string, params: ClientSummaryParams) {
-    try {
-      const {
-        startDate,
-        endDate,
-        period,
-        groupBy = "day",
-        includeMetrics = [],
-        includeSegmentation = false,
-        compareWithPrevious = false,
-        memberId,
-        serviceId,
-        categoryId,
-      } = params;
-
-      // Calculate date range based on period or custom dates
-      const dateRange = this.calculateDateRange(period, startDate, endDate);
-
-      // Base query conditions for appointments
-      const appointmentWhere: Prisma.AppointmentWhereInput = {
-        orgId,
-        startTime: {
-          gte: dateRange.start,
-          lte: dateRange.end,
-        },
-        ...(memberId && { memberId }),
-        ...(serviceId && { serviceId }),
-        ...(categoryId && { service: { categoryId } }),
-      };
-
-      // Get client statistics
-      const [totalClients, newClients, returningClients, walkInClients, activeClients] = await Promise.all([
-        // Total clients in organization
-        prisma.client.count({ where: { orgId, isActive: true } }),
-
-        // New clients (first appointment in period)
-        this.getNewClientsCount(orgId, dateRange),
-
-        // Returning clients (clients with previous appointments)
-        this.getReturningClientsCount(orgId, dateRange),
-
-        // Walk-in appointments (no clientId)
-        prisma.appointment.count({
-          where: { ...appointmentWhere, clientId: null },
-        }),
-
-        // Active clients (clients with appointments in period)
-        this.getActiveClientsCount(orgId, dateRange),
-      ]);
-
-      // Calculate revenue and appointment metrics if requested
-      let totalRevenue = 0;
-      let averageValue = 0;
-      if (includeMetrics.includes("revenue") || includeMetrics.includes("averageValue")) {
-        const revenueData = await prisma.appointment.aggregate({
-          where: { ...appointmentWhere, status: "COMPLETED" },
-          _sum: { price: true },
-          _count: { id: true },
-        });
-        totalRevenue = revenueData._sum.price || 0;
-        averageValue = revenueData._count.id > 0 ? totalRevenue / revenueData._count.id : 0;
-      }
-
-      // Get trends data if requested
-      let trends: Array<Record<string, unknown>> = [];
-      if (groupBy) {
-        trends = await this.getClientTrends(orgId, appointmentWhere, groupBy, dateRange);
-      }
-
-      // Get client segmentation if requested
-      let segmentation: Record<string, unknown> = {};
-      if (includeSegmentation) {
-        segmentation = await this.getClientSegmentation(orgId, dateRange);
-      }
-
-      // Compare with previous period if requested
-      let comparison: Record<string, unknown> = {};
-      if (compareWithPrevious) {
-        comparison = await this.getPreviousPeriodComparison(orgId, dateRange, params);
-      }
-
-      return {
-        period: {
-          start: dateRange.start,
-          end: dateRange.end,
-          label: this.getPeriodLabel(period, startDate, endDate),
-        },
-        overview: {
-          totalClients,
-          newClients,
-          returningClients,
-          walkInClients,
-          activeClients,
-          totalRevenue,
-          averageValue: Math.round(averageValue * 100) / 100,
-        },
-        trends,
-        segmentation,
-        comparison,
-        filters: {
-          memberId,
-          serviceId,
-          categoryId,
-          groupBy,
-          includeMetrics,
-          includeSegmentation,
-          compareWithPrevious,
-        },
-      };
-    } catch (error) {
-      handleError(error, "getClientSummary", "Failed to get client summary");
-    }
-  }
-
-  /**
    * Get comprehensive client list with analytics data
    */
   async getClientAnalyticsList(orgId: string, params: ClientListAnalyticsParams, pagination: PaginationParams) {
     try {
-      const {
-        clientType = "all",
-        sortBy = "name",
-        sortOrder = "asc",
-        includeDetails = [],
-        search,
-        isActive,
-        minAppointments,
-        maxAppointments,
-        minSpent,
-        maxSpent,
-        registrationDateFrom,
-        registrationDateTo,
-        lastVisitFrom: _lastVisitFrom,
-        lastVisitTo: _lastVisitTo,
-        ageFrom,
-        ageTo,
-        gender,
-        communicationPreference: _communicationPreference,
-        startDate,
-        endDate,
-        period,
-        memberId: _memberId,
-        serviceId: _serviceId,
-        categoryId: _categoryId,
-      } = params;
+      const { sortBy = "name", sortOrder = "asc", gender, startDate, endDate, period } = params;
 
       // Calculate date range if specified
       const dateRange = startDate || endDate || period ? this.calculateDateRange(period, startDate, endDate) : null;
@@ -594,111 +442,33 @@ export class ClientService {
       // Build where clause for clients
       const clientWhere: Prisma.ClientWhereInput = {
         orgId,
-        ...(isActive !== undefined && { isActive }),
-        ...(search && {
-          OR: [
-            { firstName: { contains: search, mode: "insensitive" } },
-            { lastName: { contains: search, mode: "insensitive" } },
-            { email: { contains: search, mode: "insensitive" } },
-            { phone: { contains: search, mode: "insensitive" } },
-          ],
-        }),
-        ...(registrationDateFrom && { createdAt: { gte: new Date(registrationDateFrom) } }),
-        ...(registrationDateTo && { createdAt: { lte: new Date(registrationDateTo) } }),
         ...(gender && { gender }),
-        // Note: Communication preference filtering would need a custom implementation
-        // as JSON filtering in Prisma has specific syntax requirements
       };
-
-      // Add age filters if specified
-      if (ageFrom || ageTo) {
-        const now = new Date();
-        const ageConditions: Record<string, Date> = {};
-
-        if (ageTo) {
-          const minBirthDate = new Date(now.getFullYear() - ageTo, now.getMonth(), now.getDate());
-          ageConditions.gte = minBirthDate;
-        }
-
-        if (ageFrom) {
-          const maxBirthDate = new Date(now.getFullYear() - ageFrom, now.getMonth(), now.getDate());
-          ageConditions.lte = maxBirthDate;
-        }
-
-        if (Object.keys(ageConditions).length > 0) {
-          clientWhere.dateOfBirth = ageConditions;
-        }
-      }
-
-      // Filter by client type (new, returning, walk-in)
-      if (clientType !== "all") {
-        await this.applyClientTypeFilter(clientWhere, clientType, dateRange, orgId);
-      }
 
       // Build include clause based on requested details
       const include: Prisma.ClientInclude = {
-        ...(includeDetails.includes("appointments") && {
-          appointments: {
-            select: {
-              id: true,
-              startTime: true,
-              status: true,
-              price: true,
-              service: { select: { name: true, duration: true } },
-              member: { select: { username: true } },
-            },
-            ...(dateRange && {
-              where: {
-                startTime: { gte: dateRange.start, lte: dateRange.end },
-              },
-            }),
-            orderBy: { startTime: "desc" },
-            take: 10, // Limit recent appointments
-          },
-        }),
-        _count: {
+        referredBy: {
           select: {
-            appointments: {
-              ...(dateRange && {
-                where: {
-                  startTime: { gte: dateRange.start, lte: dateRange.end },
-                },
-              }),
-            },
+            id: true,
+            firstName: true,
+            lastName: true,
           },
+        },
+        appointments: {
+          select: {
+            startTime: true,
+          },
+          ...(dateRange && {
+            where: {
+              startTime: { gte: dateRange.start, lte: dateRange.end },
+            },
+          }),
+          orderBy: { startTime: "desc" },
         },
       };
 
       // Build orderBy based on sortBy and sortOrder
       const orderBy: Prisma.ClientOrderByWithRelationInput = this.buildClientOrderBy(sortBy, sortOrder);
-
-      // Apply spending filters by adding having clause through raw query if needed
-      let clientIds: string[] | undefined;
-      if (minSpent || maxSpent || minAppointments || maxAppointments) {
-        clientIds = await this.getFilteredClientIds(orgId, {
-          minSpent,
-          maxSpent,
-          minAppointments,
-          maxAppointments,
-          dateRange,
-        });
-
-        if (clientIds.length === 0) {
-          return {
-            data: [],
-            pagination: {
-              page: pagination.page,
-              limit: pagination.limit,
-              total: 0,
-              totalPages: 0,
-            },
-            summary: this.getEmptyListSummary(),
-            filters: params,
-          };
-        }
-
-        clientWhere.id = { in: clientIds };
-      }
 
       // Get total count
       const total = await prisma.client.count({ where: clientWhere });
@@ -712,107 +482,18 @@ export class ClientService {
         take: pagination.limit,
       });
 
-      // Calculate additional analytics for each client if requested
-      const enrichedClients = await this.enrichClientsWithAnalytics(clients, includeDetails, dateRange);
-
-      // Calculate summary statistics
-      const summary = await this.calculateListSummaryStats(clientWhere, dateRange);
-
       return {
-        data: enrichedClients,
+        data: clients,
         pagination: {
           page: pagination.page,
           limit: pagination.limit,
           total,
           totalPages: Math.ceil(total / pagination.limit),
         },
-        summary,
         filters: params,
       };
     } catch (error) {
       handleError(error, "getClientAnalyticsList", "Failed to get client analytics list");
-    }
-  }
-
-  /**
-   * Get individual client insights and behavior analysis
-   */
-  async getClientInsights(orgId: string, clientId: string, params: ClientInsightsParams) {
-    try {
-      const {
-        includeAppointmentHistory = true,
-        includeSpendingAnalysis = true,
-        includeServicePreferences = true,
-        includeMemberPreferences = true,
-        includeBehaviorPatterns = true,
-        historyMonths = 12,
-      } = params;
-
-      // Validate client exists and belongs to organization
-      const client = await prisma.client.findFirst({
-        where: { id: clientId, orgId },
-        include: {
-          appointments: {
-            include: {
-              service: { include: { category: true } },
-              member: true,
-            },
-            orderBy: { startTime: "desc" },
-            take: historyMonths * 4, // Approximate appointments for the period
-          },
-        },
-      });
-
-      if (!client) {
-        throw new AppError("Client not found", 404);
-      }
-
-      const historyStartDate = new Date();
-      historyStartDate.setMonth(historyStartDate.getMonth() - historyMonths);
-
-      const insights: Record<string, unknown> = {
-        client: {
-          id: client.id,
-          name: `${client.firstName} ${client.lastName}`,
-          email: client.email,
-          phone: client.phone,
-          registrationDate: client.createdAt,
-          isActive: client.isActive,
-          preferences: client.preferences,
-        },
-      };
-
-      // Appointment History Analysis
-      if (includeAppointmentHistory) {
-        insights.appointmentHistory = await this.analyzeAppointmentHistory(client.appointments, historyStartDate);
-      }
-
-      // Spending Analysis
-      if (includeSpendingAnalysis) {
-        insights.spendingAnalysis = await this.analyzeClientSpending(client.appointments, historyStartDate);
-      }
-
-      // Service Preferences
-      if (includeServicePreferences) {
-        insights.servicePreferences = await this.analyzeServicePreferences(client.appointments);
-      }
-
-      // Member Preferences
-      if (includeMemberPreferences) {
-        insights.memberPreferences = await this.analyzeMemberPreferences(client.appointments);
-      }
-
-      // Behavior Patterns
-      if (includeBehaviorPatterns) {
-        insights.behaviorPatterns = await this.analyzeBehaviorPatterns(client.appointments, historyStartDate);
-      }
-
-      return insights;
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      handleError(error, "getClientInsights", "Failed to get client insights");
     }
   }
 
@@ -1315,251 +996,6 @@ export class ClientService {
     return segmentation;
   }
 
-  private async getPreviousPeriodComparison(
-    orgId: string,
-    dateRange: { start: Date; end: Date },
-    params: ClientSummaryParams,
-  ) {
-    // Calculate previous period date range
-    const periodDuration = dateRange.end.getTime() - dateRange.start.getTime();
-    const previousStart = new Date(dateRange.start.getTime() - periodDuration);
-    const previousEnd = new Date(dateRange.start.getTime() - 1); // 1ms before current period
-
-    // Get current period metrics
-    const currentMetrics = await this.getPeriodMetrics(orgId, dateRange, params);
-
-    // Get previous period metrics
-    const previousMetrics = await this.getPeriodMetrics(orgId, { start: previousStart, end: previousEnd }, params);
-
-    // Calculate growth rates
-    const comparison = {
-      period: {
-        current: `${dateRange.start.toISOString().split("T")[0]} to ${dateRange.end.toISOString().split("T")[0]}`,
-        previous: `${previousStart.toISOString().split("T")[0]} to ${previousEnd.toISOString().split("T")[0]}`,
-      },
-      metrics: {
-        newClients: {
-          current: currentMetrics.newClients,
-          previous: previousMetrics.newClients,
-          growth:
-            previousMetrics.newClients > 0
-              ? Math.round(
-                  ((currentMetrics.newClients - previousMetrics.newClients) / previousMetrics.newClients) * 100,
-                )
-              : currentMetrics.newClients > 0
-                ? 100
-                : 0,
-        },
-        returningClients: {
-          current: currentMetrics.returningClients,
-          previous: previousMetrics.returningClients,
-          growth:
-            previousMetrics.returningClients > 0
-              ? Math.round(
-                  ((currentMetrics.returningClients - previousMetrics.returningClients) /
-                    previousMetrics.returningClients) *
-                    100,
-                )
-              : currentMetrics.returningClients > 0
-                ? 100
-                : 0,
-        },
-        totalRevenue: {
-          current: currentMetrics.totalRevenue,
-          previous: previousMetrics.totalRevenue,
-          growth:
-            previousMetrics.totalRevenue > 0
-              ? Math.round(
-                  ((currentMetrics.totalRevenue - previousMetrics.totalRevenue) / previousMetrics.totalRevenue) * 100,
-                )
-              : currentMetrics.totalRevenue > 0
-                ? 100
-                : 0,
-        },
-        totalAppointments: {
-          current: currentMetrics.totalAppointments,
-          previous: previousMetrics.totalAppointments,
-          growth:
-            previousMetrics.totalAppointments > 0
-              ? Math.round(
-                  ((currentMetrics.totalAppointments - previousMetrics.totalAppointments) /
-                    previousMetrics.totalAppointments) *
-                    100,
-                )
-              : currentMetrics.totalAppointments > 0
-                ? 100
-                : 0,
-        },
-        averageAppointmentValue: {
-          current: currentMetrics.averageAppointmentValue,
-          previous: previousMetrics.averageAppointmentValue,
-          growth:
-            previousMetrics.averageAppointmentValue > 0
-              ? Math.round(
-                  ((currentMetrics.averageAppointmentValue - previousMetrics.averageAppointmentValue) /
-                    previousMetrics.averageAppointmentValue) *
-                    100,
-                )
-              : currentMetrics.averageAppointmentValue > 0
-                ? 100
-                : 0,
-        },
-      },
-      summary: {
-        overallGrowth: this.calculateOverallGrowth(currentMetrics, previousMetrics),
-        trend: this.determineTrend(currentMetrics, previousMetrics),
-      },
-    };
-
-    return comparison;
-  }
-
-  private async getPeriodMetrics(orgId: string, dateRange: { start: Date; end: Date }, params: ClientSummaryParams) {
-    const appointmentWhere: Prisma.AppointmentWhereInput = {
-      orgId,
-      startTime: {
-        gte: dateRange.start,
-        lte: dateRange.end,
-      },
-      ...(params.memberId && { memberId: params.memberId }),
-      ...(params.serviceId && { serviceId: params.serviceId }),
-      ...(params.categoryId && { service: { categoryId: params.categoryId } }),
-    };
-
-    const [newClients, returningClients, appointmentMetrics] = await Promise.all([
-      this.getNewClientsCount(orgId, dateRange),
-      this.getReturningClientsCount(orgId, dateRange),
-      prisma.appointment.aggregate({
-        where: { ...appointmentWhere, status: "COMPLETED" },
-        _count: { id: true },
-        _sum: { price: true },
-        _avg: { price: true },
-      }),
-    ]);
-
-    return {
-      newClients,
-      returningClients,
-      totalRevenue: appointmentMetrics._sum.price || 0,
-      totalAppointments: appointmentMetrics._count.id,
-      averageAppointmentValue: appointmentMetrics._avg.price || 0,
-    };
-  }
-
-  private calculateOverallGrowth(current: PeriodMetrics, previous: PeriodMetrics): number {
-    const revenueGrowth =
-      previous.totalRevenue > 0 ? (current.totalRevenue - previous.totalRevenue) / previous.totalRevenue : 0;
-    const clientGrowth = previous.newClients > 0 ? (current.newClients - previous.newClients) / previous.newClients : 0;
-    const appointmentGrowth =
-      previous.totalAppointments > 0
-        ? (current.totalAppointments - previous.totalAppointments) / previous.totalAppointments
-        : 0;
-
-    return Math.round(((revenueGrowth + clientGrowth + appointmentGrowth) / 3) * 100);
-  }
-
-  private determineTrend(current: PeriodMetrics, previous: PeriodMetrics): string {
-    const growth = this.calculateOverallGrowth(current, previous);
-    if (growth > 20) return "strong_growth";
-    if (growth > 5) return "moderate_growth";
-    if (growth > -5) return "stable";
-    if (growth > -20) return "moderate_decline";
-    return "strong_decline";
-  }
-
-  private async applyClientTypeFilter(
-    clientWhere: Prisma.ClientWhereInput,
-    clientType: string,
-    dateRange: { start: Date; end: Date } | null,
-    orgId: string,
-  ) {
-    if (!dateRange) return;
-
-    switch (clientType) {
-      case "new": {
-        // Clients whose first appointment was in the date range
-        const newClientIds = await prisma.appointment.findMany({
-          where: {
-            orgId,
-            startTime: {
-              gte: dateRange.start,
-              lte: dateRange.end,
-            },
-          },
-          select: { clientId: true },
-          distinct: ["clientId"],
-        });
-
-        // Filter to only clients whose first appointment was in this period
-        const firstAppointmentClients = [];
-        for (const { clientId } of newClientIds) {
-          if (!clientId) continue;
-
-          const firstAppointment = await prisma.appointment.findFirst({
-            where: { clientId, orgId },
-            orderBy: { startTime: "asc" },
-            select: { startTime: true },
-          });
-
-          if (firstAppointment && firstAppointment.startTime >= dateRange.start) {
-            firstAppointmentClients.push(clientId);
-          }
-        }
-
-        clientWhere.id = { in: firstAppointmentClients };
-        break;
-      }
-
-      case "returning": {
-        // Clients with appointments in the date range AND before the date range
-        const returningClientIds = await prisma.appointment.findMany({
-          where: {
-            orgId,
-            startTime: {
-              gte: dateRange.start,
-              lte: dateRange.end,
-            },
-          },
-          select: { clientId: true },
-          distinct: ["clientId"],
-        });
-
-        const returningClients = [];
-        for (const { clientId } of returningClientIds) {
-          if (!clientId) continue;
-
-          const hasPreviousAppointment = await prisma.appointment.count({
-            where: {
-              clientId,
-              orgId,
-              startTime: { lt: dateRange.start },
-            },
-          });
-
-          if (hasPreviousAppointment > 0) {
-            returningClients.push(clientId);
-          }
-        }
-
-        clientWhere.id = { in: returningClients };
-        break;
-      }
-
-      case "walk_in": {
-        // Clients with null clientId (walk-in appointments)
-        // This is handled at the appointment level, not client level
-        // For client analytics, walk-ins don't have client records
-        clientWhere.id = { in: [] }; // No clients for walk-ins
-        break;
-      }
-
-      case "all":
-      default:
-        // No additional filtering
-        break;
-    }
-  }
-
   private buildClientOrderBy(sortBy: string, sortOrder: string): Prisma.ClientOrderByWithRelationInput {
     const order = sortOrder as "asc" | "desc";
 
@@ -1575,782 +1011,6 @@ export class ClientService {
       default:
         return { firstName: order };
     }
-  }
-
-  private async getFilteredClientIds(
-    orgId: string,
-    filters: {
-      minSpent?: number;
-      maxSpent?: number;
-      minAppointments?: number;
-      maxAppointments?: number;
-      dateRange?: { start: Date; end: Date } | null;
-    },
-  ): Promise<string[]> {
-    const { minSpent, maxSpent, minAppointments, maxAppointments, dateRange } = filters;
-
-    // Get all clients with their appointment data
-    const clients = await prisma.client.findMany({
-      where: { orgId, isActive: true },
-      include: {
-        appointments: {
-          where: dateRange
-            ? {
-                startTime: {
-                  gte: dateRange.start,
-                  lte: dateRange.end,
-                },
-                status: "COMPLETED",
-              }
-            : {
-                status: "COMPLETED",
-              },
-          select: {
-            price: true,
-          },
-        },
-      },
-    });
-
-    const filteredClientIds: string[] = [];
-
-    for (const client of clients) {
-      const totalSpent = client.appointments.reduce((sum, apt) => sum + (apt.price || 0), 0);
-      const appointmentCount = client.appointments.length;
-
-      // Apply spending filters
-      if (minSpent !== undefined && totalSpent < minSpent) continue;
-      if (maxSpent !== undefined && totalSpent > maxSpent) continue;
-
-      // Apply appointment count filters
-      if (minAppointments !== undefined && appointmentCount < minAppointments) continue;
-      if (maxAppointments !== undefined && appointmentCount > maxAppointments) continue;
-
-      filteredClientIds.push(client.id);
-    }
-
-    return filteredClientIds;
-  }
-
-  private async enrichClientsWithAnalytics(
-    clients: Array<Record<string, unknown>>,
-    includeDetails: string[],
-    dateRange: { start: Date; end: Date } | null,
-  ) {
-    if (!includeDetails || includeDetails.length === 0) {
-      return clients;
-    }
-
-    const enrichedClients = [];
-
-    for (const client of clients) {
-      const clientId = client.id as string;
-      const enrichedClient = { ...client };
-
-      // Add appointment details if requested
-      if (includeDetails.includes("appointments") && client.appointments) {
-        enrichedClient.appointments = client.appointments;
-      }
-
-      // Add spending analytics if requested
-      if (includeDetails.includes("spending")) {
-        const spendingData = await this.getClientSpendingAnalytics(clientId, dateRange);
-        enrichedClient.spendingAnalytics = spendingData;
-      }
-
-      // Add service preferences if requested
-      if (includeDetails.includes("services")) {
-        const serviceData = await this.getClientServiceAnalytics(clientId, dateRange);
-        enrichedClient.serviceAnalytics = serviceData;
-      }
-
-      // Add demographic data if requested
-      if (includeDetails.includes("demographics")) {
-        enrichedClient.demographics = {
-          age: client.dateOfBirth ? this.calculateAge(client.dateOfBirth as Date) : null,
-          registrationDate: client.createdAt,
-          lastVisit: client.updatedAt,
-          isActive: client.isActive,
-        };
-      }
-
-      enrichedClients.push(enrichedClient);
-    }
-
-    return enrichedClients;
-  }
-
-  private async getClientSpendingAnalytics(clientId: string, dateRange: { start: Date; end: Date } | null) {
-    const appointments = await prisma.appointment.findMany({
-      where: {
-        clientId,
-        status: "COMPLETED",
-        ...(dateRange && {
-          startTime: {
-            gte: dateRange.start,
-            lte: dateRange.end,
-          },
-        }),
-      },
-      select: {
-        price: true,
-        startTime: true,
-      },
-    });
-
-    const totalSpent = appointments.reduce((sum, apt) => sum + (apt.price || 0), 0);
-    const appointmentCount = appointments.length;
-    const averageSpent = appointmentCount > 0 ? totalSpent / appointmentCount : 0;
-
-    return {
-      totalSpent: Math.round(totalSpent * 100) / 100,
-      appointmentCount,
-      averageSpent: Math.round(averageSpent * 100) / 100,
-      spendingTrend: this.calculateSpendingTrend(appointments),
-    };
-  }
-
-  private async getClientServiceAnalytics(clientId: string, dateRange: { start: Date; end: Date } | null) {
-    const appointments = await prisma.appointment.findMany({
-      where: {
-        clientId,
-        status: "COMPLETED",
-        ...(dateRange && {
-          startTime: {
-            gte: dateRange.start,
-            lte: dateRange.end,
-          },
-        }),
-      },
-      include: {
-        service: {
-          include: {
-            category: true,
-          },
-        },
-      },
-    });
-
-    const serviceStats = new Map();
-    const categoryStats = new Map();
-
-    appointments.forEach((appointment) => {
-      const service = appointment.service;
-      const category = service.category;
-
-      // Service stats
-      if (!serviceStats.has(service.id)) {
-        serviceStats.set(service.id, {
-          service: { id: service.id, name: service.name },
-          count: 0,
-          totalSpent: 0,
-        });
-      }
-      const serviceStat = serviceStats.get(service.id);
-      serviceStat.count++;
-      serviceStat.totalSpent += appointment.price || 0;
-
-      // Category stats
-      if (!categoryStats.has(category.id)) {
-        categoryStats.set(category.id, {
-          category: { id: category.id, name: category.name },
-          count: 0,
-          totalSpent: 0,
-        });
-      }
-      const categoryStat = categoryStats.get(category.id);
-      categoryStat.count++;
-      categoryStat.totalSpent += appointment.price || 0;
-    });
-
-    return {
-      topServices: Array.from(serviceStats.values())
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5)
-        .map((stat) => ({
-          ...stat,
-          totalSpent: Math.round(stat.totalSpent * 100) / 100,
-        })),
-      topCategories: Array.from(categoryStats.values())
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 3)
-        .map((stat) => ({
-          ...stat,
-          totalSpent: Math.round(stat.totalSpent * 100) / 100,
-        })),
-    };
-  }
-
-  private calculateAge(dateOfBirth: Date): number {
-    const today = new Date();
-    let age = today.getFullYear() - dateOfBirth.getFullYear();
-    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
-      age--;
-    }
-
-    return age;
-  }
-
-  private calculateSpendingTrend(appointments: Array<{ price: number; startTime: Date }>): string {
-    if (appointments.length < 2) return "insufficient_data";
-
-    // Sort by date
-    const sortedAppointments = appointments.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
-
-    // Split into first and second half
-    const midPoint = Math.floor(sortedAppointments.length / 2);
-    const firstHalf = sortedAppointments.slice(0, midPoint);
-    const secondHalf = sortedAppointments.slice(midPoint);
-
-    const firstHalfAvg = firstHalf.reduce((sum, apt) => sum + (apt.price || 0), 0) / firstHalf.length;
-    const secondHalfAvg = secondHalf.reduce((sum, apt) => sum + (apt.price || 0), 0) / secondHalf.length;
-
-    const change = ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
-
-    if (change > 10) return "increasing";
-    if (change < -10) return "decreasing";
-    return "stable";
-  }
-
-  private async calculateListSummaryStats(
-    clientWhere: Prisma.ClientWhereInput,
-    dateRange: { start: Date; end: Date } | null,
-  ) {
-    // Get clients with their appointment data
-    const clients = await prisma.client.findMany({
-      where: clientWhere,
-      include: {
-        appointments: {
-          where: {
-            status: "COMPLETED",
-            ...(dateRange && {
-              startTime: {
-                gte: dateRange.start,
-                lte: dateRange.end,
-              },
-            }),
-          },
-          select: {
-            price: true,
-          },
-        },
-      },
-    });
-
-    if (clients.length === 0) {
-      return this.getEmptyListSummary();
-    }
-
-    let totalSpending = 0;
-    let totalAppointments = 0;
-    const clientSpending: number[] = [];
-
-    clients.forEach((client) => {
-      const clientTotalSpent = client.appointments.reduce((sum, apt) => sum + (apt.price || 0), 0);
-      const clientAppointmentCount = client.appointments.length;
-
-      totalSpending += clientTotalSpent;
-      totalAppointments += clientAppointmentCount;
-
-      if (clientTotalSpent > 0) {
-        clientSpending.push(clientTotalSpent);
-      }
-    });
-
-    const averageSpending = totalSpending / clients.length;
-    const averageAppointments = totalAppointments / clients.length;
-
-    // Calculate median spending
-    const sortedSpending = clientSpending.sort((a, b) => a - b);
-    const medianSpending =
-      sortedSpending.length > 0
-        ? sortedSpending.length % 2 === 0
-          ? (sortedSpending[sortedSpending.length / 2 - 1] + sortedSpending[sortedSpending.length / 2]) / 2
-          : sortedSpending[Math.floor(sortedSpending.length / 2)]
-        : 0;
-
-    return {
-      totalClients: clients.length,
-      totalSpending: Math.round(totalSpending * 100) / 100,
-      totalAppointments,
-      averageSpending: Math.round(averageSpending * 100) / 100,
-      averageAppointments: Math.round(averageAppointments * 100) / 100,
-      medianSpending: Math.round(medianSpending * 100) / 100,
-      spendingDistribution: this.calculateSpendingDistribution(clientSpending),
-    };
-  }
-
-  private calculateSpendingDistribution(spendingData: number[]): Record<string, number> {
-    if (spendingData.length === 0) {
-      return { "0-100": 0, "100-500": 0, "500-1000": 0, "1000+": 0 };
-    }
-
-    const distribution = { "0-100": 0, "100-500": 0, "500-1000": 0, "1000+": 0 };
-
-    spendingData.forEach((amount) => {
-      if (amount < 100) distribution["0-100"]++;
-      else if (amount < 500) distribution["100-500"]++;
-      else if (amount < 1000) distribution["500-1000"]++;
-      else distribution["1000+"]++;
-    });
-
-    // Convert to percentages
-    Object.keys(distribution).forEach((key) => {
-      distribution[key as keyof typeof distribution] = Math.round(
-        (distribution[key as keyof typeof distribution] / spendingData.length) * 100,
-      );
-    });
-
-    return distribution;
-  }
-
-  private getEmptyListSummary() {
-    return {
-      totalClients: 0,
-      averageSpending: 0,
-      averageAppointments: 0,
-    };
-  }
-
-  private async analyzeAppointmentHistory(appointments: AppointmentAnalytics[], _historyStartDate: Date) {
-    // Implementation for appointment history analysis
-    return {
-      totalAppointments: appointments.length,
-      completedAppointments: appointments.filter((a) => a.status === "COMPLETED").length,
-      cancelledAppointments: appointments.filter((a) => a.status === "CANCELLED").length,
-      noShowAppointments: appointments.filter((a) => a.status === "NO_SHOW").length,
-    };
-  }
-
-  private async analyzeClientSpending(appointments: AppointmentAnalytics[], _historyStartDate: Date) {
-    // Implementation for spending analysis
-    const completedAppointments = appointments.filter((a) => a.status === "COMPLETED");
-    const totalSpent = completedAppointments.reduce((sum: number, a) => sum + (a.price || 0), 0);
-
-    return {
-      totalSpent,
-      averagePerAppointment: completedAppointments.length > 0 ? totalSpent / completedAppointments.length : 0,
-      appointmentCount: completedAppointments.length,
-    };
-  }
-
-  private async analyzeServicePreferences(appointments: AppointmentAnalytics[]) {
-    if (appointments.length === 0) {
-      return {
-        topServices: [],
-        serviceFrequency: {},
-        preferredCategories: [],
-        serviceDiversity: 0,
-        mostFrequentService: null,
-        leastFrequentService: null,
-      };
-    }
-
-    // Group appointments by service (assuming service data is included)
-    const serviceStats = new Map<
-      string,
-      {
-        serviceId: string;
-        serviceName: string;
-        count: number;
-        totalSpent: number;
-        lastVisit: Date;
-        category?: string;
-      }
-    >();
-
-    appointments.forEach((appointment) => {
-      const serviceId = appointment.serviceId || "unknown";
-      const serviceName = appointment.service?.name || "Unknown Service";
-      const category = appointment.service?.category?.name;
-      const price = appointment.price || 0;
-
-      if (!serviceStats.has(serviceId)) {
-        serviceStats.set(serviceId, {
-          serviceId,
-          serviceName,
-          count: 0,
-          totalSpent: 0,
-          lastVisit: appointment.startTime || new Date(),
-          category,
-        });
-      }
-
-      const stat = serviceStats.get(serviceId)!;
-      stat.count++;
-      stat.totalSpent += price;
-      if (appointment.startTime && appointment.startTime > stat.lastVisit) {
-        stat.lastVisit = appointment.startTime;
-      }
-    });
-
-    const serviceArray = Array.from(serviceStats.values());
-
-    // Sort by frequency
-    const sortedByFrequency = serviceArray.sort((a, b) => b.count - a.count);
-    const sortedBySpending = serviceArray.sort((a, b) => b.totalSpent - a.totalSpent);
-
-    // Calculate service diversity (unique services / total appointments)
-    const serviceDiversity = serviceArray.length / appointments.length;
-
-    // Group by categories
-    const categoryStats = new Map<string, { count: number; totalSpent: number }>();
-    serviceArray.forEach((service) => {
-      if (service.category) {
-        if (!categoryStats.has(service.category)) {
-          categoryStats.set(service.category, { count: 0, totalSpent: 0 });
-        }
-        const catStat = categoryStats.get(service.category)!;
-        catStat.count += service.count;
-        catStat.totalSpent += service.totalSpent;
-      }
-    });
-
-    const preferredCategories = Array.from(categoryStats.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 3)
-      .map(([category, stats]) => ({
-        category,
-        count: stats.count,
-        totalSpent: Math.round(stats.totalSpent * 100) / 100,
-        percentage: Math.round((stats.count / appointments.length) * 100),
-      }));
-
-    return {
-      topServices: sortedByFrequency.slice(0, 5).map((service) => ({
-        serviceId: service.serviceId,
-        serviceName: service.serviceName,
-        count: service.count,
-        totalSpent: Math.round(service.totalSpent * 100) / 100,
-        percentage: Math.round((service.count / appointments.length) * 100),
-        lastVisit: service.lastVisit,
-        averageSpent: Math.round((service.totalSpent / service.count) * 100) / 100,
-      })),
-      topServicesBySpending: sortedBySpending.slice(0, 5).map((service) => ({
-        serviceId: service.serviceId,
-        serviceName: service.serviceName,
-        totalSpent: Math.round(service.totalSpent * 100) / 100,
-        count: service.count,
-        averageSpent: Math.round((service.totalSpent / service.count) * 100) / 100,
-      })),
-      serviceFrequency: Object.fromEntries(serviceArray.map((service) => [service.serviceName, service.count])),
-      preferredCategories,
-      serviceDiversity: Math.round(serviceDiversity * 100) / 100,
-      mostFrequentService: sortedByFrequency[0] || null,
-      leastFrequentService: sortedByFrequency[sortedByFrequency.length - 1] || null,
-      totalUniqueServices: serviceArray.length,
-    };
-  }
-
-  private async analyzeMemberPreferences(appointments: AppointmentAnalytics[]) {
-    if (appointments.length === 0) {
-      return {
-        topMembers: [],
-        memberFrequency: {},
-        preferredMemberTypes: [],
-        memberLoyalty: 0,
-        mostVisitedMember: null,
-        memberDiversity: 0,
-      };
-    }
-
-    // Group appointments by member
-    const memberStats = new Map<
-      string,
-      {
-        memberId: string;
-        memberName: string;
-        count: number;
-        totalSpent: number;
-        lastVisit: Date;
-        averageRating?: number;
-      }
-    >();
-
-    appointments.forEach((appointment) => {
-      const memberId = appointment.memberId || "unknown";
-      const memberName = appointment.member?.username || "Unknown Member";
-      const price = appointment.price || 0;
-
-      if (!memberStats.has(memberId)) {
-        memberStats.set(memberId, {
-          memberId,
-          memberName,
-          count: 0,
-          totalSpent: 0,
-          lastVisit: appointment.startTime || new Date(),
-        });
-      }
-
-      const stat = memberStats.get(memberId)!;
-      stat.count++;
-      stat.totalSpent += price;
-      if (appointment.startTime && appointment.startTime > stat.lastVisit) {
-        stat.lastVisit = appointment.startTime;
-      }
-    });
-
-    const memberArray = Array.from(memberStats.values());
-
-    // Sort by frequency and spending
-    const sortedByFrequency = memberArray.sort((a, b) => b.count - a.count);
-    const sortedBySpending = memberArray.sort((a, b) => b.totalSpent - a.totalSpent);
-
-    // Calculate member diversity (unique members / total appointments)
-    const memberDiversity = memberArray.length / appointments.length;
-
-    // Calculate member loyalty (percentage of appointments with top member)
-    const topMemberPercentage = sortedByFrequency[0] ? (sortedByFrequency[0].count / appointments.length) * 100 : 0;
-
-    return {
-      topMembers: sortedByFrequency.slice(0, 5).map((member) => ({
-        memberId: member.memberId,
-        memberName: member.memberName,
-        count: member.count,
-        totalSpent: Math.round(member.totalSpent * 100) / 100,
-        percentage: Math.round((member.count / appointments.length) * 100),
-        lastVisit: member.lastVisit,
-        averageSpent: Math.round((member.totalSpent / member.count) * 100) / 100,
-      })),
-      topMembersBySpending: sortedBySpending.slice(0, 5).map((member) => ({
-        memberId: member.memberId,
-        memberName: member.memberName,
-        totalSpent: Math.round(member.totalSpent * 100) / 100,
-        count: member.count,
-        averageSpent: Math.round((member.totalSpent / member.count) * 100) / 100,
-      })),
-      memberFrequency: Object.fromEntries(memberArray.map((member) => [member.memberName, member.count])),
-      memberDiversity: Math.round(memberDiversity * 100) / 100,
-      memberLoyalty: Math.round(topMemberPercentage),
-      mostVisitedMember: sortedByFrequency[0] || null,
-      leastVisitedMember: sortedByFrequency[sortedByFrequency.length - 1] || null,
-      totalUniqueMembers: memberArray.length,
-      memberRetention: this.calculateMemberRetention(memberArray, appointments),
-    };
-  }
-
-  private calculateMemberRetention(
-    memberStats: Array<{ memberId: string; count: number }>,
-    appointments: AppointmentAnalytics[],
-  ): number {
-    if (memberStats.length === 0 || appointments.length < 2) return 0;
-
-    // Sort appointments by date
-    const sortedAppointments = appointments
-      .filter((apt) => apt.startTime)
-      .sort((a, b) => a.startTime!.getTime() - b.startTime!.getTime());
-
-    if (sortedAppointments.length < 2) return 0;
-
-    // Check if client returns to the same member
-    const firstAppointment = sortedAppointments[0];
-    const lastAppointment = sortedAppointments[sortedAppointments.length - 1];
-
-    const firstMemberId = firstAppointment.memberId;
-    const lastMemberId = lastAppointment.memberId;
-
-    return firstMemberId === lastMemberId ? 100 : 0;
-  }
-
-  private async analyzeBehaviorPatterns(appointments: AppointmentAnalytics[], historyStartDate: Date) {
-    if (appointments.length === 0) {
-      return {
-        bookingFrequency: "no_data",
-        preferredDays: [],
-        preferredTimes: [],
-        seasonality: {},
-        bookingPatterns: {},
-        cancellationRate: 0,
-        noShowRate: 0,
-        averageGapBetweenVisits: 0,
-        consistencyScore: 0,
-      };
-    }
-
-    // Filter appointments within history period
-    const relevantAppointments = appointments.filter((apt) => apt.startTime && apt.startTime >= historyStartDate);
-
-    if (relevantAppointments.length === 0) {
-      return {
-        bookingFrequency: "no_recent_data",
-        preferredDays: [],
-        preferredTimes: [],
-        seasonality: {},
-        bookingPatterns: {},
-        cancellationRate: 0,
-        noShowRate: 0,
-        averageGapBetweenVisits: 0,
-        consistencyScore: 0,
-      };
-    }
-
-    // Analyze booking frequency
-    const bookingFrequency = this.calculateBookingFrequency(relevantAppointments, historyStartDate);
-
-    // Analyze preferred days and times
-    const { preferredDays, preferredTimes } = this.analyzePreferredSchedule(relevantAppointments);
-
-    // Analyze seasonality
-    const seasonality = this.analyzeSeasonality(relevantAppointments);
-
-    // Calculate rates
-    const completedAppointments = relevantAppointments.filter((apt) => apt.status === "COMPLETED");
-    const cancelledAppointments = relevantAppointments.filter((apt) => apt.status === "CANCELLED");
-    const noShowAppointments = relevantAppointments.filter((apt) => apt.status === "NO_SHOW");
-
-    const cancellationRate =
-      relevantAppointments.length > 0
-        ? Math.round((cancelledAppointments.length / relevantAppointments.length) * 100)
-        : 0;
-
-    const noShowRate =
-      relevantAppointments.length > 0 ? Math.round((noShowAppointments.length / relevantAppointments.length) * 100) : 0;
-
-    // Calculate average gap between visits
-    const averageGapBetweenVisits = this.calculateAverageGap(relevantAppointments);
-
-    // Calculate consistency score (0-100)
-    const consistencyScore = this.calculateConsistencyScore(relevantAppointments, historyStartDate);
-
-    return {
-      bookingFrequency,
-      preferredDays,
-      preferredTimes,
-      seasonality,
-      bookingPatterns: {
-        totalAppointments: relevantAppointments.length,
-        completedAppointments: completedAppointments.length,
-        cancelledAppointments: cancelledAppointments.length,
-        noShowAppointments: noShowAppointments.length,
-      },
-      cancellationRate,
-      noShowRate,
-      averageGapBetweenVisits: Math.round(averageGapBetweenVisits * 100) / 100,
-      consistencyScore: Math.round(consistencyScore),
-      lastVisit: relevantAppointments[relevantAppointments.length - 1]?.startTime,
-      firstVisit: relevantAppointments[0]?.startTime,
-    };
-  }
-
-  private calculateBookingFrequency(appointments: AppointmentAnalytics[], startDate: Date): string {
-    const now = new Date();
-    const daysSinceStart = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (daysSinceStart === 0) return "no_data";
-
-    const appointmentsPerMonth = (appointments.length / daysSinceStart) * 30;
-
-    if (appointmentsPerMonth >= 4) return "frequent"; // Weekly or more
-    if (appointmentsPerMonth >= 2) return "regular"; // Bi-weekly
-    if (appointmentsPerMonth >= 1) return "occasional"; // Monthly
-    if (appointmentsPerMonth >= 0.25) return "infrequent"; // Quarterly
-    return "rare"; // Less than quarterly
-  }
-
-  private analyzePreferredSchedule(appointments: AppointmentAnalytics[]) {
-    const dayCounts = new Array(7).fill(0); // Sunday to Saturday
-    const hourCounts = new Array(24).fill(0); // 0-23 hours
-
-    appointments.forEach((appointment) => {
-      if (appointment.startTime) {
-        const day = appointment.startTime.getDay(); // 0 = Sunday, 6 = Saturday
-        const hour = appointment.startTime.getHours();
-
-        dayCounts[day]++;
-        hourCounts[hour]++;
-      }
-    });
-
-    // Get top preferred days
-    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const preferredDays = dayCounts
-      .map((count, index) => ({
-        day: dayNames[index],
-        count,
-        percentage: Math.round((count / appointments.length) * 100),
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
-
-    // Get top preferred times
-    const preferredTimes = hourCounts
-      .map((count, hour) => ({ hour, count, percentage: Math.round((count / appointments.length) * 100) }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3)
-      .map((item) => ({
-        time: `${item.hour}:00`,
-        count: item.count,
-        percentage: item.percentage,
-      }));
-
-    return { preferredDays, preferredTimes };
-  }
-
-  private analyzeSeasonality(appointments: AppointmentAnalytics[]) {
-    const monthlyCounts = new Array(12).fill(0);
-    const quarterlyCounts = new Array(4).fill(0);
-
-    appointments.forEach((appointment) => {
-      if (appointment.startTime) {
-        const month = appointment.startTime.getMonth(); // 0-11
-        const quarter = Math.floor(month / 3); // 0-3
-
-        monthlyCounts[month]++;
-        quarterlyCounts[quarter]++;
-      }
-    });
-
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-    return {
-      monthly: monthlyCounts.map((count, index) => ({
-        month: monthNames[index],
-        count,
-        percentage: Math.round((count / appointments.length) * 100),
-      })),
-      quarterly: quarterlyCounts.map((count, index) => ({
-        quarter: `Q${index + 1}`,
-        count,
-        percentage: Math.round((count / appointments.length) * 100),
-      })),
-      peakMonth: monthNames[monthlyCounts.indexOf(Math.max(...monthlyCounts))],
-      peakQuarter: `Q${quarterlyCounts.indexOf(Math.max(...quarterlyCounts)) + 1}`,
-    };
-  }
-
-  private calculateAverageGap(appointments: AppointmentAnalytics[]): number {
-    if (appointments.length < 2) return 0;
-
-    const sortedAppointments = appointments
-      .filter((apt) => apt.startTime)
-      .sort((a, b) => a.startTime!.getTime() - b.startTime!.getTime());
-
-    const gaps: number[] = [];
-    for (let i = 1; i < sortedAppointments.length; i++) {
-      const gap = sortedAppointments[i].startTime!.getTime() - sortedAppointments[i - 1].startTime!.getTime();
-      gaps.push(gap / (1000 * 60 * 60 * 24)); // Convert to days
-    }
-
-    return gaps.length > 0 ? gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length : 0;
-  }
-
-  private calculateConsistencyScore(appointments: AppointmentAnalytics[], startDate: Date): number {
-    if (appointments.length === 0) return 0;
-
-    const now = new Date();
-    const totalDays = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (totalDays === 0) return 0;
-
-    // Expected appointments based on frequency
-    const actualAppointments = appointments.length;
-    const expectedAppointments = Math.max(1, Math.ceil(totalDays / 30)); // At least monthly
-
-    // Calculate consistency based on how close actual is to expected
-    const consistencyRatio = Math.min(actualAppointments / expectedAppointments, 2); // Cap at 200%
-    return Math.round(consistencyRatio * 50); // 0-100 scale
   }
 }
 

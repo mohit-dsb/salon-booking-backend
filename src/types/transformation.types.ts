@@ -32,7 +32,7 @@ export interface AppointmentAnalyticsData {
   client?: {
     id: string;
     firstName: string;
-    lastName: string
+    lastName: string;
     name?: string; // Computed field for convenience
   } | null;
   member?: {
@@ -50,4 +50,21 @@ export interface AppointmentAnalyticsData {
       name: string;
     } | null;
   } | null;
+}
+
+// Type for client report list item with relationships for analytics transformation
+export interface ClientsReportList {
+  id: string;
+  firstName: string;
+  lastName: string;
+  gender: string;
+  age: number;
+  mobileNumber: string;
+  email: string;
+  addedOn: string;
+  firstAppointmentDate: string;
+  lastAppointmentDate: string;
+  loyaltyPoints: number;
+  clientSource: string;
+  referredBy: string;
 }

@@ -376,7 +376,7 @@ export class AppointmentController {
 
     // Transform data for UI consumption
     const tableData = transformAppointmentsToTableData(appointmentList.data);
-    const columns = getAppointmentTableColumns(queryParams.includeFields, queryParams.excludeFields);
+    const columns = getAppointmentTableColumns();
     const availableFilters = generateAppointmentFilters(appointmentList.data);
     const appliedFilters = extractAppliedAppointmentFilters(analyticsQuery);
 

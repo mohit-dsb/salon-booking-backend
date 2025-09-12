@@ -121,17 +121,8 @@ export const appointmentSummarySchema = analyticsBaseSchema.extend({
     .optional(),
 });
 
-// Type for appointment list parameters after transformation
-export type AppointmentListParams = Omit<
-  z.infer<typeof appointmentListBaseSchema>,
-  "includeFields" | "excludeFields"
-> & {
-  includeFields?: string[];
-  excludeFields?: string[];
-};
-
 // Base appointment list schema without transformation
-const appointmentListBaseSchema = analyticsBaseSchema.extend({
+export const appointmentListSchema = analyticsBaseSchema.extend({
   status: z
     .union([
       z.array(z.enum(["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"])),
@@ -147,32 +138,11 @@ const appointmentListBaseSchema = analyticsBaseSchema.extend({
   isWalkIn: z.enum(["true", "false"]).optional(),
   sortBy: z.enum(["startTime", "createdAt", "revenue", "member", "service"]).optional().default("startTime"),
   sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
-  includeDetails: z.array(z.enum(["revenue"])).optional(),
-  search: z.string().optional(), // Search by client name, member name, or service name
-  includeFields: z.string().optional(), // Comma-separated list of fields to include
-  excludeFields: z.string().optional(), // Comma-separated list of fields to exclude
   ...paginationQuerySchema.shape,
 });
 
-// Appointment list analytics schema with transformation
-export const appointmentListSchema = appointmentListBaseSchema.transform((data): AppointmentListParams => {
-  // Transform comma-separated strings to arrays
-  const transformed: AppointmentListParams = {
-    ...data,
-    includeFields: undefined,
-    excludeFields: undefined,
-  };
-
-  if (data.includeFields) {
-    transformed.includeFields = data.includeFields.split(",").map((field) => field.trim());
-  }
-
-  if (data.excludeFields) {
-    transformed.excludeFields = data.excludeFields.split(",").map((field) => field.trim());
-  }
-
-  return transformed;
-});
+// Type for appointment list parameters after transformation
+export type AppointmentListParams = z.infer<typeof appointmentListSchema>;
 
 // Cancellations and no-shows analytics schema
 export const cancellationNoShowSchema = analyticsBaseSchema.extend({

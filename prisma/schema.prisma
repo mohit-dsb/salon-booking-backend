@@ -39,6 +39,16 @@ enum RecurrencePattern {
   CUSTOM
 }
 
+enum ClientGender {
+  Male
+  Female
+  Other
+}
+
+enum ClientSource {
+  WALK_IN
+}
+
 model Category {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String // Original name with proper casing for display
@@ -110,7 +120,7 @@ model Member {
   bookedAppointments    Appointment[]   @relation("BookedAppointments") // Appointments booked by this member
   cancelledAppointments Appointment[]   @relation("CancelledAppointments") // Appointments cancelled by this member
   shifts                Shift[]         @relation("AssignedShifts") // Shifts assigned to this member
-  createdShifts         Shift[]         @relation("CreatedShifts") 
+  createdShifts         Shift[]         @relation("CreatedShifts")
 
   @@unique([email, orgId])
   @@index([orgId])
@@ -133,22 +143,45 @@ model MemberService {
 }
 
 model Client {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
   firstName   String
   lastName    String
   email       String
+  gender      ClientGender
   phone       String?
   dateOfBirth DateTime?
   address     Json? // Store address as JSON
-  notes       String? // Internal notes about the client
-  preferences Json? // Client preferences (communication, services, etc.)
   orgId       String
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  isActive    Boolean      @default(true)
+
+  // ADDITIONAL INFO
+  clientSource      ClientSource @default(WALK_IN) // How the client heard about the business
+  referredById      String?      @db.ObjectId // Which client referred this client
+  preferredLanguage String? // Client's preferred language
+  occupation        String? // Client's occupation
+  country           String? // Client's country
+
+  // ADDITIONAL CONTACT DETAILS
+  additionalEmail String? // Secondary email address
+  additionalPhone String? // Secondary phone number
+
+  // NOTIFICATION PREFERENCES
+  notifyByEmail    Boolean @default(true) // Email notifications enabled
+  notifyBySMS      Boolean @default(false) // SMS notifications enabled
+  notifyByWhatsapp Boolean @default(false) // WhatsApp notifications enabled
+
+  // MARKETING PREFERENCES
+  allowEmailMarketing    Boolean @default(false) // Allow email marketing
+  allowSMSMarketing      Boolean @default(false) // Allow SMS marketing
+  allowWhatsappMarketing Boolean @default(false) // Allow WhatsApp marketing
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relationships
   appointments Appointment[]
+  referredBy   Client?       @relation("ClientReferrals", fields: [referredById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  referrals    Client[]      @relation("ClientReferrals")
 
   // Ensure email is unique within each organization
   @@unique([email, orgId])

@@ -1159,8 +1159,6 @@ export class AppointmentService {
         isWalkIn,
         sortBy = "startTime",
         sortOrder = "desc",
-        includeDetails = [],
-        search,
         memberId,
         serviceId,
         categoryId,
@@ -1186,18 +1184,6 @@ export class AppointmentService {
         ...(typeof memberId === "string" ? { memberId } : {}),
         ...(typeof serviceId === "string" ? { serviceId } : {}),
         ...(typeof categoryId === "string" ? { service: { categoryId } } : {}),
-        ...(typeof search === "string"
-          ? {
-              OR: [
-                { walkInClientName: { contains: search, mode: "insensitive" } },
-                { client: { firstName: { contains: search, mode: "insensitive" } } },
-                { client: { lastName: { contains: search, mode: "insensitive" } } },
-                { member: { username: { contains: search, mode: "insensitive" } } },
-                { service: { name: { contains: search, mode: "insensitive" } } },
-                { notes: { contains: search, mode: "insensitive" } },
-              ],
-            }
-          : {}),
       };
 
       // Build include object based on includeDetails
@@ -1277,13 +1263,11 @@ export class AppointmentService {
           dateRange,
           status,
           isWalkIn,
-          search,
           memberId,
           serviceId,
           categoryId,
           sortBy,
           sortOrder,
-          includeDetails,
         },
       };
     } catch (error) {

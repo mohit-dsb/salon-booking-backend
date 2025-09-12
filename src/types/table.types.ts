@@ -41,6 +41,26 @@ export interface AppointmentTableRow {
   cancelledAt?: string;
 }
 
+export interface ClientTableRow {
+  client: {
+    id: string;
+    name: string;
+  };
+  gender: string;
+  age: number | null;
+  mobileNumber: string | null;
+  email: string;
+  addedOn: string | null;
+  firstAppointmentDate: string | null;
+  lastAppointmentDate: string | null;
+  loyaltyPoints: number;
+  clientSource: string;
+  referredBy?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
 // Pagination metadata
 export interface TablePagination {
   page: number;
@@ -79,7 +99,7 @@ export interface TableResponse<T = AppointmentTableRow> {
   tableData: T[];
   columns: TableColumn[];
   pagination: TablePagination;
-  filters: TableFilters;
+  filters?: TableFilters;
   metadata: TableMetadata;
 }
 

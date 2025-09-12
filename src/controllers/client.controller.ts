@@ -3,13 +3,9 @@ import { parsePaginationParams } from "@/utils/pagination";
 import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
-import type {
-  ClientSummaryParams,
-  ClientListAnalyticsParams,
-  ClientInsightsParams,
-  UpdateClientData,
-  CreateClientData,
-} from "@/validations/client.schema";
+import type { ClientListAnalyticsParams, UpdateClientData, CreateClientData } from "@/validations/client.schema";
+import { getClientTableColumns, transformClientsReportToTableData } from "@/utils/data-transformation/clients";
+import { ClientTableRow, TableResponse } from "@/types/table.types";
 
 // Create service instance
 const clientService = new ClientService();
@@ -142,64 +138,44 @@ export const searchClients = asyncHandler(async (req: Request, res: Response, _n
 });
 
 /**
- * Get client summary analytics with trends and patterns
- * @route GET /api/v1/clients/analytics/summary
- * @access Private (Member)
- */
-export const getClientSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as ClientSummaryParams;
-
-  const result = await clientService.getClientSummary(orgId, params);
-
-  res.status(200).json({
-    success: true,
-    data: result,
-    message: "Client summary analytics retrieved successfully",
-  });
-});
-
-/**
  * Get comprehensive client list with analytics data
  * @route GET /api/v1/clients/analytics/list
  * @access Private (Member)
  */
 export const getClientAnalyticsList = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as ClientListAnalyticsParams;
+  const params = req.parsedQuery as ClientListAnalyticsParams;
   const pagination = parsePaginationParams(req.query);
 
   const result = await clientService.getClientAnalyticsList(orgId, params, pagination);
+  const tableData = transformClientsReportToTableData(result.data);
+  const columns = getClientTableColumns();
+
+  // Build response
+  const response: TableResponse<ClientTableRow> = {
+    tableData,
+    columns,
+    pagination: {
+      page: result.pagination.page,
+      limit: result.pagination.limit,
+      total: result.pagination.total,
+      totalPages: result.pagination.totalPages,
+      hasNext: result.pagination.page < result.pagination.totalPages,
+      hasPrev: result.pagination.page > 1,
+    },
+    metadata: {
+      totalRecords: result.pagination.total,
+      filteredRecords: tableData.length,
+      lastUpdated: new Date().toISOString(),
+      queryTime: Date.now(),
+    },
+  };
 
   res.status(200).json({
     success: true,
-    data: result.data,
+    data: response,
     pagination: result.pagination,
-    summary: result.summary,
     filters: result.filters,
     message: "Client analytics list retrieved successfully",
-  });
-});
-
-/**
- * Get individual client insights and behavior analysis
- * @route GET /api/v1/clients/analytics/insights/:clientId
- * @access Private (Member)
- */
-export const getClientInsights = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const { clientId } = req.params;
-  const params = req.query as unknown as ClientInsightsParams;
-
-  if (!clientId) {
-    throw new AppError("Client ID is required", 400);
-  }
-
-  const result = await clientService.getClientInsights(orgId, clientId, params);
-
-  res.status(200).json({
-    success: true,
-    data: result,
-    message: "Client insights retrieved successfully",
   });
 });

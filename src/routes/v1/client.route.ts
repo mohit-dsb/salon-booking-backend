@@ -3,13 +3,7 @@ import { validate } from "@/middlewares/validation.middleware";
 import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import * as clientController from "@/controllers/client.controller";
 import { paginationQuerySchema } from "@/validations/pagination.schema";
-import {
-  createClientSchema,
-  updateClientSchema,
-  clientSummarySchema,
-  clientListAnalyticsSchema,
-  clientInsightsSchema,
-} from "@/validations/client.schema";
+import { createClientSchema, updateClientSchema, clientListAnalyticsSchema } from "@/validations/client.schema";
 
 const router = Router();
 
@@ -61,24 +55,10 @@ router.get("/search/:query", clientController.searchClients);
 // Analytics and Reporting Routes
 
 /**
- * @route   GET /api/v1/clients/analytics/summary
- * @desc    Get client summary analytics with trends and patterns
- * @access  Private (Member)
- */
-router.get("/analytics/summary", validate(clientSummarySchema), clientController.getClientSummary);
-
-/**
  * @route   GET /api/v1/clients/analytics/list
  * @desc    Get comprehensive client list with analytics data
  * @access  Private (Member)
  */
 router.get("/analytics/list", validate(clientListAnalyticsSchema), clientController.getClientAnalyticsList);
-
-/**
- * @route   GET /api/v1/clients/analytics/insights/:clientId
- * @desc    Get individual client insights and behavior analysis
- * @access  Private (Member)
- */
-router.get("/analytics/insights/:clientId", validate(clientInsightsSchema), clientController.getClientInsights);
 
 export default router;

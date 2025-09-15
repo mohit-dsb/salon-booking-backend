@@ -22,6 +22,13 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+enum CancellationReason {
+  NO_REASON_PROVIDED
+  DUPLICATE_APPOINTMENT
+  APPOINTMENT_MADE_BY_MISTAKE
+  CLIENT_NOT_AVAILABLE
+}
+
 enum ShiftStatus {
   SCHEDULED
   CONFIRMED
@@ -190,23 +197,23 @@ model Client {
 }
 
 model Appointment {
-  id                  String            @id @default(auto()) @map("_id") @db.ObjectId
-  clientId            String?           @db.ObjectId // Optional for walk-in appointments
-  memberId            String            @db.ObjectId
-  serviceId           String            @db.ObjectId
-  bookedByMemberId    String            @db.ObjectId // Member who booked the appointment
+  id                  String              @id @default(auto()) @map("_id") @db.ObjectId
+  clientId            String?             @db.ObjectId // Optional for walk-in appointments
+  memberId            String              @db.ObjectId
+  serviceId           String              @db.ObjectId
+  bookedByMemberId    String              @db.ObjectId // Member who booked the appointment
   orgId               String
-  status              AppointmentStatus @default(SCHEDULED)
+  status              AppointmentStatus   @default(SCHEDULED)
   startTime           DateTime
   endTime             DateTime
   duration            Int // Duration in minutes (copied from service for historical accuracy)
   price               Float // Price at time of booking (copied from service for historical accuracy)
   notes               String? // Appointment-specific notes
   internalNotes       String? // Internal staff notes
-  cancellationReason  String? // Reason for cancellation if cancelled
+  cancellationReason  CancellationReason? // Reason for cancellation if cancelled
   cancelledAt         DateTime?
   // Audit fields - store as simple strings or IDs for reporting
-  cancelledByMemberId String?           @db.ObjectId // ID of member who cancelled (for analytics)
+  cancelledByMemberId String?             @db.ObjectId // ID of member who cancelled (for analytics)
 
   // Walk-in appointment fields (used when clientId is null)
   walkInClientName  String? // Temporary name for walk-in client (e.g., "Walk-in #123")

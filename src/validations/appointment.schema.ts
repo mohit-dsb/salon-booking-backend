@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "./pagination.schema";
 
+export const cancellationReasonsEnum = [
+  "No reason provided",
+  "Duplicate appointment",
+  "Appointment made by mistake",
+  "Client not available",
+] as const;
+
 // Appointment validation schema - clientId is optional for walk-in appointments
 export const createAppointmentSchema = z
   .object({
@@ -35,7 +42,7 @@ export const updateAppointmentSchema = z.object({
   status: z.enum(["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"]).optional(),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
   internalNotes: z.string().max(500, "Internal notes must be less than 500 characters").optional(),
-  cancellationReason: z.string().max(200, "Cancellation reason must be less than 200 characters").optional(),
+  cancellationReason: z.enum(cancellationReasonsEnum).optional(),
 });
 
 export const appointmentQuerySchema = z.object({
@@ -61,10 +68,7 @@ export const rescheduleAppointmentSchema = z.object({
 });
 
 export const cancelAppointmentSchema = z.object({
-  cancellationReason: z
-    .string()
-    .min(1, "Cancellation reason is required")
-    .max(200, "Cancellation reason must be less than 200 characters"),
+  cancellationReason: z.enum(cancellationReasonsEnum).default("No reason provided"),
 });
 
 // Availability check schema
@@ -135,13 +139,5 @@ export const appointmentListSchema = analyticsBaseSchema.extend({
 // Type for appointment list parameters after transformation
 export type AppointmentListParams = z.infer<typeof appointmentListSchema>;
 
-// Cancellations and no-shows analytics schema
-export const cancellationNoShowSchema = analyticsBaseSchema.extend({
-  analysisType: z.enum(["cancellations", "no_shows", "both"]).optional().default("both"),
-  groupBy: z.enum(["day", "week", "month", "member", "service", "reason"]).optional().default("day"),
-  includeReasons: z.boolean().optional().default(true),
-  minCancellationRate: z.number().min(0).max(100).optional(), // Filter members/services with high cancellation rates
-});
-
 // Export types for the analytics schemas
-export type CancellationNoShowParams = z.infer<typeof cancellationNoShowSchema>;
+export type CancellationNoShowParams = z.infer<typeof analyticsBaseSchema>;

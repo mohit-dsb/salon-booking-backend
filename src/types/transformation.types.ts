@@ -51,20 +51,3 @@ export interface AppointmentAnalyticsData {
     } | null;
   } | null;
 }
-
-// Type for client report list item with relationships for analytics transformation
-export interface ClientsReportList {
-  id: string;
-  firstName: string;
-  lastName: string;
-  gender: string;
-  age: number;
-  mobileNumber: string;
-  email: string;
-  addedOn: string;
-  firstAppointmentDate: string;
-  lastAppointmentDate: string;
-  loyaltyPoints: number;
-  clientSource: string;
-  referredBy: string;
-}

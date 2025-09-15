@@ -6,6 +6,8 @@ import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
 import type { Appointment, AppointmentStatus, Prisma } from "@prisma/client";
 import type { CreateAppointmentData, UpdateAppointmentData } from "@/validations/appointment.schema";
+import { cancellationReasonsEnum } from "@/validations/appointment.schema";
+import { mapCancellationReason, reverseMapCancellationReason } from "@/utils/functions";
 
 export interface AppointmentFilters {
   clientId?: string;
@@ -595,7 +597,7 @@ export class AppointmentService {
       }
 
       if (data.cancellationReason !== undefined) {
-        updateData.cancellationReason = data.cancellationReason;
+        updateData.cancellationReason = mapCancellationReason(data.cancellationReason);
         updateData.cancelledAt = new Date();
         updateData.cancelledByMember = updatedBy ? { connect: { id: updatedBy } } : { disconnect: true };
       }
@@ -663,7 +665,7 @@ export class AppointmentService {
   public async cancelAppointment(
     id: string,
     orgId: string,
-    reason: string,
+    reason: (typeof cancellationReasonsEnum)[number],
     cancelledBy: string,
   ): Promise<AppointmentWithDetails> {
     const updateData: UpdateAppointmentData = {
@@ -1265,18 +1267,7 @@ export class AppointmentService {
    */
   async getCancellationNoShowAnalytics(orgId: string, params: Record<string, unknown>) {
     try {
-      const {
-        startDate,
-        endDate,
-        period,
-        analysisType = "both",
-        groupBy = "day",
-        includeReasons = true,
-        minCancellationRate,
-        memberId,
-        serviceId,
-        categoryId,
-      } = params;
+      const { startDate, endDate, period, memberId, serviceId, categoryId } = params;
 
       // Calculate date range
       const dateRange = this.calculateDateRange(
@@ -1298,44 +1289,29 @@ export class AppointmentService {
       };
 
       // Status filter based on analysis type
-      const statusFilter: AppointmentStatus[] = [];
-      if (analysisType === "cancellations" || analysisType === "both") {
-        statusFilter.push("CANCELLED");
-      }
-      if (analysisType === "no_shows" || analysisType === "both") {
-        statusFilter.push("NO_SHOW");
-      }
+      const statusFilter: AppointmentStatus[] = ["CANCELLED", "NO_SHOW"];
 
       const whereConditions = {
         ...baseWhere,
         status: { in: statusFilter },
       };
 
-      // Get total counts
-      const [totalAppointments, cancelledAppointments, noShowAppointments] = await Promise.all([
-        prisma.appointment.count({ where: baseWhere }),
-        prisma.appointment.count({ where: { ...baseWhere, status: "CANCELLED" } }),
-        prisma.appointment.count({ where: { ...baseWhere, status: "NO_SHOW" } }),
-      ]);
+      const result = await prisma.appointment.groupBy({
+        by: ["cancellationReason"],
+        where: {
+          ...whereConditions,
+          cancellationReason: { not: null },
+        },
+        _count: { id: true },
+        _sum: { price: true },
+        orderBy: { _count: { id: "desc" } },
+      });
 
-      // Calculate rates
-      const cancellationRate = totalAppointments > 0 ? (cancelledAppointments / totalAppointments) * 100 : 0;
-      const noShowRate = totalAppointments > 0 ? (noShowAppointments / totalAppointments) * 100 : 0;
-
-      // Get cancellation reasons if requested
-      let cancellationReasons: Array<{ reason: string | null; count: number }> = [];
-      if (includeReasons) {
-        cancellationReasons = await this.getCancellationReasons(whereConditions);
-      }
-
-      // Get member and service analysis
-      const [memberAnalysis, serviceAnalysis] = await Promise.all([
-        this.getMemberCancellationAnalysis(baseWhere, statusFilter, minCancellationRate as number | undefined),
-        this.getServiceCancellationAnalysis(baseWhere, statusFilter, minCancellationRate as number | undefined),
-      ]);
-
-      // Calculate revenue impact
-      const revenueImpact = await this.calculateCancellationRevenueImpact(whereConditions);
+      const reasons = result.map((reason) => ({
+        reason: reverseMapCancellationReason(reason.cancellationReason!),
+        count: reason._count.id,
+        price: reason._sum.price,
+      }));
 
       return {
         period: {
@@ -1347,24 +1323,8 @@ export class AppointmentService {
             endDate as string | undefined,
           ),
         },
-        overview: {
-          totalAppointments,
-          cancelledAppointments,
-          noShowAppointments,
-          cancellationRate: Math.round(cancellationRate * 100) / 100,
-          noShowRate: Math.round(noShowRate * 100) / 100,
-        },
-        reasons: cancellationReasons,
-        analysis: {
-          byMember: memberAnalysis,
-          byService: serviceAnalysis,
-        },
-        revenueImpact,
+        reasons,
         filters: {
-          analysisType,
-          groupBy,
-          includeReasons,
-          minCancellationRate,
           memberId,
           serviceId,
           categoryId,
@@ -1500,202 +1460,7 @@ export class AppointmentService {
       ),
     };
   }
-
-  private async getCancellationReasons(whereConditions: Prisma.AppointmentWhereInput) {
-    const reasons = await prisma.appointment.groupBy({
-      by: ["cancellationReason"],
-      where: {
-        ...whereConditions,
-        cancellationReason: { not: null },
-      },
-      _count: { id: true },
-      orderBy: { _count: { id: "desc" } },
-    });
-
-    return reasons.map((reason) => ({
-      reason: reason.cancellationReason,
-      count: reason._count.id,
-    }));
-  }
-
-  private async getMemberCancellationAnalysis(
-    baseWhere: Prisma.AppointmentWhereInput,
-    statusFilter: AppointmentStatus[],
-    minCancellationRate?: number,
-  ) {
-    const memberStats = await prisma.appointment.groupBy({
-      by: ["memberId"],
-      where: baseWhere,
-      _count: { id: true },
-    });
-
-    const memberCancellations = await prisma.appointment.groupBy({
-      by: ["memberId"],
-      where: {
-        ...baseWhere,
-        status: { in: statusFilter },
-      },
-      _count: { id: true },
-    });
-
-    const analysis = memberStats.map((stat) => {
-      const cancellationRecord = memberCancellations.find((c) => c.memberId === stat.memberId);
-      const cancellations = cancellationRecord?._count?.id || 0;
-      const rate = (cancellations / stat._count.id) * 100;
-
-      return {
-        memberId: stat.memberId,
-        totalAppointments: stat._count.id,
-        cancellations,
-        cancellationRate: Math.round(rate * 100) / 100,
-      };
-    });
-
-    // Filter by minimum cancellation rate if specified
-    const filteredAnalysis = minCancellationRate
-      ? analysis.filter((item) => item.cancellationRate >= minCancellationRate)
-      : analysis;
-
-    // Get member details and sort by cancellation rate
-    const analysisWithDetails = await Promise.all(
-      filteredAnalysis
-        .sort((a, b) => b.cancellationRate - a.cancellationRate)
-        .slice(0, 10) // Limit to top 10
-        .map(async (item) => {
-          const member = await prisma.member.findUnique({
-            where: { id: item.memberId },
-            select: { id: true, username: true, email: true },
-          });
-          return { ...item, member };
-        }),
-    );
-
-    return analysisWithDetails;
-  }
-
-  private async getServiceCancellationAnalysis(
-    baseWhere: Prisma.AppointmentWhereInput,
-    statusFilter: AppointmentStatus[],
-    minCancellationRate?: number,
-  ) {
-    const serviceStats = await prisma.appointment.groupBy({
-      by: ["serviceId"],
-      where: baseWhere,
-      _count: { id: true },
-    });
-
-    const serviceCancellations = await prisma.appointment.groupBy({
-      by: ["serviceId"],
-      where: {
-        ...baseWhere,
-        status: { in: statusFilter },
-      },
-      _count: { id: true },
-    });
-
-    const analysis = serviceStats.map((stat) => {
-      const cancellationRecord = serviceCancellations.find((c) => c.serviceId === stat.serviceId);
-      const cancellations = cancellationRecord?._count?.id || 0;
-      const rate = (cancellations / stat._count.id) * 100;
-
-      return {
-        serviceId: stat.serviceId,
-        totalAppointments: stat._count.id,
-        cancellations,
-        cancellationRate: Math.round(rate * 100) / 100,
-      };
-    });
-
-    // Filter by minimum cancellation rate if specified
-    const filteredAnalysis = minCancellationRate
-      ? analysis.filter((item) => item.cancellationRate >= minCancellationRate)
-      : analysis;
-
-    // Get service details and sort by cancellation rate
-    const analysisWithDetails = await Promise.all(
-      filteredAnalysis
-        .sort((a, b) => b.cancellationRate - a.cancellationRate)
-        .slice(0, 10) // Limit to top 10
-        .map(async (item) => {
-          const service = await prisma.service.findUnique({
-            where: { id: item.serviceId },
-            select: { id: true, name: true, price: true, duration: true },
-          });
-          return { ...item, service };
-        }),
-    );
-
-    return analysisWithDetails;
-  }
-
-  private async calculateCancellationRevenueImpact(whereConditions: Prisma.AppointmentWhereInput) {
-    const result = await prisma.appointment.aggregate({
-      where: whereConditions,
-      _sum: { price: true },
-      _count: { id: true },
-    });
-
-    return {
-      lostRevenue: result._sum.price || 0,
-      lostAppointments: result._count.id,
-    };
-  }
-
-  private groupAppointmentsByPeriod(
-    appointments: Array<{ startTime: Date; status: AppointmentStatus; price?: number }>,
-    groupBy: string,
-  ) {
-    const groups = new Map();
-
-    appointments.forEach((appointment) => {
-      const date = new Date(appointment.startTime);
-      let key: string;
-
-      switch (groupBy) {
-        case "day":
-          key = date.toISOString().split("T")[0];
-          break;
-        case "week": {
-          const startOfWeek = new Date(date);
-          startOfWeek.setDate(date.getDate() - date.getDay());
-          key = startOfWeek.toISOString().split("T")[0];
-          break;
-        }
-        case "month":
-          key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-          break;
-        default:
-          key = date.toISOString().split("T")[0];
-      }
-
-      if (!groups.has(key)) {
-        groups.set(key, {
-          date: key,
-          total: 0,
-          completed: 0,
-          cancelled: 0,
-          noShow: 0,
-          revenue: 0,
-        });
-      }
-
-      const group = groups.get(key);
-      group.total++;
-
-      if (appointment.status === "COMPLETED") {
-        group.completed++;
-        group.revenue += appointment.price || 0;
-      } else if (appointment.status === "CANCELLED") {
-        group.cancelled++;
-      } else if (appointment.status === "NO_SHOW") {
-        group.noShow++;
-      }
-    });
-
-    return Array.from(groups.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }
-
-  // Export service instance
 }
 
+// Export service instance
 export const appointmentService = new AppointmentService();

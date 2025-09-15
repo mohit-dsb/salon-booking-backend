@@ -12,7 +12,6 @@ import {
   checkAvailabilitySchema,
   convertWalkInAppointmentSchema,
   appointmentListSchema,
-  cancellationNoShowSchema,
   analyticsBaseSchema,
 } from "@/validations/appointment.schema";
 
@@ -157,7 +156,7 @@ router.get("/analytics/list", validate(appointmentListSchema), appointmentContro
  */
 router.get(
   "/analytics/cancellations",
-  validate(cancellationNoShowSchema),
+  validate(analyticsBaseSchema),
   appointmentController.getCancellationNoShowAnalytics,
 );
 

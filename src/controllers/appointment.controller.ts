@@ -19,6 +19,7 @@ import {
   generateAppointmentFilters,
   extractAppliedAppointmentFilters,
 } from "@/utils/data-transformation/appointment";
+import { reverseMapCancellationReason } from "@/utils/functions";
 
 export class AppointmentController {
   private appointmentService = new AppointmentService();
@@ -104,7 +105,12 @@ export class AppointmentController {
 
     res.status(200).json({
       success: true,
-      data: result.appointments,
+      data: result.appointments.map((appointment) => ({
+        ...appointment,
+        cancellationReason: appointment.cancellationReason
+          ? reverseMapCancellationReason(appointment.cancellationReason)
+          : null,
+      })),
       pagination: result.pagination,
       message: "Appointments retrieved successfully",
     });

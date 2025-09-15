@@ -330,7 +330,7 @@ export class AppointmentController {
 
   /**
    * Get appointment summary analytics
-   * Provides overview of appointment trends, patterns, cancellations, and no-shows
+   * Provides overview of appointment patterns, cancellations, and no-shows
    */
   public getAppointmentSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId } = await getAuthWithOrgId(req);
@@ -413,7 +413,7 @@ export class AppointmentController {
 
   /**
    * Get cancellations and no-shows analytics
-   * Insights into appointment cancellations and no-shows with trends and patterns
+   * Insights into appointment cancellations and no-shows with patterns
    */
   public getCancellationNoShowAnalytics = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId } = await getAuthWithOrgId(req);

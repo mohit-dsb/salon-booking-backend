@@ -15,8 +15,6 @@ import type {
   PaySummaryParams,
   ScheduledShiftsParams,
   WorkingHoursSummaryParams,
-  CommissionActivityParams,
-  CommissionSummaryParams,
   BulkDeleteMembersData,
   CreateMemberData,
   UpdateMemberData,
@@ -557,46 +555,6 @@ export const getWorkingHoursSummary = asyncHandler(async (req: Request, res: Res
     message: "Working hours summary retrieved successfully",
     data: result.data,
     meta: result.meta,
-    filters: params,
-  });
-});
-
-/**
- * Get full list of sales with commission payable
- * @route GET /api/v1/members/analytics/commission-activity
- * @access Private (Admin/Member)
- */
-export const getCommissionActivity = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as CommissionActivityParams;
-  const pagination = parsePaginationParams(req.query);
-
-  const result = await memberService.getCommissionActivity(orgId, params, pagination);
-
-  res.status(200).json({
-    success: true,
-    message: "Commission activity retrieved successfully",
-    data: result.data,
-    meta: result.meta,
-    filters: params,
-  });
-});
-
-/**
- * Get overview of commission earned by team members, locations and sales items
- * @route GET /api/v1/members/analytics/commission-summary
- * @access Private (Admin/Member)
- */
-export const getCommissionSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as CommissionSummaryParams;
-
-  const result = await memberService.getCommissionSummary(orgId, params);
-
-  res.status(200).json({
-    success: true,
-    message: "Commission summary retrieved successfully",
-    data: result,
     filters: params,
   });
 });

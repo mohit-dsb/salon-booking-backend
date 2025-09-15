@@ -229,8 +229,6 @@ export const attendanceSummarySchema = z.object({
 
   punctualityThreshold: z.number().min(0, "Punctuality threshold must be positive").optional(), // minutes
   includePatterns: z.boolean().optional(),
-  includeTrends: z.boolean().optional(),
-  compareWithPrevious: z.boolean().optional(),
   groupBy: z.enum(["day", "week", "month", "member", "department"]).optional(),
 });
 
@@ -283,11 +281,6 @@ export const wagesSummarySchema = z.object({
     )
     .optional(),
 
-  includeTrends: z.boolean().optional(),
-  includeComparisons: z.boolean().optional(),
-  includeForecasting: z.boolean().optional(),
-  compareWithBudget: z.boolean().optional(),
-  budgetAmount: z.number().min(0, "Budget amount must be positive").optional(),
   groupBy: z.enum(["department", "location", "role", "period"]).optional(),
 });
 
@@ -377,79 +370,7 @@ export const workingHoursSummarySchema = z.object({
     .optional(),
 
   hoursType: z.array(z.enum(["scheduled", "actual", "billable", "productive"])).optional(),
-  includeTrends: z.boolean().optional(),
-  includeComparisons: z.boolean().optional(),
-  includeGoals: z.boolean().optional(),
-  targetHours: z.number().min(0, "Target hours must be positive").optional(),
   groupBy: z.enum(["day", "week", "month", "member", "department", "location", "service"]).optional(),
-});
-
-// 10. Commission Activity Schema
-export const commissionActivitySchema = z.object({
-  ...analyticsBaseSchema.shape,
-
-  // Specific filters for commission activity
-  commissionTypes: z.array(z.enum(["SERVICE", "PRODUCT", "PACKAGE", "MEMBERSHIP", "GIFT_CARD"])).optional(),
-
-  salesChannels: z.array(z.enum(["IN_PERSON", "ONLINE", "PHONE", "MOBILE_APP"])).optional(),
-
-  includeDetails: z
-    .array(
-      z.enum([
-        "transactionDetails",
-        "itemBreakdown",
-        "paymentMethods",
-        "refunds",
-        "adjustments",
-        "splits",
-        "overrides",
-        "customerInfo",
-      ]),
-    )
-    .optional(),
-
-  minCommissionAmount: z.number().min(0, "Minimum commission amount must be positive").optional(),
-  maxCommissionAmount: z.number().min(0, "Maximum commission amount must be positive").optional(),
-
-  payoutStatus: z.array(z.enum(["PENDING", "PAID", "DISPUTED", "CANCELLED"])).optional(),
-  includeRefunds: z.boolean().optional(),
-  includeAdjustments: z.boolean().optional(),
-  transactionIds: z.array(z.string()).optional(),
-  groupBy: z.enum(["member", "date", "service", "product", "location", "commissionType"]).optional(),
-});
-
-// 11. Commission Summary Schema
-export const commissionSummarySchema = z.object({
-  ...analyticsBaseSchema.shape,
-
-  // Specific filters for commission summary
-  includeMetrics: z
-    .array(
-      z.enum([
-        "totalCommissions",
-        "averageCommission",
-        "commissionRate",
-        "topPerformers",
-        "salesVolume",
-        "conversionRate",
-        "repeatCustomers",
-        "newCustomers",
-        "refundRate",
-      ]),
-    )
-    .optional(),
-
-  locations: z.array(z.string()).optional(),
-  serviceCategories: z.array(z.string()).optional(),
-
-  includeRankings: z.boolean().optional(),
-  includeGoals: z.boolean().optional(),
-  includeTrends: z.boolean().optional(),
-  includeForecasting: z.boolean().optional(),
-
-  minimumSales: z.number().min(0, "Minimum sales must be positive").optional(),
-  goalAmount: z.number().min(0, "Goal amount must be positive").optional(),
-  groupBy: z.enum(["member", "location", "service", "period", "commissionType", "salesItem"]).optional(),
 });
 
 // Export type definitions for use in controllers and services
@@ -464,5 +385,3 @@ export type WagesSummaryParams = z.infer<typeof wagesSummarySchema>;
 export type PaySummaryParams = z.infer<typeof paySummarySchema>;
 export type ScheduledShiftsParams = z.infer<typeof scheduledShiftsSchema>;
 export type WorkingHoursSummaryParams = z.infer<typeof workingHoursSummarySchema>;
-export type CommissionActivityParams = z.infer<typeof commissionActivitySchema>;
-export type CommissionSummaryParams = z.infer<typeof commissionSummarySchema>;

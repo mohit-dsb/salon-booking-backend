@@ -17,8 +17,6 @@ import {
   paySummarySchema,
   scheduledShiftsSchema,
   workingHoursSummarySchema,
-  commissionActivitySchema,
-  commissionSummarySchema,
 } from "@/validations/member.schema";
 
 const router = Router();
@@ -118,23 +116,5 @@ router.get(
   validate(workingHoursSummarySchema),
   memberController.getWorkingHoursSummary,
 );
-
-/**
- * @route   GET /api/v1/members/analytics/commission-activity
- * @desc    Get full list of sales with commission payable
- * @access  Private (Admin/Member)
- */
-router.get(
-  "/analytics/commission-activity",
-  validate(commissionActivitySchema),
-  memberController.getCommissionActivity,
-);
-
-/**
- * @route   GET /api/v1/members/analytics/commission-summary
- * @desc    Get overview of commission earned by team members, locations and sales items
- * @access  Private (Admin/Member)
- */
-router.get("/analytics/commission-summary", validate(commissionSummarySchema), memberController.getCommissionSummary);
 
 export default router;

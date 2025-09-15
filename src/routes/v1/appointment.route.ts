@@ -11,9 +11,9 @@ import {
   cancelAppointmentSchema,
   checkAvailabilitySchema,
   convertWalkInAppointmentSchema,
-  appointmentSummarySchema,
   appointmentListSchema,
   cancellationNoShowSchema,
+  analyticsBaseSchema,
 } from "@/validations/appointment.schema";
 
 const router = Router();
@@ -138,10 +138,10 @@ router.get("/upcoming", appointmentController.getMemberUpcomingAppointments);
 
 /**
  * @route   GET /api/v1/appointments/analytics/summary
- * @desc    Get appointment summary analytics with trends and patterns
+ * @desc    Get appointment summary analytics with patterns
  * @access  Private (Member)
  */
-router.get("/analytics/summary", validate(appointmentSummarySchema), appointmentController.getAppointmentSummary);
+router.get("/analytics/summary", validate(analyticsBaseSchema), appointmentController.getAppointmentSummary);
 
 /**
  * @route   GET /api/v1/appointments/analytics/list

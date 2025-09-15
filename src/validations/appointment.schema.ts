@@ -110,15 +110,6 @@ export const analyticsBaseSchema = z.object({
       "custom",
     ])
     .optional(),
-  timezone: z.string().optional(), // e.g., "America/New_York"
-});
-
-// Appointment summary analytics schema
-export const appointmentSummarySchema = analyticsBaseSchema.extend({
-  groupBy: z.enum(["day", "week", "month", "member", "service", "status"]).optional().default("day"),
-  includeMetrics: z
-    .array(z.enum(["revenue", "utilization", "cancellation_rate", "no_show_rate", "conversion_rate"]))
-    .optional(),
 });
 
 // Base appointment list schema without transformation
@@ -153,5 +144,4 @@ export const cancellationNoShowSchema = analyticsBaseSchema.extend({
 });
 
 // Export types for the analytics schemas
-export type AppointmentSummaryParams = z.infer<typeof appointmentSummarySchema>;
 export type CancellationNoShowParams = z.infer<typeof cancellationNoShowSchema>;

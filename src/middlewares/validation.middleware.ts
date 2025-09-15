@@ -56,7 +56,7 @@ export const validate = (schema: z.ZodSchema) => {
           message = `${fieldName} must be a valid email address`;
         } else if (originalMessage.includes("url")) {
           message = `${fieldName} must be a valid URL`;
-        }  else if (firstIssue.code === "custom") {
+        } else if (firstIssue.code === "custom") {
           message = firstIssue.message;
         } else {
           // Capitalize first letter and add field name if not present

@@ -1024,20 +1024,11 @@ export class AppointmentService {
   // Analytics and Reporting Methods
 
   /**
-   * Get appointment summary analytics with trends and patterns
+   * Get appointment summary analytics with patterns
    */
   async getAppointmentSummary(orgId: string, params: Record<string, unknown>) {
     try {
-      const {
-        startDate,
-        endDate,
-        period,
-        groupBy = "day",
-        memberId,
-        serviceId,
-        categoryId,
-        includeMetrics = [],
-      } = params;
+      const { startDate, endDate, period, memberId, serviceId, categoryId } = params;
 
       // Calculate date range based on period or custom dates
       const dateRange = this.calculateDateRange(
@@ -1061,31 +1052,31 @@ export class AppointmentService {
       // Get basic counts
       const [
         totalAppointments,
-        scheduledAppointments,
-        confirmedAppointments,
+        totalServices,
         completedAppointments,
         cancelledAppointments,
         noShowAppointments,
         walkInAppointments,
+        totalClients,
+        newClients,
       ] = await Promise.all([
         prisma.appointment.count({ where: whereConditions }),
-        prisma.appointment.count({ where: { ...whereConditions, status: "SCHEDULED" } }),
-        prisma.appointment.count({ where: { ...whereConditions, status: "CONFIRMED" } }),
+        prisma.appointment.groupBy({ where: whereConditions, by: ["serviceId"] }).then((groups) => groups.length),
         prisma.appointment.count({ where: { ...whereConditions, status: "COMPLETED" } }),
         prisma.appointment.count({ where: { ...whereConditions, status: "CANCELLED" } }),
         prisma.appointment.count({ where: { ...whereConditions, status: "NO_SHOW" } }),
         prisma.appointment.count({ where: { ...whereConditions, clientId: null } }),
+        prisma.appointment
+          .groupBy({ where: whereConditions, by: ["clientId"] })
+          .then((groups) => groups.filter((g) => g.clientId !== null).length), // Exclude walk-ins
+        prisma.appointment.count({
+          where: {
+            ...whereConditions,
+            clientId: { not: null },
+            client: { createdAt: { gte: dateRange.start, lte: dateRange.end } },
+          },
+        }),
       ]);
-
-      // Calculate revenue if requested
-      let totalRevenue = 0;
-      if (Array.isArray(includeMetrics) && includeMetrics.includes("revenue")) {
-        const revenueResult = await prisma.appointment.aggregate({
-          where: { ...whereConditions, status: "COMPLETED" },
-          _sum: { price: true },
-        });
-        totalRevenue = revenueResult._sum.price || 0;
-      }
 
       // Calculate rates
       const cancellationRate = totalAppointments > 0 ? (cancelledAppointments / totalAppointments) * 100 : 0;
@@ -1093,14 +1084,8 @@ export class AppointmentService {
       const completionRate = totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0;
       const walkInRate = totalAppointments > 0 ? (walkInAppointments / totalAppointments) * 100 : 0;
 
-      // Get trend data based on groupBy
-      const trendData = await this.getAppointmentTrends(whereConditions, groupBy as string, dateRange);
-
-      // Get top performing members and services
-      const [topMembers, topServices] = await Promise.all([
-        this.getTopPerformingMembers(whereConditions, 5),
-        this.getTopPerformingServices(whereConditions, 5),
-      ]);
+      // Calculate summary statistics
+      const summaryStats = await this.calculateListSummaryStats(whereConditions);
 
       return {
         period: {
@@ -1114,31 +1099,31 @@ export class AppointmentService {
         },
         overview: {
           totalAppointments,
-          scheduledAppointments,
-          confirmedAppointments,
+          totalServices,
           completedAppointments,
           cancelledAppointments,
           noShowAppointments,
           walkInAppointments,
-          totalRevenue,
+          totalClients,
+          newClients,
         },
         rates: {
           cancellationRate: Math.round(cancellationRate * 100) / 100,
           noShowRate: Math.round(noShowRate * 100) / 100,
           completionRate: Math.round(completionRate * 100) / 100,
           walkInRate: Math.round(walkInRate * 100) / 100,
+          newClientsRate: totalClients > 0 ? Math.round((newClients / totalClients) * 10000) / 100 : 0,
+          returningClientsRate:
+            totalClients > 0 ? Math.round(((totalClients - newClients) / totalClients) * 10000) / 100 : 0,
         },
-        trends: trendData,
-        topPerformers: {
-          members: topMembers,
-          services: topServices,
+        values: {
+          totalAppointmentsValue: summaryStats.totalAppointmentsValue,
+          averageAppointmentValue: summaryStats.averageAppointmentValue,
         },
         filters: {
           memberId,
           serviceId,
           categoryId,
-          groupBy,
-          includeMetrics,
         },
       };
     } catch (error) {
@@ -1337,9 +1322,6 @@ export class AppointmentService {
       const cancellationRate = totalAppointments > 0 ? (cancelledAppointments / totalAppointments) * 100 : 0;
       const noShowRate = totalAppointments > 0 ? (noShowAppointments / totalAppointments) * 100 : 0;
 
-      // Get trend data
-      const trendData = await this.getCancellationTrends(baseWhere, groupBy as string, dateRange, statusFilter);
-
       // Get cancellation reasons if requested
       let cancellationReasons: Array<{ reason: string | null; count: number }> = [];
       if (includeReasons) {
@@ -1372,7 +1354,6 @@ export class AppointmentService {
           cancellationRate: Math.round(cancellationRate * 100) / 100,
           noShowRate: Math.round(noShowRate * 100) / 100,
         },
-        trends: trendData,
         reasons: cancellationReasons,
         analysis: {
           byMember: memberAnalysis,
@@ -1483,87 +1464,10 @@ export class AppointmentService {
     return "Last 30 Days";
   }
 
-  private async getAppointmentTrends(
-    whereConditions: Prisma.AppointmentWhereInput,
-    groupBy: string,
-    _dateRange: { start: Date; end: Date },
-  ) {
-    // This is a simplified version. In production, you'd want to use more sophisticated aggregation
-    // For MongoDB, you might need to use raw queries or aggregation pipelines
-    const appointments = await prisma.appointment.findMany({
-      where: whereConditions,
-      select: {
-        startTime: true,
-        status: true,
-        price: true,
-      },
-    });
-
-    // Group appointments by the specified period
-    const trends = this.groupAppointmentsByPeriod(appointments, groupBy);
-    return trends;
-  }
-
-  private async getTopPerformingMembers(whereConditions: Prisma.AppointmentWhereInput, limit: number) {
-    const members = await prisma.appointment.groupBy({
-      by: ["memberId"],
-      where: { ...whereConditions, status: "COMPLETED" },
-      _count: { id: true },
-      _sum: { price: true },
-      orderBy: { _count: { id: "desc" } },
-      take: limit,
-    });
-
-    // Get member details
-    const memberDetails = await Promise.all(
-      members.map(async (member) => {
-        const memberInfo = await prisma.member.findUnique({
-          where: { id: member.memberId },
-          select: { id: true, username: true, email: true },
-        });
-        return {
-          member: memberInfo,
-          appointmentCount: member._count.id,
-          totalRevenue: member._sum.price || 0,
-        };
-      }),
-    );
-
-    return memberDetails;
-  }
-
-  private async getTopPerformingServices(whereConditions: Prisma.AppointmentWhereInput, limit: number) {
-    const services = await prisma.appointment.groupBy({
-      by: ["serviceId"],
-      where: { ...whereConditions, status: "COMPLETED" },
-      _count: { id: true },
-      _sum: { price: true },
-      orderBy: { _count: { id: "desc" } },
-      take: limit,
-    });
-
-    // Get service details
-    const serviceDetails = await Promise.all(
-      services.map(async (service) => {
-        const serviceInfo = await prisma.service.findUnique({
-          where: { id: service.serviceId },
-          select: { id: true, name: true, price: true, duration: true },
-        });
-        return {
-          service: serviceInfo,
-          appointmentCount: service._count.id,
-          totalRevenue: service._sum.price || 0,
-        };
-      }),
-    );
-
-    return serviceDetails;
-  }
-
   private async calculateListSummaryStats(whereConditions: Prisma.AppointmentWhereInput) {
-    const [totalRevenue, avgDuration, statusCounts] = await Promise.all([
+    const [totalRevenue, avgDuration, statusCounts, totalAppointmentsCount] = await Promise.all([
       prisma.appointment.aggregate({
-        where: { ...whereConditions, status: "COMPLETED" },
+        where: { ...whereConditions },
         _sum: { price: true },
       }),
       prisma.appointment.aggregate({
@@ -1575,10 +1479,17 @@ export class AppointmentService {
         where: whereConditions,
         _count: { id: true },
       }),
+      prisma.appointment.count({
+        where: { ...whereConditions },
+      }),
     ]);
 
+    const totalAppointmentsValue = totalRevenue._sum.price || 0;
+    const averageAppointmentValue = totalAppointmentsValue / totalAppointmentsCount;
+
     return {
-      totalRevenue: totalRevenue._sum.price || 0,
+      totalAppointmentsValue,
+      averageAppointmentValue: Math.round(averageAppointmentValue * 100) / 100, // Round to 2 decimal places
       averageDuration: Math.round(avgDuration._avg.duration || 0),
       statusBreakdown: statusCounts.reduce(
         (acc, item) => {
@@ -1588,27 +1499,6 @@ export class AppointmentService {
         {} as Record<string, number>,
       ),
     };
-  }
-
-  private async getCancellationTrends(
-    baseWhere: Prisma.AppointmentWhereInput,
-    groupBy: string,
-    _dateRange: { start: Date; end: Date },
-    statusFilter: AppointmentStatus[],
-  ) {
-    const appointments = await prisma.appointment.findMany({
-      where: {
-        ...baseWhere,
-        status: { in: statusFilter },
-      },
-      select: {
-        startTime: true,
-        status: true,
-        cancellationReason: true,
-      },
-    });
-
-    return this.groupAppointmentsByPeriod(appointments, groupBy);
   }
 
   private async getCancellationReasons(whereConditions: Prisma.AppointmentWhereInput) {

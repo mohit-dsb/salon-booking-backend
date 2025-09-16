@@ -1,12 +1,14 @@
 import { getAuth } from "@clerk/express";
 import { AppError } from "@/middlewares/error.middleware";
 import type { Request, Response, NextFunction } from "express";
+import { MemberService } from "@/services/member.service";
 
 // Type for extended auth object
 interface AuthWithOrgId {
   orgId: string;
   [key: string]: unknown;
 }
+const memberService = new MemberService();
 
 // Extract orgId from different sources based on your needs
 export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFunction) => {
@@ -46,8 +48,20 @@ export const getAuthWithOrgId = async (req: Request): Promise<AuthWithOrgId & { 
     throw new AppError("Organization ID is required", 401);
   }
   if (!auth.userId) {
-    auth.userId = "user_31aziV2dPBBVQslwaxVZVr4ixCo";
-    // throw new AppError("User Authentication is required", 401);
+    throw new AppError("User Authentication is required", 401);
   }
+
+  const member = await memberService.getMemberByClerkId(auth.userId, auth.orgId);
+
+  if (!member) {
+    throw new AppError("Member not found in the organization", 404);
+  }
+
+  if (!member.isActive) {
+    throw new AppError("Member account is inactive. Please contact your administrator.", 403);
+  }
+
+  auth.userId = member.id;
+
   return auth;
 };

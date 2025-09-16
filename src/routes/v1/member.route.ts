@@ -9,14 +9,8 @@ import {
   memberQuerySchema,
   searchMemberSchema,
   bulkDeleteMembersSchema,
-  workingHoursActivitySchema,
-  breakActivitySchema,
   attendanceSummarySchema,
-  wagesDetailSchema,
-  wagesSummarySchema,
-  paySummarySchema,
   scheduledShiftsSchema,
-  workingHoursSummarySchema,
 } from "@/validations/member.schema";
 
 const router = Router();
@@ -56,48 +50,14 @@ router.patch("/:id/status", memberController.toggleMemberStatus);
 // Analytics and Reporting Routes
 
 /**
- * @route   GET /api/v1/members/analytics/working-hours
- * @desc    Get working hours activity analytics for team members
- * @access  Private (Admin/Member)
- */
-router.get("/analytics/working-hours", validate(workingHoursActivitySchema), memberController.getWorkingHoursActivity);
-
-/**
- * @route   GET /api/v1/members/analytics/breaks
- * @desc    Get break activity analytics for team members
- * @access  Private (Admin/Member)
- */
-router.get("/analytics/breaks", validate(breakActivitySchema), memberController.getBreakActivity);
-
-/**
  * @route   GET /api/v1/members/analytics/attendance
  * @desc    Get attendance summary analytics for team members
  * @access  Private (Admin/Member)
  */
 router.get("/analytics/attendance", validate(attendanceSummarySchema), memberController.getAttendanceSummary);
 
-/**
- * @route   GET /api/v1/members/analytics/wages/detail
- * @desc    Get detailed wages information for team members
- * @access  Private (Admin/Member)
- */
-router.get("/analytics/wages/detail", validate(wagesDetailSchema), memberController.getWagesDetail);
-
-/**
- * @route   GET /api/v1/members/analytics/wages/summary
- * @desc    Get wages summary analytics for team members
- * @access  Private (Admin/Member)
- */
-router.get("/analytics/wages/summary", validate(wagesSummarySchema), memberController.getWagesSummary);
 
 // New Analytics and Reporting Routes
-
-/**
- * @route   GET /api/v1/members/analytics/pay-summary
- * @desc    Get pay summary overview for team member compensation
- * @access  Private (Admin/Member)
- */
-router.get("/analytics/pay-summary", validate(paySummarySchema), memberController.getPaySummary);
 
 /**
  * @route   GET /api/v1/members/analytics/scheduled-shifts
@@ -105,16 +65,5 @@ router.get("/analytics/pay-summary", validate(paySummarySchema), memberControlle
  * @access  Private (Admin/Member)
  */
 router.get("/analytics/scheduled-shifts", validate(scheduledShiftsSchema), memberController.getScheduledShifts);
-
-/**
- * @route   GET /api/v1/members/analytics/working-hours-summary
- * @desc    Get working hours summary with operational hours and productivity overview
- * @access  Private (Admin/Member)
- */
-router.get(
-  "/analytics/working-hours-summary",
-  validate(workingHoursSummarySchema),
-  memberController.getWorkingHoursSummary,
-);
 
 export default router;

@@ -170,45 +170,7 @@ const analyticsBaseSchema = z.object({
   format: z.enum(["json", "csv", "excel"]).optional(),
 });
 
-// 1. Working Hours Activity Schema
-export const workingHoursActivitySchema = z.object({
-  ...analyticsBaseSchema.shape,
-
-  // Specific filters for working hours
-  includeDetails: z
-    .array(z.enum(["shiftDetails", "breakdowns", "overtime", "regularHours", "plannedVsActual", "timeTracking"]))
-    .optional(),
-
-  minHours: z.number().min(0, "Minimum hours must be positive").optional(),
-  maxHours: z.number().min(0, "Maximum hours must be positive").optional(),
-
-  shiftStatus: z
-    .array(z.enum(["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"]))
-    .optional(),
-
-  includeBreakdown: z.boolean().optional(),
-  groupBy: z.enum(["day", "week", "month", "member"]).optional(),
-});
-
-// 2. Break Activity Schema
-export const breakActivitySchema = z.object({
-  ...analyticsBaseSchema.shape,
-
-  // Specific filters for break activity
-  includeDetails: z
-    .array(z.enum(["breakDuration", "breakFrequency", "breakTypes", "adherence", "violations"]))
-    .optional(),
-
-  breakType: z.array(z.string()).optional(),
-  minBreakDuration: z.number().min(0, "Minimum break duration must be positive").optional(),
-  maxBreakDuration: z.number().min(0, "Maximum break duration must be positive").optional(),
-
-  adherenceThreshold: z.number().min(0).max(100, "Adherence threshold must be between 0-100").optional(),
-  includeViolations: z.boolean().optional(),
-  groupBy: z.enum(["day", "week", "month", "member", "breakType"]).optional(),
-});
-
-// 3. Attendance Summary Schema
+// Attendance Summary Schema
 export const attendanceSummarySchema = z.object({
   ...analyticsBaseSchema.shape,
 
@@ -230,88 +192,6 @@ export const attendanceSummarySchema = z.object({
   punctualityThreshold: z.number().min(0, "Punctuality threshold must be positive").optional(), // minutes
   includePatterns: z.boolean().optional(),
   groupBy: z.enum(["day", "week", "month", "member", "department"]).optional(),
-});
-
-// 4. Wages Detail Schema
-export const wagesDetailSchema = z.object({
-  ...analyticsBaseSchema.shape,
-
-  // Specific filters for detailed wages
-  includeComponents: z
-    .array(
-      z.enum([
-        "baseWage",
-        "overtime",
-        "commission",
-        "bonuses",
-        "deductions",
-        "netPay",
-        "grossPay",
-        "taxes",
-        "benefits",
-      ]),
-    )
-    .optional(),
-
-  minWage: z.number().min(0, "Minimum wage must be positive").optional(),
-  maxWage: z.number().min(0, "Maximum wage must be positive").optional(),
-
-  payPeriod: z.enum(["daily", "weekly", "bi-weekly", "monthly"]).optional(),
-  includeBreakdown: z.boolean().optional(),
-  includeProjections: z.boolean().optional(),
-  groupBy: z.enum(["day", "week", "month", "member", "location", "department"]).optional(),
-});
-
-// 5. Wages Summary Schema
-export const wagesSummarySchema = z.object({
-  ...analyticsBaseSchema.shape,
-
-  // Specific filters for wages summary
-  includeMetrics: z
-    .array(
-      z.enum([
-        "totalWages",
-        "averageWage",
-        "medianWage",
-        "overtimeCosts",
-        "commissionTotal",
-        "costPerHour",
-        "wageDistribution",
-      ]),
-    )
-    .optional(),
-
-  groupBy: z.enum(["department", "location", "role", "period"]).optional(),
-});
-
-// 6. Pay Summary Schema
-export const paySummarySchema = z.object({
-  ...analyticsBaseSchema.shape,
-
-  // Specific filters for pay summary
-  includeComponents: z
-    .array(
-      z.enum([
-        "totalCompensation",
-        "baseSalary",
-        "hourlyWages",
-        "overtime",
-        "commissions",
-        "bonuses",
-        "deductions",
-        "benefits",
-        "taxes",
-        "netPay",
-        "grossPay",
-      ]),
-    )
-    .optional(),
-
-  payrollPeriod: z.enum(["current", "last", "year-to-date", "custom"]).optional(),
-  includeProjections: z.boolean().optional(),
-  includeYearOverYear: z.boolean().optional(),
-  includeBenchmarks: z.boolean().optional(),
-  groupBy: z.enum(["member", "department", "role", "location", "payType"]).optional(),
 });
 
 // 7. Scheduled Shifts Schema
@@ -347,41 +227,9 @@ export const scheduledShiftsSchema = z.object({
   groupBy: z.enum(["day", "week", "month", "location", "department", "shift_type"]).optional(),
 });
 
-// 8. Working Hours Summary Schema
-export const workingHoursSummarySchema = z.object({
-  ...analyticsBaseSchema.shape,
-
-  // Specific filters for working hours summary
-  includeMetrics: z
-    .array(
-      z.enum([
-        "totalHours",
-        "regularHours",
-        "overtimeHours",
-        "productivity",
-        "utilization",
-        "efficiency",
-        "laborCost",
-        "averageHours",
-        "peakHours",
-        "idleTime",
-      ]),
-    )
-    .optional(),
-
-  hoursType: z.array(z.enum(["scheduled", "actual", "billable", "productive"])).optional(),
-  groupBy: z.enum(["day", "week", "month", "member", "department", "location", "service"]).optional(),
-});
-
 // Export type definitions for use in controllers and services
 export type CreateMemberData = z.infer<typeof createMemberSchema>;
 export type UpdateMemberData = z.infer<typeof updateMemberSchema>;
 export type BulkDeleteMembersData = z.infer<typeof bulkDeleteMembersSchema>;
-export type WorkingHoursActivityParams = z.infer<typeof workingHoursActivitySchema>;
-export type BreakActivityParams = z.infer<typeof breakActivitySchema>;
 export type AttendanceSummaryParams = z.infer<typeof attendanceSummarySchema>;
-export type WagesDetailParams = z.infer<typeof wagesDetailSchema>;
-export type WagesSummaryParams = z.infer<typeof wagesSummarySchema>;
-export type PaySummaryParams = z.infer<typeof paySummarySchema>;
 export type ScheduledShiftsParams = z.infer<typeof scheduledShiftsSchema>;
-export type WorkingHoursSummaryParams = z.infer<typeof workingHoursSummarySchema>;

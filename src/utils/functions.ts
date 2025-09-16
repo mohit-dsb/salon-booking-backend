@@ -31,4 +31,4 @@ export const reverseMapCancellationReason = (reason: CancellationReason): string
     default:
       return "No reason provided";
   }
-}
+};

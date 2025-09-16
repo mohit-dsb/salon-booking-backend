@@ -7,14 +7,8 @@ import { parsePaginationParams } from "@/utils/pagination";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
 import type {
-  WorkingHoursActivityParams,
-  BreakActivityParams,
   AttendanceSummaryParams,
-  WagesDetailParams,
-  WagesSummaryParams,
-  PaySummaryParams,
   ScheduledShiftsParams,
-  WorkingHoursSummaryParams,
   BulkDeleteMembersData,
   CreateMemberData,
   UpdateMemberData,
@@ -388,50 +382,6 @@ export const syncClerkUser = asyncHandler(async (req: Request, res: Response, _n
 // Analytics and Reporting Functions
 
 /**
- * Get working hours activity analytics for team members
- * @route GET /api/v1/members/analytics/working-hours
- * @access Private (Admin/Member)
- */
-export const getWorkingHoursActivity = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as WorkingHoursActivityParams;
-  const pagination = parsePaginationParams(req.query);
-
-  const result = await memberService.getWorkingHoursActivity(orgId, params, pagination);
-
-  res.status(200).json({
-    success: true,
-    message: "Working hours activity retrieved successfully",
-    data: result.data,
-    summary: result.summary,
-    meta: result.meta,
-    filters: params,
-  });
-});
-
-/**
- * Get break activity analytics for team members
- * @route GET /api/v1/members/analytics/breaks
- * @access Private (Admin/Member)
- */
-export const getBreakActivity = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as BreakActivityParams;
-  const pagination = parsePaginationParams(req.query);
-
-  const result = await memberService.getBreakActivity(orgId, params, pagination);
-
-  res.status(200).json({
-    success: true,
-    message: "Break activity retrieved successfully",
-    data: result.data,
-    summary: result.summary,
-    meta: result.meta,
-    filters: params,
-  });
-});
-
-/**
  * Get attendance summary analytics for team members
  * @route GET /api/v1/members/analytics/attendance
  * @access Private (Admin/Member)
@@ -453,70 +403,7 @@ export const getAttendanceSummary = asyncHandler(async (req: Request, res: Respo
   });
 });
 
-/**
- * Get detailed wages information for team members
- * @route GET /api/v1/members/analytics/wages/detail
- * @access Private (Admin/Member)
- */
-export const getWagesDetail = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as WagesDetailParams;
-  const pagination = parsePaginationParams(req.query);
-
-  const result = await memberService.getWagesDetail(orgId, params, pagination);
-
-  res.status(200).json({
-    success: true,
-    message: "Wages detail retrieved successfully",
-    data: result.data,
-    summary: result.summary,
-    meta: result.meta,
-    filters: params,
-  });
-});
-
-/**
- * Get wages summary analytics for team members
- * @route GET /api/v1/members/analytics/wages/summary
- * @access Private (Admin/Member)
- */
-export const getWagesSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as WagesSummaryParams;
-
-  const result = await memberService.getWagesSummary(orgId, params);
-
-  res.status(200).json({
-    success: true,
-    message: "Wages summary retrieved successfully",
-    data: result,
-    filters: params,
-  });
-});
-
 // New Analytics and Reporting Functions
-
-/**
- * Get pay summary overview for team member compensation
- * @route GET /api/v1/members/analytics/pay-summary
- * @access Private (Admin/Member)
- */
-export const getPaySummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as PaySummaryParams;
-  const pagination = parsePaginationParams(req.query);
-
-  const result = await memberService.getPaySummary(orgId, params, pagination);
-
-  res.status(200).json({
-    success: true,
-    message: "Pay summary retrieved successfully",
-    data: result.data,
-    meta: result.meta,
-    filters: params,
-  });
-});
-
 /**
  * Get detailed view of team members scheduled shifts
  * @route GET /api/v1/members/analytics/scheduled-shifts
@@ -532,27 +419,6 @@ export const getScheduledShifts = asyncHandler(async (req: Request, res: Respons
   res.status(200).json({
     success: true,
     message: "Scheduled shifts retrieved successfully",
-    data: result.data,
-    meta: result.meta,
-    filters: params,
-  });
-});
-
-/**
- * Get working hours summary with operational hours and productivity overview
- * @route GET /api/v1/members/analytics/working-hours-summary
- * @access Private (Admin/Member)
- */
-export const getWorkingHoursSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const params = req.query as unknown as WorkingHoursSummaryParams;
-  const pagination = parsePaginationParams(req.query);
-
-  const result = await memberService.getWorkingHoursSummary(orgId, params, pagination);
-
-  res.status(200).json({
-    success: true,
-    message: "Working hours summary retrieved successfully",
     data: result.data,
     meta: result.meta,
     filters: params,

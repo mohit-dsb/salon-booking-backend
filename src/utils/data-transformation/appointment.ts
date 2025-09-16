@@ -1,11 +1,16 @@
 import type { AppointmentStatus } from "@prisma/client";
-import { AppointmentAnalyticsData, AppointmentSummaryData } from "@/types/transformation.types";
+import {
+  AppointmentAnalyticsData,
+  AppointmentCancellationNoShowData,
+  AppointmentSummaryData,
+} from "@/types/transformation.types";
 import type {
   TableColumn,
   AppointmentTableRow,
   TableFilters,
   AppointmentAnalyticsQuery,
   AppointmentSummaryTableRow,
+  AppointmentCancellationNoShowTableRow,
 } from "@/types/table.types";
 
 const appointmentDateFormatOptions: Intl.DateTimeFormatOptions = {
@@ -184,14 +189,14 @@ export const DEFAULT_APPOINTMENT_SUMMARY_COLUMNS: TableColumn[] = [
     filterable: false,
   },
   {
-    key: "Total Clients",
+    key: "totalClients",
     label: "Total Clients",
     type: "number",
     sortable: true,
     filterable: false,
   },
   {
-    key: "New Clients",
+    key: "newClients",
     label: "New Clients",
     type: "number",
     sortable: true,
@@ -208,6 +213,37 @@ export const DEFAULT_APPOINTMENT_SUMMARY_COLUMNS: TableColumn[] = [
     key: "returningClients",
     label: "% returning Clients",
     type: "percentage",
+    sortable: true,
+    filterable: false,
+  },
+];
+
+export const DEFAULT_APPOINTMENT_CANCELLATION_NO_SHOW_COLUMNS: TableColumn[] = [
+  {
+    key: "reason",
+    label: "Reason",
+    type: "link",
+    sortable: true,
+    filterable: true,
+  },
+  {
+    key: "noOfAppointments",
+    label: "No. of Appointments",
+    type: "number",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "value",
+    label: "Value",
+    type: "currency",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "fees",
+    label: "Fees",
+    type: "currency",
     sortable: true,
     filterable: false,
   },
@@ -285,6 +321,21 @@ export const transformAppointmentsToTableData = (appointments: AppointmentAnalyt
   return appointments.map(transformAppointmentToTableRow);
 };
 
+export const transformAppointmentsCancellationNoShowToTableRow = (
+  data: AppointmentCancellationNoShowData,
+): AppointmentCancellationNoShowTableRow => ({
+  reason: data.reason || "Unspecified",
+  noOfAppointments: data.count,
+  value: data?.price || 0,
+  fees: 0,
+});
+
+export const transformAppointmentsCancellationNoShowToTableData = (
+  data: AppointmentCancellationNoShowData[],
+): AppointmentCancellationNoShowTableRow[] => {
+  return data.map(transformAppointmentsCancellationNoShowToTableRow);
+};
+
 // Get columns based on include/exclude preferences
 export const getAppointmentTableColumns = (includeFields?: string[], excludeFields?: string[]): TableColumn[] => {
   let columns = [...DEFAULT_APPOINTMENT_COLUMNS];
@@ -305,6 +356,23 @@ export const getAppointmentSummaryTableColumns = (
   excludeFields?: string[],
 ): TableColumn[] => {
   let columns = [...DEFAULT_APPOINTMENT_SUMMARY_COLUMNS];
+
+  if (excludeFields?.length) {
+    columns = columns.filter((col) => !excludeFields.includes(col.key));
+  }
+
+  if (includeFields?.length) {
+    columns = columns.filter((col) => includeFields.includes(col.key));
+  }
+
+  return columns;
+};
+
+export const getAppointmentCancellationNoShowColumns = (
+  includeFields?: string[],
+  excludeFields?: string[],
+): TableColumn[] => {
+  let columns = [...DEFAULT_APPOINTMENT_CANCELLATION_NO_SHOW_COLUMNS];
 
   if (excludeFields?.length) {
     columns = columns.filter((col) => !excludeFields.includes(col.key));

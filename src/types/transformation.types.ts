@@ -86,3 +86,9 @@ export interface AppointmentSummaryData {
     categoryId?: string;
   };
 }
+
+export interface AppointmentCancellationNoShowData {
+  reason: string;
+  count: number;
+  price: number | null;
+}

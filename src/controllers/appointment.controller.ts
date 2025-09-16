@@ -7,12 +7,19 @@ import { asyncHandler, AppError } from "@/middlewares/error.middleware";
 import type {
   AppointmentListParams,
   CancelAppointmentData,
+  CancellationNoShowParams,
   ConvertWalkInAppointmentData,
   CreateAppointmentData,
   RescheduleAppointmentData,
   UpdateAppointmentData,
 } from "@/validations/appointment.schema";
-import type { TableResponse, AppointmentTableRow, AppointmentAnalyticsQuery, AppointmentSummaryTableRow } from "@/types/table.types";
+import type {
+  TableResponse,
+  AppointmentTableRow,
+  AppointmentAnalyticsQuery,
+  AppointmentSummaryTableRow,
+  AppointmentCancellationNoShowTableRow,
+} from "@/types/table.types";
 import {
   transformAppointmentsToTableData,
   getAppointmentTableColumns,
@@ -20,6 +27,8 @@ import {
   extractAppliedAppointmentFilters,
   getAppointmentSummaryTableColumns,
   transformAppointmentSummariesToTableData,
+  getAppointmentCancellationNoShowColumns,
+  transformAppointmentsCancellationNoShowToTableData,
 } from "@/utils/data-transformation/appointment";
 import { reverseMapCancellationReason } from "@/utils/functions";
 
@@ -390,17 +399,24 @@ export class AppointmentController {
 
   /**
    * Get cancellations and no-shows analytics
-   * Insights into appointment cancellations and no-shows with patterns
+   * Insights into appointment cancellations and no-shows
    */
   public getCancellationNoShowAnalytics = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId } = await getAuthWithOrgId(req);
-    const params = req.query;
+    const params = req.parsedQuery as CancellationNoShowParams;
 
     const analytics = await this.appointmentService.getCancellationNoShowAnalytics(orgId, params);
+    const tableData = transformAppointmentsCancellationNoShowToTableData(analytics.reasons);
+    const columns = getAppointmentCancellationNoShowColumns();
+
+    const response: TableResponse<AppointmentCancellationNoShowTableRow> = {
+      tableData,
+      columns,
+    };
 
     res.status(200).json({
       success: true,
-      data: analytics,
+      data: response,
       message: "Cancellation and no-show analytics retrieved successfully",
     });
   });

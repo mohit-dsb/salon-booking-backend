@@ -7,6 +7,7 @@ import type { PaginationParams } from "@/utils/pagination";
 import type { Appointment, AppointmentStatus, Prisma } from "@prisma/client";
 import type {
   AppointmentListParams,
+  CancellationNoShowParams,
   CreateAppointmentData,
   UpdateAppointmentData,
 } from "@/validations/appointment.schema";
@@ -1269,7 +1270,7 @@ export class AppointmentService {
   /**
    * Get cancellations and no-shows analytics
    */
-  async getCancellationNoShowAnalytics(orgId: string, params: Record<string, unknown>) {
+  async getCancellationNoShowAnalytics(orgId: string, params: CancellationNoShowParams) {
     try {
       const { startDate, endDate, period, memberId, serviceId, categoryId } = params;
 

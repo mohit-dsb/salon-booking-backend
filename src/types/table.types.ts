@@ -57,6 +57,13 @@ export interface AppointmentSummaryTableRow {
   returningClients: number;
 }
 
+export interface AppointmentCancellationNoShowTableRow {
+  reason: string;
+  noOfAppointments: number;
+  value: number;
+  fees: number;
+}
+
 export interface ClientTableRow {
   client: {
     id: string;

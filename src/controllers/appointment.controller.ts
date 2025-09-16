@@ -1,5 +1,5 @@
 import type { AppointmentStatus } from "@prisma/client";
-import { parsePaginationParams } from "@/utils/pagination";
+import { PaginationQuery, parsePaginationParams } from "@/utils/pagination";
 import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppointmentService } from "@/services/appointment.service";
@@ -12,12 +12,14 @@ import type {
   RescheduleAppointmentData,
   UpdateAppointmentData,
 } from "@/validations/appointment.schema";
-import type { TableResponse, AppointmentTableRow, AppointmentAnalyticsQuery } from "@/types/table.types";
+import type { TableResponse, AppointmentTableRow, AppointmentAnalyticsQuery, AppointmentSummaryTableRow } from "@/types/table.types";
 import {
   transformAppointmentsToTableData,
   getAppointmentTableColumns,
   generateAppointmentFilters,
   extractAppliedAppointmentFilters,
+  getAppointmentSummaryTableColumns,
+  transformAppointmentSummariesToTableData,
 } from "@/utils/data-transformation/appointment";
 import { reverseMapCancellationReason } from "@/utils/functions";
 
@@ -55,53 +57,13 @@ export class AppointmentController {
   // Get all appointments with pagination and filters
   public getAllAppointments = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId } = await getAuthWithOrgId(req);
-    const pagination = parsePaginationParams(req.query);
+    const pagination = parsePaginationParams(req.parsedQuery as PaginationQuery);
 
-    // Extract filters from query parameters (validated by middleware)
-    const filters: {
-      clientId?: string;
-      memberId?: string;
-      serviceId?: string;
-      status?: AppointmentStatus;
-      startDate?: string;
-      endDate?: string;
-      search?: string;
-      isWalkIn?: boolean;
-    } = {};
-
-    if (req.query.clientId) {
-      filters.clientId = req.query.clientId as string;
-    }
-
-    if (req.query.memberId) {
-      filters.memberId = req.query.memberId as string;
-    }
-
-    if (req.query.serviceId) {
-      filters.serviceId = req.query.serviceId as string;
-    }
-
-    if (req.query.status) {
-      filters.status = req.query.status as AppointmentStatus;
-    }
-
-    if (req.query.startDate) {
-      filters.startDate = req.query.startDate as string;
-    }
-
-    if (req.query.endDate) {
-      filters.endDate = req.query.endDate as string;
-    }
-
-    if (req.query.search) {
-      filters.search = req.query.search as string;
-    }
-
-    if (req.query.isWalkIn !== undefined) {
-      filters.isWalkIn = req.query.isWalkIn === "true";
-    }
-
-    const result = await this.appointmentService.getAllAppointments(orgId, pagination, filters);
+    const result = await this.appointmentService.getAllAppointments(
+      orgId,
+      pagination,
+      req.parsedQuery as AppointmentListParams,
+    );
 
     res.status(200).json({
       success: true,
@@ -340,13 +302,22 @@ export class AppointmentController {
    */
   public getAppointmentSummary = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const { orgId } = await getAuthWithOrgId(req);
-    const params = req.query;
+    const params = req.parsedQuery as AppointmentListParams;
 
     const summary = await this.appointmentService.getAppointmentSummary(orgId, params);
 
+    // Transform data for UI consumption
+    const tableData = transformAppointmentSummariesToTableData([summary]);
+    const columns = getAppointmentSummaryTableColumns();
+
+    const response: TableResponse<AppointmentSummaryTableRow> = {
+      tableData,
+      columns,
+    };
+
     res.status(200).json({
       success: true,
-      data: summary,
+      data: response,
       message: "Appointment summary retrieved successfully",
     });
   });

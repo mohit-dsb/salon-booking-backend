@@ -12,9 +12,9 @@ interface AuthWithOrgId {
 export const requireAuthWithOrgId = (req: Request, _res: Response, next: NextFunction) => {
   const auth = getAuth(req);
 
-  // if (!auth.isAuthenticated) {
-  //   return next(new AppError("Authentication required", 401));
-  // }
+  if (!auth.isAuthenticated) {
+    return next(new AppError("Authentication required", 401));
+  }
 
   // Method 1: From environment (single tenant):TODO REMOVE THIS VARIABLE IN PRODUCTION
   let orgId = process.env.ORG_ID || null;
@@ -46,8 +46,7 @@ export const getAuthWithOrgId = async (req: Request): Promise<AuthWithOrgId & { 
     throw new AppError("Organization ID is required", 401);
   }
   if (!auth.userId) {
-    auth.userId = "user_31aziV2dPBBVQslwaxVZVr4ixCo";
-    // throw new AppError("User Authentication is required", 401);
+    throw new AppError("User Authentication is required", 401);
   }
   return auth;
 };

@@ -5,7 +5,11 @@ import { handleError } from "@/utils/errorHandler";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
 import type { Appointment, AppointmentStatus, Prisma } from "@prisma/client";
-import type { CreateAppointmentData, UpdateAppointmentData } from "@/validations/appointment.schema";
+import type {
+  AppointmentListParams,
+  CreateAppointmentData,
+  UpdateAppointmentData,
+} from "@/validations/appointment.schema";
 import { cancellationReasonsEnum } from "@/validations/appointment.schema";
 import { mapCancellationReason, reverseMapCancellationReason } from "@/utils/functions";
 
@@ -387,7 +391,7 @@ export class AppointmentService {
   public async getAllAppointments(
     orgId: string,
     pagination: PaginationParams,
-    filters: AppointmentFilters = {},
+    filters: AppointmentListParams,
   ): Promise<{
     appointments: AppointmentWithDetails[];
     pagination: {
@@ -1028,7 +1032,7 @@ export class AppointmentService {
   /**
    * Get appointment summary analytics with patterns
    */
-  async getAppointmentSummary(orgId: string, params: Record<string, unknown>) {
+  async getAppointmentSummary(orgId: string, params: AppointmentListParams) {
     try {
       const { startDate, endDate, period, memberId, serviceId, categoryId } = params;
 

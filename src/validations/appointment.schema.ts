@@ -118,21 +118,12 @@ export const analyticsBaseSchema = z.object({
 
 // Base appointment list schema without transformation
 export const appointmentListSchema = analyticsBaseSchema.extend({
-  status: z
-    .union([
-      z.array(z.enum(["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"])),
-      z
-        .string()
-        .transform((val) =>
-          val
-            .split(",")
-            .map((s) => s.trim() as "SCHEDULED" | "CONFIRMED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "NO_SHOW"),
-        ),
-    ])
-    .optional(),
+  status: z.enum(["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"]).optional(),
   isWalkIn: z.enum(["true", "false"]).optional(),
   sortBy: z.enum(["startTime", "createdAt", "revenue", "member", "service"]).optional().default("startTime"),
   sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+  clientId: z.string().optional(),
+  search: z.string().optional(),
   ...paginationQuerySchema.shape,
 });
 

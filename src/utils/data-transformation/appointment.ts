@@ -1,6 +1,12 @@
 import type { AppointmentStatus } from "@prisma/client";
-import { AppointmentAnalyticsData } from "@/types/transformation.types";
-import type { TableColumn, AppointmentTableRow, TableFilters, AppointmentAnalyticsQuery } from "@/types/table.types";
+import { AppointmentAnalyticsData, AppointmentSummaryData } from "@/types/transformation.types";
+import type {
+  TableColumn,
+  AppointmentTableRow,
+  TableFilters,
+  AppointmentAnalyticsQuery,
+  AppointmentSummaryTableRow,
+} from "@/types/table.types";
 
 const appointmentDateFormatOptions: Intl.DateTimeFormatOptions = {
   year: "numeric",
@@ -113,6 +119,100 @@ export const DEFAULT_APPOINTMENT_COLUMNS: TableColumn[] = [
   },
 ];
 
+export const DEFAULT_APPOINTMENT_SUMMARY_COLUMNS: TableColumn[] = [
+  {
+    key: "Location",
+    label: "Location",
+    type: "text",
+    sortable: true,
+    filterable: true,
+  },
+  {
+    key: "appointments",
+    label: "Appointments",
+    type: "number",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "services",
+    label: "Services",
+    type: "number",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "requested",
+    label: "Requested",
+    type: "number",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "totalAppointmentValue",
+    label: "Total appt. value",
+    type: "currency",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "averageAppointmentValue",
+    label: "Avg. appt. value",
+    type: "currency",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "online",
+    label: "% online",
+    type: "percentage",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "cancelled",
+    label: "% cancelled",
+    type: "percentage",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "noShow",
+    label: "% no show",
+    type: "percentage",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "Total Clients",
+    label: "Total Clients",
+    type: "number",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "New Clients",
+    label: "New Clients",
+    type: "number",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "newClientsRate",
+    label: "% new clients",
+    type: "percentage",
+    sortable: true,
+    filterable: false,
+  },
+  {
+    key: "returningClients",
+    label: "% returning Clients",
+    type: "percentage",
+    sortable: true,
+    filterable: false,
+  },
+];
+
 // Transform raw appointment data to table rows
 export const transformAppointmentToTableRow = (appointment: AppointmentAnalyticsData): AppointmentTableRow => ({
   id: appointment.id,
@@ -158,6 +258,28 @@ export const transformAppointmentToTableRow = (appointment: AppointmentAnalytics
   notes: appointment.notes || appointment.internalNotes || "",
 });
 
+export const transformAppointmentSummaryToTableRow = (summary: AppointmentSummaryData): AppointmentSummaryTableRow => ({
+  location: "-",
+  appointments: summary.overview.totalAppointments,
+  services: summary.overview.totalServices,
+  totalAppointmentValue: summary.values.totalAppointmentsValue,
+  averageAppointmentValue: summary.values.averageAppointmentValue,
+  requested: 0,
+  online: 0,
+  cancelled: summary.rates.cancellationRate,
+  noShow: summary.rates.noShowRate,
+  totalClients: summary.overview.totalClients,
+  newClients: summary.overview.newClients,
+  newClientsRate: summary.rates.newClientsRate,
+  returningClients: summary.rates.returningClientsRate,
+});
+
+export const transformAppointmentSummariesToTableData = (
+  summaries: AppointmentSummaryData[],
+): AppointmentSummaryTableRow[] => {
+  return summaries.map(transformAppointmentSummaryToTableRow);
+};
+
 // Transform multiple appointments to table data
 export const transformAppointmentsToTableData = (appointments: AppointmentAnalyticsData[]): AppointmentTableRow[] => {
   return appointments.map(transformAppointmentToTableRow);
@@ -166,6 +288,23 @@ export const transformAppointmentsToTableData = (appointments: AppointmentAnalyt
 // Get columns based on include/exclude preferences
 export const getAppointmentTableColumns = (includeFields?: string[], excludeFields?: string[]): TableColumn[] => {
   let columns = [...DEFAULT_APPOINTMENT_COLUMNS];
+
+  if (excludeFields?.length) {
+    columns = columns.filter((col) => !excludeFields.includes(col.key));
+  }
+
+  if (includeFields?.length) {
+    columns = columns.filter((col) => includeFields.includes(col.key));
+  }
+
+  return columns;
+};
+
+export const getAppointmentSummaryTableColumns = (
+  includeFields?: string[],
+  excludeFields?: string[],
+): TableColumn[] => {
+  let columns = [...DEFAULT_APPOINTMENT_SUMMARY_COLUMNS];
 
   if (excludeFields?.length) {
     columns = columns.filter((col) => !excludeFields.includes(col.key));

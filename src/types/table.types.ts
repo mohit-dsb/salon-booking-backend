@@ -4,7 +4,7 @@ import type { AppointmentStatus } from "@prisma/client";
 export interface TableColumn {
   key: string;
   label: string;
-  type: "text" | "date" | "number" | "status" | "currency" | "boolean" | "link";
+  type: "text" | "date" | "number" | "status" | "currency" | "boolean" | "link" | "percentage";
   sortable: boolean;
   filterable: boolean;
   format?: (value: unknown) => string;
@@ -39,6 +39,22 @@ export interface AppointmentTableRow {
     name: string;
   };
   cancelledAt?: string;
+}
+
+export interface AppointmentSummaryTableRow {
+  location:string;
+  appointments: number;
+  services: number;
+  requested:number;
+  totalAppointmentValue: number;
+  averageAppointmentValue: number;
+  online: number;
+  cancelled: number;
+  noShow: number;
+  totalClients: number;
+  newClients: number;
+  newClientsRate: number;
+  returningClients: number;
 }
 
 export interface ClientTableRow {
@@ -95,12 +111,12 @@ export interface TableMetadata {
 }
 
 // Complete table response structure
-export interface TableResponse<T = AppointmentTableRow> {
+export interface TableResponse<T> {
   tableData: T[];
   columns: TableColumn[];
-  pagination: TablePagination;
+  pagination?: TablePagination;
   filters?: TableFilters;
-  metadata: TableMetadata;
+  metadata?: TableMetadata;
 }
 
 // Query parameters for analytics

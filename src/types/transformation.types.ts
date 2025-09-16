@@ -51,3 +51,38 @@ export interface AppointmentAnalyticsData {
     } | null;
   } | null;
 }
+
+export interface AppointmentSummaryData {
+  period: {
+    start: Date;
+    end: Date;
+    label: string;
+  };
+  overview: {
+    totalAppointments: number;
+    totalServices: number;
+    completedAppointments: number;
+    cancelledAppointments: number;
+    noShowAppointments: number;
+    walkInAppointments: number;
+    totalClients: number;
+    newClients: number;
+  };
+  rates: {
+    cancellationRate: number;
+    noShowRate: number;
+    completionRate: number;
+    walkInRate: number;
+    newClientsRate: number;
+    returningClientsRate: number;
+  };
+  values: {
+    totalAppointmentsValue: number;
+    averageAppointmentValue: number;
+  };
+  filters: {
+    memberId?: string;
+    serviceId?: string;
+    categoryId?: string;
+  };
+}

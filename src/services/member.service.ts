@@ -275,22 +275,10 @@ export class MemberService {
       throw new AppError("Clerk ID is required", 400);
     }
 
-    // Check cache first
-    const cacheKey = this.getMemberByClerkIdCacheKey(clerkId, orgId);
-    const cached = await cacheService.get<MemberWithServices | null>(cacheKey);
-
-    if (cached !== undefined) {
-      return cached;
-    }
-
     const member = await prisma.member.findUnique({
       where: { clerkId, orgId },
       include: this.memberInclude,
     });
-
-    // // Cache the result for 1 hour (cache null results with shorter TTL)
-    const ttl = member ? 3600 : 300; // 5 minutes for null results
-    await cacheService.set(cacheKey, member, ttl);
 
     return member;
   }

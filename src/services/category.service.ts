@@ -256,43 +256,4 @@ export class CategoryService {
 
     return category;
   }
-
-  // Count categories in organization
-  public async countCategories(orgId: string): Promise<number> {
-    return await prisma.category.count({
-      where: { orgId },
-    });
-  }
-
-  // Search categories by name within organization
-  public async searchCategories(searchTerm: string, orgId: string): Promise<Category[]> {
-    const normalizedSearchTerm = searchTerm.toLowerCase().trim();
-    const cacheKey = `category:${orgId}:search:${normalizedSearchTerm}`;
-
-    // Try to get from cache first
-    const cached = await cacheService.get<Category[]>(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    // If not in cache, fetch from database
-    const categories = await prisma.category.findMany({
-      where: {
-        orgId,
-        name: {
-          contains: searchTerm,
-          mode: "insensitive",
-        },
-      },
-      include: {
-        services: true,
-      },
-      orderBy: { name: "asc" },
-    });
-
-    // Cache the result for 30 minutes (shorter TTL for search results)
-    await cacheService.set(cacheKey, categories, 1800);
-
-    return categories;
-  }
 }

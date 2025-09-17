@@ -81,7 +81,6 @@ export const checkAvailabilitySchema = z.object({
 export type CreateAppointmentData = z.infer<typeof createAppointmentSchema>;
 export type ConvertWalkInAppointmentData = z.infer<typeof convertWalkInAppointmentSchema>;
 export type UpdateAppointmentData = z.infer<typeof updateAppointmentSchema>;
-export type AppointmentQueryParams = z.infer<typeof appointmentQuerySchema>;
 export type RescheduleAppointmentData = z.infer<typeof rescheduleAppointmentSchema>;
 export type CancelAppointmentData = z.infer<typeof cancelAppointmentSchema>;
 export type CheckAvailabilityData = z.infer<typeof checkAvailabilitySchema>;

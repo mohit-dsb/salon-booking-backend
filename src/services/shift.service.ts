@@ -4,8 +4,6 @@ import { createPaginatedResponse } from "@/utils/pagination";
 import type { PaginatedResponse } from "@/utils/pagination";
 import type { Prisma, ShiftStatus } from "@prisma/client";
 import type {
-  CreateShiftData,
-  UpdateShiftData,
   ShiftFilters,
   ShiftWithDetails,
   WeeklySchedule,
@@ -14,6 +12,7 @@ import type {
   RecurringShiftOptions,
   BreakPeriod,
 } from "@/types/shift.types";
+import type { CreateShiftData, UpdateShiftData } from "@/validations/shift.schema";
 
 class ShiftService {
   private prisma = prisma;

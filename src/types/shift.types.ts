@@ -1,30 +1,5 @@
 // Shift type definitions and interfaces
 
-export interface CreateShiftData {
-  memberId: string;
-  date: string; // YYYY-MM-DD format
-  startTime: string; // HH:MM format
-  endTime: string; // HH:MM format
-  title?: string;
-  description?: string;
-  color?: string;
-  breaks?: BreakPeriod[];
-  isRecurring?: boolean;
-  recurrencePattern?: "DAILY" | "WEEKLY" | "BI_WEEKLY" | "MONTHLY" | "CUSTOM";
-  parentShiftId?: string;
-}
-
-export interface UpdateShiftData {
-  date?: string;
-  startTime?: string;
-  endTime?: string;
-  title?: string;
-  description?: string;
-  color?: string;
-  status?: "SCHEDULED" | "CONFIRMED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
-  breaks?: BreakPeriod[];
-}
-
 export interface BreakPeriod {
   startTime: string; // HH:MM format
   endTime: string; // HH:MM format

@@ -1,64 +1,6 @@
+import { extractClerkErrorMessage, isClerkError } from "./errorHandler";
 import { logger } from "./logger";
 import { AppError } from "@/middlewares/error.middleware";
-
-/**
- * Interface for Clerk error structure
- */
-interface ClerkErrorDetails {
-  code?: string;
-  message?: string;
-  longMessage?: string;
-  meta?: Record<string, unknown>;
-}
-
-interface ClerkAPIError {
-  status?: number;
-  name?: string;
-  message?: string;
-  errors?: ClerkErrorDetails[];
-  clerkTraceId?: string;
-}
-
-/**
- * Extracts meaningful error messages from Clerk API errors
- * @param error - The error object from Clerk API
- * @returns Processed error message
- */
-function extractClerkErrorMessage(error: ClerkAPIError): string {
-  const clerkErrors = error?.errors;
-
-  if (clerkErrors && Array.isArray(clerkErrors) && clerkErrors.length > 0) {
-    // Extract the most relevant error message
-    const primaryError = clerkErrors[0];
-
-    if (primaryError?.longMessage) {
-      return primaryError.longMessage;
-    } else if (primaryError?.message) {
-      return primaryError.message;
-    }
-  }
-
-  // Fallback to main error message if available and meaningful
-  if (error?.message && error.message !== "Unprocessable Entity") {
-    return error.message;
-  }
-
-  return "An error occurred with the authentication service";
-}
-
-/**
- * Determines if an error is a Clerk API error
- * @param error - The error to check
- * @returns True if it's a Clerk error
- */
-function isClerkError(error: unknown): error is ClerkAPIError {
-  const typedError = error as ClerkAPIError;
-  return (
-    (typeof typedError?.status === "number" && typedError.status >= 400) ||
-    typedError?.name === "ClerkAPIError" ||
-    Array.isArray(typedError?.errors)
-  );
-}
 
 /**
  * Handles Clerk API errors and converts them to appropriate AppErrors
@@ -98,7 +40,7 @@ export function handleClerkError(error: unknown, context: string, fallbackMessag
       statusCode = 404; // Not found
     }
 
-    throw new AppError(errorMessage, statusCode);
+    throw new AppError(errorMessage.message, statusCode);
   }
 
   // Handle non-Clerk errors

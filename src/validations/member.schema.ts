@@ -114,12 +114,6 @@ export const bulkDeleteMembersSchema = z.object({
     .max(5, "Cannot delete more than 5 members at once"),
 });
 
-export const inviteMemberSchema = z.object({
-  ...baseUserFields,
-  jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
-  serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
-});
-
 // Query parameter validation schemas
 export const memberQuerySchema = z.object({
   page: z.string().regex(/^\d+$/, "Page must be a number").optional(),
@@ -135,13 +129,6 @@ export const searchMemberSchema = z.object({
   limit: z.string().regex(/^\d+$/, "Limit must be a number").optional(),
 });
 
-export const memberParamsSchema = z.object({
-  id: z.string().min(1, "Member ID is required"),
-});
-
-export const serviceParamsSchema = z.object({
-  serviceId: z.string().min(1, "Service ID is required"),
-});
 
 // Analytics and Reporting Validation Schemas
 

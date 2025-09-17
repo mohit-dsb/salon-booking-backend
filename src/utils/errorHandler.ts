@@ -33,7 +33,7 @@ interface StandardErrorResponse {
 /**
  * Extracts meaningful error messages from Clerk API errors
  */
-function extractClerkErrorMessage(error: ClerkAPIError): StandardErrorResponse {
+export function extractClerkErrorMessage(error: ClerkAPIError): StandardErrorResponse {
   const clerkErrors = error?.errors;
 
   if (clerkErrors && Array.isArray(clerkErrors) && clerkErrors.length > 0) {
@@ -157,7 +157,7 @@ function handlePrismaError(error: Prisma.PrismaClientKnownRequestError): Standar
 /**
  * Determines if an error is a Clerk API error
  */
-function isClerkError(error: unknown): error is ClerkAPIError {
+export function isClerkError(error: unknown): error is ClerkAPIError {
   const typedError = error as ClerkAPIError;
   return (
     (typeof typedError?.status === "number" && typedError.status >= 400) ||

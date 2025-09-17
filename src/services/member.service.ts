@@ -17,36 +17,6 @@ import type {
 } from "@/validations/member.schema";
 
 // Type definitions for better type safety
-export interface WorkingHours {
-  [key: string]:
-    | {
-        isWorking: boolean;
-        startTime?: string;
-        endTime?: string;
-        breaks?: Array<{
-          startTime: string;
-          endTime: string;
-        }>;
-      }
-    | undefined;
-}
-
-export interface Address {
-  [key: string]: string | undefined;
-  street?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  country?: string;
-}
-
-export interface EmergencyContact {
-  [key: string]: string | undefined;
-  name: string;
-  relationship: string;
-  phone: string;
-  email?: string;
-}
 
 export interface MemberWithServices extends Member {
   memberServices: (PrismaMemberService & {

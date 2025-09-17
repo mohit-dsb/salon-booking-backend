@@ -52,8 +52,6 @@ export const validate = (schema: z.ZodSchema) => {
           } else {
             message = `${fieldName} must be no more than ${firstIssue.maximum}`;
           }
-        } else if (originalMessage.includes("email")) {
-          message = `${fieldName} must be a valid email address`;
         } else if (originalMessage.includes("url")) {
           message = `${fieldName} must be a valid URL`;
         } else if (firstIssue.code === "custom") {

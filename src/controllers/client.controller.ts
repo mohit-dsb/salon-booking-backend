@@ -3,9 +3,9 @@ import { parsePaginationParams } from "@/utils/pagination";
 import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
+import { ClientTableRow, TableResponse } from "@/types/table.types";
 import type { ClientListAnalyticsParams, UpdateClientData, CreateClientData } from "@/validations/client.schema";
 import { getClientTableColumns, transformClientsReportToTableData } from "@/utils/data-transformation/clients";
-import { ClientTableRow, TableResponse } from "@/types/table.types";
 
 // Create service instance
 const clientService = new ClientService();

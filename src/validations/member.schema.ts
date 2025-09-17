@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 // Role enum
 export const roleEnum = z.enum(["ADMIN", "MEMBER"]);
@@ -128,7 +128,6 @@ export const searchMemberSchema = z.object({
   page: z.string().regex(/^\d+$/, "Page must be a number").optional(),
   limit: z.string().regex(/^\d+$/, "Limit must be a number").optional(),
 });
-
 
 // Analytics and Reporting Validation Schemas
 

@@ -27,14 +27,3 @@ export const securityMiddlewares = [
     legacyHeaders: false,
   }),
 ];
-
-// Stricter rate limit for authentication endpoints
-export const authRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
-  message: {
-    error: "Too many authentication attempts",
-    retryAfter: 900,
-  },
-  skipSuccessfulRequests: true,
-});

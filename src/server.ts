@@ -1,4 +1,3 @@
-import "reflect-metadata";
 import { app } from "./app";
 import { logger } from "@/utils/logger";
 import { env } from "@/config/environment";

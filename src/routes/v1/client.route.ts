@@ -2,8 +2,7 @@ import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
 import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import * as clientController from "@/controllers/client.controller";
-import { paginationQuerySchema } from "@/validations/pagination.schema";
-import { createClientSchema, updateClientSchema, clientListAnalyticsSchema } from "@/validations/client.schema";
+import { createClientSchema, updateClientSchema, clientListAnalyticsSchema, getAllClientsSchema } from "@/validations/client.schema";
 
 const router = Router();
 
@@ -22,7 +21,7 @@ router.post("/", validate(createClientSchema), clientController.createClient);
  * @desc    Get all clients with pagination and search
  * @access  Private (Member)
  */
-router.get("/", validate(paginationQuerySchema), clientController.getAllClients);
+router.get("/", validate(getAllClientsSchema), clientController.getAllClients);
 
 /**
  * @route   GET /api/v1/clients/:id

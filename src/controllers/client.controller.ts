@@ -4,7 +4,7 @@ import type { Request, Response, NextFunction } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { asyncHandler, AppError } from "@/middlewares/error.middleware";
 import { ClientTableRow, TableResponse } from "@/types/table.types";
-import type { ClientListAnalyticsParams, UpdateClientData, CreateClientData } from "@/validations/client.schema";
+import type { ClientListAnalyticsParams, UpdateClientData, CreateClientData, GetAllClientsParams } from "@/validations/client.schema";
 import { getClientTableColumns, transformClientsReportToTableData } from "@/utils/data-transformation/clients";
 
 // Create service instance
@@ -38,18 +38,7 @@ export const getAllClients = asyncHandler(async (req: Request, res: Response, _n
   const pagination = parsePaginationParams(req.query);
 
   // Extract filters from query parameters (validated by middleware)
-  const filters: {
-    isActive?: boolean;
-    search?: string;
-  } = {};
-
-  if (req.query.isActive !== undefined) {
-    filters.isActive = req.query.isActive === "true";
-  }
-
-  if (req.query.search) {
-    filters.search = req.query.search as string;
-  }
+  const filters = req.parsedQuery as GetAllClientsParams
 
   const result = await clientService.getAllClients(orgId, pagination, filters);
 

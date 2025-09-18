@@ -134,7 +134,7 @@ export class MemberService {
           clerkClient.users.createUser({
             emailAddress: [data.email],
             username: data.username,
-            password: "SecureTemp@2024!", // Secure temporary password - user will be invited to change it
+            password: "SecureTemp@2024!", // Secure temporary password
           }),
         "createUser",
         "Failed to create user account",

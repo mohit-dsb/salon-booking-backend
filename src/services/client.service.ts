@@ -5,12 +5,12 @@ import { Client, Prisma } from "@prisma/client";
 import { handleError } from "@/utils/errorHandler";
 import { AppError } from "@/middlewares/error.middleware";
 import type { PaginationParams } from "@/utils/pagination";
-import type { ClientListAnalyticsParams, CreateClientData, UpdateClientData } from "@/validations/client.schema";
-
-export interface ClientFilters {
-  search?: string;
-  isActive?: boolean;
-}
+import type {
+  ClientListAnalyticsParams,
+  CreateClientData,
+  GetAllClientsParams,
+  UpdateClientData,
+} from "@/validations/client.schema";
 
 export interface ClientWithAppointments extends Client {
   appointments?: Array<{
@@ -21,6 +21,10 @@ export interface ClientWithAppointments extends Client {
       name: string;
     };
   }>;
+}
+
+export interface ClientWithTotalSpent extends Client {
+  totalSpent: number;
 }
 export class ClientService {
   private readonly CACHE_TTL = 3600; // 1 hour
@@ -184,9 +188,9 @@ export class ClientService {
   public async getAllClients(
     orgId: string,
     pagination: PaginationParams,
-    filters: ClientFilters = {},
+    filters: GetAllClientsParams,
   ): Promise<{
-    clients: Client[];
+    clients: ClientWithTotalSpent[];
     pagination: {
       total: number;
       pages: number;
@@ -205,7 +209,7 @@ export class ClientService {
 
     // Define result type
     type ClientListResult = {
-      clients: Client[];
+      clients: ClientWithTotalSpent[];
       pagination: {
         total: number;
         pages: number;
@@ -250,15 +254,31 @@ export class ClientService {
       ];
     }
 
-    const [clients, total] = await Promise.all([
+    const [clientsData, total] = await Promise.all([
       prisma.client.findMany({
         where,
         skip: offset,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy: { [filters.sortBy]: `${filters.sortOrder}` },
+        include: {
+          appointments: {
+            where: {
+              status: "COMPLETED",
+            },
+            select: {
+              price: true,
+            },
+          },
+        },
       }),
       prisma.client.count({ where }),
     ]);
+
+    // Calculate total spent for each client
+    const clients: ClientWithTotalSpent[] = clientsData.map((client) => ({
+      ...client,
+      totalSpent: client.appointments.reduce((sum, appointment) => sum + appointment.price, 0),
+    }));
 
     const result = {
       clients,

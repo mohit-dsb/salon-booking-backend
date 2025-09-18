@@ -39,6 +39,15 @@ export const createClientSchema = z.object({
 });
 
 export const updateClientSchema = createClientSchema.partial();
+
+export const getAllClientsSchema = z.object({
+  ...paginationQuerySchema.shape,
+  search: z.string().max(100).optional(),
+  isActive: z.boolean().optional(),
+  sortBy: z.enum(["firstName", "lastName", "createdAt"]).default("createdAt"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
+});
+
 // Analytics validation schemas
 const analyticsBaseSchema = z.object({
   startDate: z.iso.datetime().optional(),
@@ -62,6 +71,7 @@ export const clientListAnalyticsSchema = z.object({
 
 export type CreateClientData = z.infer<typeof createClientSchema>;
 export type UpdateClientData = z.infer<typeof updateClientSchema>;
+export type GetAllClientsParams = z.infer<typeof getAllClientsSchema>;
 
 // Analytics types
 export type ClientListAnalyticsParams = z.infer<typeof clientListAnalyticsSchema>;

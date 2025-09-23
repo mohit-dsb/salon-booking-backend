@@ -92,7 +92,7 @@ export class ClientService {
       // Basic optional fields
       if (data.phone) createData.phone = data.phone.trim();
       if (data.dateOfBirth) createData.dateOfBirth = this.parseDate(data.dateOfBirth);
-      if (data.address) createData.address = data.address as Prisma.InputJsonValue;
+      if (data.addresses && data.addresses.length > 0) createData.addresses = data.addresses;
 
       // Additional info fields
       if (data.clientSource === "Walk-in") {

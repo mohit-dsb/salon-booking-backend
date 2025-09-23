@@ -42,10 +42,10 @@ export interface AppointmentTableRow {
 }
 
 export interface AppointmentSummaryTableRow {
-  location:string;
+  location: string;
   appointments: number;
   services: number;
-  requested:number;
+  requested: number;
   totalAppointmentValue: number;
   averageAppointmentValue: number;
   online: number;

@@ -3,6 +3,16 @@ import { z } from "zod";
 // Role enum
 export const roleEnum = z.enum(["ADMIN", "MEMBER"]);
 
+const addressSchema = z.object({
+  street: z.string().optional(),
+  district: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postcode: z.string().optional(),
+  country: z.string().optional(),
+  addressType: z.string().optional(), // e.g., Home, Work
+});
+
 // Day working hours schema (reusable for all days)
 const dayWorkingHoursSchema = z
   .object({
@@ -35,15 +45,6 @@ const workingHoursSchema = z.object({
   friday: dayWorkingHoursSchema,
   saturday: dayWorkingHoursSchema,
   sunday: dayWorkingHoursSchema,
-});
-
-// Address schema with better validation
-const addressSchema = z.object({
-  street: z.string().trim().min(1, "Street is required").max(200, "Street too long").optional(),
-  city: z.string().trim().min(1, "City is required").max(100, "City too long").optional(),
-  state: z.string().trim().min(1, "State is required").max(100, "State too long").optional(),
-  zipCode: z.string().trim().min(3, "Invalid zip code").max(20, "Zip code too long").optional(),
-  country: z.string().trim().min(2, "Invalid country").max(100, "Country too long").optional(),
 });
 
 // Emergency contact schema with better validation

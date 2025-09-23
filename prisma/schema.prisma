@@ -56,6 +56,16 @@ enum ClientSource {
   WALK_IN
 }
 
+type Address {
+  street      String?
+  district    String?
+  city        String?
+  state       String?
+  postcode    String?
+  country     String?
+  addressType String? // e.g., Home, Work
+}
+
 model Category {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String // Original name with proper casing for display
@@ -114,7 +124,7 @@ model Member {
   commissionRate   Float? // Commission percentage (0-100)
   hourlyRate       Float? // Hourly rate for services
   dateOfBirth      DateTime?
-  address          Json? // Store address as JSON
+  address          Address?
   emergencyContact Json? // Store emergency contact as JSON
   startDate        DateTime  @default(now())
   endDate          DateTime?
@@ -157,7 +167,7 @@ model Client {
   gender      ClientGender
   phone       String?
   dateOfBirth DateTime?
-  address     Json? // Store address as JSON
+  addresses   Address[]
   orgId       String
   isActive    Boolean      @default(true)
 

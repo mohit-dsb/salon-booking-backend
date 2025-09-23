@@ -1,6 +1,17 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "./pagination.schema";
 
+// Address validation schema
+const addressSchema = z.object({
+  street: z.string().optional(),
+  district: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postcode: z.string().optional(),
+  country: z.string().optional(),
+  addressType: z.string().optional(), // e.g., Home, Work
+});
+
 // Client validation schemas
 export const createClientSchema = z.object({
   // PROFILE INFO
@@ -27,7 +38,7 @@ export const createClientSchema = z.object({
     .string()
     .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number")
     .optional(),
-  address: z.json().optional(),
+  addresses: z.array(addressSchema).optional(),
   // NOTIFICATION PREFERENCES
   notifyByEmail: z.boolean().default(true),
   notifyBySMS: z.boolean().default(false),

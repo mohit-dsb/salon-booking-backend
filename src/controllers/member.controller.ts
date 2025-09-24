@@ -12,6 +12,7 @@ import type {
   BulkDeleteMembersData,
   CreateMemberData,
   UpdateMemberData,
+  MemberQueryParams,
 } from "@/validations/member.schema";
 
 // Initialize service instance - can be mocked easily for testing
@@ -46,25 +47,7 @@ export const getAllMembers = asyncHandler(async (req: Request, res: Response, _n
   const { orgId } = await getAuthWithOrgId(req);
   const pagination = parsePaginationParams(req.query);
 
-  // Extract filters from query parameters (validated by middleware)
-  const filters: {
-    isActive?: boolean;
-    search?: string;
-    serviceId?: string;
-  } = {};
-
-  if (req.query.isActive !== undefined) {
-    filters.isActive = req.query.isActive === "true";
-  }
-
-  if (req.query.search) {
-    filters.search = req.query.search as string;
-  }
-
-  if (req.query.serviceId) {
-    filters.serviceId = req.query.serviceId as string;
-  }
-
+  const filters = req.parsedQuery as MemberQueryParams;
   const result = await memberService.getAllMembers(orgId, pagination, filters);
 
   res.status(200).json({
@@ -231,26 +214,6 @@ export const toggleMemberStatus = asyncHandler(async (req: Request, res: Respons
     success: true,
     message: `Member ${member.isActive ? "activated" : "deactivated"} successfully`,
     data: member,
-  });
-});
-
-/**
- * Search members
- * @route GET /api/v1/members/search
- * @access Private (Admin/Member)
- */
-export const searchMembers = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const { q } = req.query;
-
-  const pagination = parsePaginationParams(req.query);
-  const result = await memberService.searchMembers(orgId, q as string, pagination);
-
-  res.status(200).json({
-    success: true,
-    message: "Search completed successfully",
-    data: result.data,
-    meta: result.meta,
   });
 });
 

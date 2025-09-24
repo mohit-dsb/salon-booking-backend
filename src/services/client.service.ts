@@ -259,7 +259,7 @@ export class ClientService {
         where,
         skip: offset,
         take: limit,
-        orderBy: { [filters.sortBy]: `${filters.sortOrder}` },
+        orderBy: { [filters.sortBy]: filters.sortOrder },
         include: {
           appointments: {
             where: {

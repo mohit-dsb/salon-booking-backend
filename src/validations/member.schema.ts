@@ -119,15 +119,11 @@ export const bulkDeleteMembersSchema = z.object({
 export const memberQuerySchema = z.object({
   page: z.string().regex(/^\d+$/, "Page must be a number").optional(),
   limit: z.string().regex(/^\d+$/, "Limit must be a number").optional(),
-  isActive: z.enum(["true", "false"]).optional(),
+  isActive: z.enum(["true", "false"]).default("true").transform((val) => val === "true"),
   search: z.string().trim().min(1, "Search query cannot be empty").optional(),
   serviceId: z.string().min(1, "Service ID cannot be empty").optional(),
-});
-
-export const searchMemberSchema = z.object({
-  q: z.string().trim().min(1, "Search query is required").max(100, "Search query too long"),
-  page: z.string().regex(/^\d+$/, "Page must be a number").optional(),
-  limit: z.string().regex(/^\d+$/, "Limit must be a number").optional(),
+  sortBy: z.enum(["username", "createdAt"]).default("createdAt"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
 // Analytics and Reporting Validation Schemas
@@ -220,3 +216,4 @@ export type UpdateMemberData = z.infer<typeof updateMemberSchema>;
 export type BulkDeleteMembersData = z.infer<typeof bulkDeleteMembersSchema>;
 export type AttendanceSummaryParams = z.infer<typeof attendanceSummarySchema>;
 export type ScheduledShiftsParams = z.infer<typeof scheduledShiftsSchema>;
+export type MemberQueryParams = z.infer<typeof memberQuerySchema>;

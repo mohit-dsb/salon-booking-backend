@@ -14,6 +14,7 @@ import type {
   ScheduledShiftsParams,
   CreateMemberData,
   UpdateMemberData,
+  MemberQueryParams,
 } from "@/validations/member.schema";
 
 // Type definitions for better type safety
@@ -62,15 +63,7 @@ export class MemberService {
     return this.getCacheKey(orgId, `clerk:${clerkId}`);
   }
 
-  private getAllMembersCacheKey(
-    orgId: string,
-    pagination: PaginationParams,
-    filters?: {
-      isActive?: boolean;
-      search?: string;
-      serviceId?: string;
-    },
-  ): string {
+  private getAllMembersCacheKey(orgId: string, pagination: PaginationParams, filters: MemberQueryParams): string {
     const filterKey = filters ? `filters:${JSON.stringify(filters)}` : "all";
     return this.getCacheKey(orgId, `list:${pagination.page}:${pagination.limit}:${filterKey}`);
   }
@@ -257,15 +250,12 @@ export class MemberService {
   public async getAllMembers(
     orgId: string,
     pagination: PaginationParams,
-    filters?: {
-      isActive?: boolean;
-      search?: string;
-      serviceId?: string;
-    },
+    filters: MemberQueryParams,
   ): Promise<PaginatedResponse<MemberWithServices>> {
     await this.validateOrgMembership(orgId);
 
     const { page, limit, skip } = pagination;
+    const { isActive, search, serviceId, sortOrder, sortBy } = filters;
 
     // Check cache first
     const cacheKey = this.getAllMembersCacheKey(orgId, pagination, filters);
@@ -282,23 +272,20 @@ export class MemberService {
       AND: [{ orgId }, { orgId: { not: "" } }],
     };
 
-    // Add filters conditionally
-    if (filters?.isActive !== undefined) {
-      whereConditions.isActive = filters.isActive;
-    }
+    whereConditions.isActive = isActive;
 
-    if (filters?.search && filters.search.trim() !== "") {
+    if (search && search.trim() !== "") {
       whereConditions.OR = [
-        { username: { contains: filters.search.trim(), mode: "insensitive" as const } },
-        { email: { contains: filters.search.trim(), mode: "insensitive" as const } },
-        { jobTitle: { contains: filters.search.trim(), mode: "insensitive" as const } },
+        { username: { contains: search.trim(), mode: "insensitive" as const } },
+        { email: { contains: search.trim(), mode: "insensitive" as const } },
+        { jobTitle: { contains: search.trim(), mode: "insensitive" as const } },
       ];
     }
 
-    if (filters?.serviceId && filters.serviceId.trim() !== "") {
+    if (serviceId && serviceId.trim() !== "") {
       whereConditions.memberServices = {
         some: {
-          serviceId: filters.serviceId.trim(),
+          serviceId: serviceId.trim(),
         },
       };
     }
@@ -308,7 +295,7 @@ export class MemberService {
         prisma.member.findMany({
           where: whereConditions,
           include: this.memberInclude,
-          orderBy: { createdAt: "desc" },
+          orderBy: { [sortBy]: sortOrder },
           skip,
           take: limit,
         }),
@@ -619,17 +606,6 @@ export class MemberService {
 
     // Note: updateMember already invalidates cache, so no need to do it again
     return updatedMember;
-  }
-
-  // Search members with pagination
-  public async searchMembers(
-    orgId: string,
-    query: string,
-    pagination: PaginationParams,
-  ): Promise<PaginatedResponse<MemberWithServices>> {
-    return await this.getAllMembers(orgId, pagination, {
-      search: query,
-    });
   }
 
   // Update member profile with restricted fields

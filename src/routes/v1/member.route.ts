@@ -7,7 +7,6 @@ import {
   updateMemberSchema,
   assignServicesSchema,
   memberQuerySchema,
-  searchMemberSchema,
   bulkDeleteMembersSchema,
   attendanceSummarySchema,
   scheduledShiftsSchema,
@@ -22,7 +21,6 @@ router.use(requireAuthWithOrgId);
 
 // Stats and search routes (must come before parameterized routes)
 router.get("/stats", memberController.getMemberStats);
-router.get("/search", validate(searchMemberSchema), memberController.searchMembers);
 
 // Profile routes for current user
 router.get("/profile", memberController.getMemberProfile);

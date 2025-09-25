@@ -153,6 +153,7 @@ export class MemberService {
           role: data.role || Role.MEMBER,
           username: data.username,
           email: data.email,
+          country: data.country,
           phone: data.phone,
           jobTitle: data.jobTitle,
           bio: data.bio,
@@ -163,6 +164,10 @@ export class MemberService {
           address: data.address,
           emergencyContact: data.emergencyContact,
           startDate: typeof data.startDate === "string" ? this.parseDate(data.startDate) : data.startDate || new Date(),
+          endDate: typeof data.endDate === "string" ? this.parseDate(data.endDate) : data.endDate,
+          employementType: data.employementType,
+          teamMemberId: data.teamMemberId,
+          notes: data.notes,
         },
         include: this.memberInclude,
       });

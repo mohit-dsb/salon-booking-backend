@@ -61,6 +61,7 @@ const baseUserFields = {
   email: z.email("Invalid email format"),
   phone: z.string().trim().min(10, "Phone number too short").max(20, "Phone number too long").optional(),
   role: roleEnum.optional().default("MEMBER"),
+  country: z.string().trim().min(3, "Country name too short").max(100, "Country name too long").optional(),
 };
 
 export const createMemberSchema = z.object({
@@ -78,7 +79,11 @@ export const createMemberSchema = z.object({
   address: addressSchema.optional(),
   emergencyContact: emergencyContactSchema.optional(),
   startDate: z.iso.datetime("Invalid date format").optional(),
+  endDate: z.iso.datetime("Invalid date format").optional(),
+  employementType: z.enum(["EMPLOYEE", "SELF_EMPLOYED"]).optional(),
   serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
+  teamMemberId: z.string().trim().optional(),
+  notes: z.string().trim().max(250, "Notes too long").optional(),
 });
 
 export const updateMemberSchema = z.object({
@@ -119,7 +124,10 @@ export const bulkDeleteMembersSchema = z.object({
 export const memberQuerySchema = z.object({
   page: z.string().regex(/^\d+$/, "Page must be a number").optional(),
   limit: z.string().regex(/^\d+$/, "Limit must be a number").optional(),
-  isActive: z.enum(["true", "false"]).default("true").transform((val) => val === "true"),
+  isActive: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((val) => val === "true"),
   search: z.string().trim().min(1, "Search query cannot be empty").optional(),
   serviceId: z.string().min(1, "Service ID cannot be empty").optional(),
   sortBy: z.enum(["username", "createdAt"]).default("createdAt"),

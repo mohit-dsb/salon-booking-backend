@@ -13,6 +13,11 @@ enum Role {
   MEMBER
 }
 
+enum EmployementType {
+  EMPLOYEE
+  SELF_EMPLOYED
+}
+
 enum AppointmentStatus {
   SCHEDULED
   CONFIRMED
@@ -109,10 +114,10 @@ model Service {
 }
 
 model Member {
-  id               String    @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId          String    @unique
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId          String           @unique
   orgId            String
-  role             Role      @default(MEMBER)
+  role             Role             @default(MEMBER)
   username         String
   email            String
   phone            String?
@@ -120,16 +125,20 @@ model Member {
   jobTitle         String?
   bio              String?
   workingHours     Json? // Store working hours as JSON
-  isActive         Boolean   @default(true)
+  isActive         Boolean          @default(true)
   commissionRate   Float? // Commission percentage (0-100)
   hourlyRate       Float? // Hourly rate for services
   dateOfBirth      DateTime?
   address          Address?
+  country          String?
   emergencyContact Json? // Store emergency contact as JSON
-  startDate        DateTime  @default(now())
+  startDate        DateTime         @default(now())
   endDate          DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  employementType  EmployementType?
+  teamMemberId     String? // An identifier used for external systems like payroll
+  notes            String? // Internal notes about the member
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   // Relationships
   memberServices        MemberService[]

@@ -122,33 +122,10 @@ export class MemberService {
     }
 
     try {
-      const clerkUser = await executeClerkOperation(
-        () =>
-          clerkClient.users.createUser({
-            emailAddress: [data.email],
-            username: data.username,
-            password: "SecureTemp@2024!", // Secure temporary password
-          }),
-        "createUser",
-        "Failed to create user account",
-      );
-
-      // Create membership for the user in the organization
-      await executeClerkOperation(
-        () =>
-          clerkClient.organizations.createOrganizationMembership({
-            organizationId: orgId,
-            userId: clerkUser.id,
-            role: "org:member",
-          }),
-        "createOrganizationMembership",
-        "Failed to add user to organization",
-      );
-
       // Create member in our database
       const member = await prisma.member.create({
         data: {
-          clerkId: clerkUser.id,
+          clerkId: "", // Will be set after Clerk user creation
           orgId,
           role: data.role || Role.MEMBER,
           username: data.username,
@@ -171,6 +148,29 @@ export class MemberService {
         },
         include: this.memberInclude,
       });
+
+      const clerkUser = await executeClerkOperation(
+        () =>
+          clerkClient.users.createUser({
+            emailAddress: [data.email],
+            username: data.username,
+            password: "SecureTemp@2024!", // Secure temporary password
+          }),
+        "createUser",
+        "Failed to create user account",
+      );
+
+      // Create membership for the user in the organization
+      await executeClerkOperation(
+        () =>
+          clerkClient.organizations.createOrganizationMembership({
+            organizationId: orgId,
+            userId: clerkUser.id,
+            role: "org:member",
+          }),
+        "createOrganizationMembership",
+        "Failed to add user to organization",
+      );
 
       // Assign services if provided
       if (data.serviceIds && data.serviceIds.length > 0) {
@@ -691,6 +691,7 @@ export class MemberService {
         await prisma.member.update({
           where: { id: existingGlobalUser.id },
           data: {
+            clerkId: id,
             username: username || existingGlobalUser.username,
             email: primaryEmail,
             profileImage: image_url || existingGlobalUser.profileImage,

@@ -1,4 +1,16 @@
-import z from "zod";
+import { z } from "zod";
+
+export const getAllServicesSchema = z.object({
+  page: z.string().optional(),
+  limit: z.string().optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
+  groupBy: z.enum(["categoryId"]).default("categoryId"),
+});
+
+export const getServiceByCategoryName = z.object({
+  group: z.enum(["categoryId"]).default("categoryId"),
+});
 
 export const createServiceSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -18,5 +30,7 @@ export const updateServiceSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+export type GetAllServicesQuery = z.infer<typeof getAllServicesSchema>;
+export type GetAllServicesByCategoryName = z.infer<typeof getServiceByCategoryName>;
 export type CreateServiceData = z.infer<typeof createServiceSchema>;
 export type UpdateServiceData = z.infer<typeof updateServiceSchema>;

@@ -3,6 +3,7 @@ import { z } from "zod";
 // Role enum
 export const roleEnum = z.enum(["ADMIN", "MEMBER"]);
 
+// Address validation schema
 const addressSchema = z.object({
   street: z.string().optional(),
   district: z.string().optional(),
@@ -76,14 +77,15 @@ export const createMemberSchema = z.object({
     .optional(),
   hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
   dateOfBirth: z.iso.datetime("Invalid date format").optional(),
-  address: addressSchema.optional(),
-  emergencyContact: emergencyContactSchema.optional(),
+  addresses: z.array(addressSchema).optional(),
+  emergencyContacts: z.array(emergencyContactSchema).optional(),
   startDate: z.iso.datetime("Invalid date format").optional(),
   endDate: z.iso.datetime("Invalid date format").optional(),
   employementType: z.enum(["EMPLOYEE", "SELF_EMPLOYED"]).optional(),
   serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
   teamMemberId: z.string().trim().optional(),
   notes: z.string().trim().max(250, "Notes too long").optional(),
+  allowCalendarBookings: z.boolean().optional().default(true),
 });
 
 export const updateMemberSchema = z.object({
@@ -103,10 +105,11 @@ export const updateMemberSchema = z.object({
     .optional(),
   hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
   dateOfBirth: z.iso.datetime("Invalid date format").optional(),
-  address: addressSchema.optional(),
-  emergencyContact: emergencyContactSchema.optional(),
+  addresses: z.array(addressSchema).optional(),
+  emergencyContacts: z.array(emergencyContactSchema).optional(),
   endDate: z.iso.datetime("Invalid date format").optional(),
   serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
+  allowCalendarBookings: z.boolean().optional(),
 });
 
 export const assignServicesSchema = z.object({
@@ -131,7 +134,7 @@ export const memberQuerySchema = z.object({
   search: z.string().trim().min(1, "Search query cannot be empty").optional(),
   serviceId: z.string().min(1, "Service ID cannot be empty").optional(),
   sortBy: z.enum(["username", "createdAt"]).default("createdAt"),
-  sortOrder: z.enum(["asc", "desc"]).default("asc"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
 // Analytics and Reporting Validation Schemas

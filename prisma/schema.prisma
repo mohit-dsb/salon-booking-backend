@@ -54,7 +54,7 @@ enum RecurrencePattern {
 enum ClientGender {
   Male
   Female
-  Other
+  PreferNotToSay
 }
 
 enum ClientSource {
@@ -69,6 +69,13 @@ type Address {
   postcode    String?
   country     String?
   addressType String? // e.g., Home, Work
+}
+
+type EmergencyContact {
+  name         String
+  relationship String? // e.g., Spouse, Parent, Friend
+  phone        String
+  email        String?
 }
 
 model Category {
@@ -114,31 +121,32 @@ model Service {
 }
 
 model Member {
-  id               String           @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId          String           @unique
-  orgId            String
-  role             Role             @default(MEMBER)
-  username         String
-  email            String
-  phone            String?
-  profileImage     String?
-  jobTitle         String?
-  bio              String?
-  workingHours     Json? // Store working hours as JSON
-  isActive         Boolean          @default(true)
-  commissionRate   Float? // Commission percentage (0-100)
-  hourlyRate       Float? // Hourly rate for services
-  dateOfBirth      DateTime?
-  address          Address?
-  country          String?
-  emergencyContact Json? // Store emergency contact as JSON
-  startDate        DateTime         @default(now())
-  endDate          DateTime?
-  employementType  EmployementType?
-  teamMemberId     String? // An identifier used for external systems like payroll
-  notes            String? // Internal notes about the member
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  id                    String             @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId               String             @unique
+  orgId                 String
+  role                  Role               @default(MEMBER)
+  username              String
+  email                 String
+  phone                 String?
+  profileImage          String?
+  jobTitle              String?
+  bio                   String?
+  workingHours          Json? // Store working hours as JSON
+  isActive              Boolean            @default(true)
+  commissionRate        Float? // Commission percentage (0-100)
+  hourlyRate            Float? // Hourly rate for services
+  dateOfBirth           DateTime?
+  addresses             Address[]
+  country               String?
+  emergencyContacts     EmergencyContact[]
+  startDate             DateTime           @default(now())
+  endDate               DateTime?
+  employementType       EmployementType?
+  teamMemberId          String? // An identifier used for external systems like payroll
+  notes                 String? // Internal notes about the member
+  allowCalendarBookings Boolean            @default(true)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
   // Relationships
   memberServices        MemberService[]
@@ -173,7 +181,7 @@ model Client {
   firstName   String
   lastName    String
   email       String
-  gender      ClientGender
+  gender      ClientGender @default(PreferNotToSay)
   phone       String?
   dateOfBirth DateTime?
   addresses   Address[]

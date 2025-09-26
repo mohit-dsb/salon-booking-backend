@@ -3,7 +3,6 @@ import type { NextFunction, Request, Response } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import type { CreateServiceData, UpdateServiceData } from "@/validations/service.schema";
 import { AppError, asyncHandler } from "@/middlewares/error.middleware";
-import { parsePaginationParams, PaginationQuery } from "@/utils/pagination";
 
 export class ServiceController {
   private serviceService = new ServiceService();
@@ -32,9 +31,7 @@ export class ServiceController {
 
   public getAllServices = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const auth = await getAuthWithOrgId(req);
-    // Use paginated response
-    const pagination = parsePaginationParams(req.query as PaginationQuery, "createdAt");
-    const result = await this.serviceService.getServicesByOrgPaginated(auth.orgId, pagination);
+    const result = await this.serviceService.getServicesByOrg(auth.orgId);
     res.status(200).json(result);
   });
 
@@ -73,6 +70,13 @@ export class ServiceController {
     const services = await this.serviceService.getServicesByCategory(categoryId, auth.orgId);
     res.status(200).json({ success: true, data: services });
   });
+
+  public getServicesByCategories = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const auth = await getAuthWithOrgId(req);
+
+    const services = await this.serviceService.getServicesByCategories(auth.orgId);
+    res.status(200).json({ success: true, data: services });
+  })
 
   public updateService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const auth = await getAuthWithOrgId(req);

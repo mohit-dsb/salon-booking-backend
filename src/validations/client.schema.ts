@@ -23,7 +23,7 @@ export const createClientSchema = z.object({
     .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number")
     .optional(),
   dateOfBirth: z.iso.datetime().optional(),
-  gender: z.enum(["Male", "Female", "Other"]),
+  gender: z.enum(["Male", "Female", "PreferNotToSay"]).default("PreferNotToSay"),
   // ADDITIONAL INFO
   // Client source: How the client heard about the business
   clientSource: z.enum(["Walk-in"]).default("Walk-in"), // Extendable for future sources
@@ -57,6 +57,7 @@ export const getAllClientsSchema = z.object({
   isActive: z.boolean().optional(),
   sortBy: z.enum(["firstName", "lastName", "createdAt"]).default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
+  gender: z.enum(["Male", "Female", "PreferNotToSay"]).optional()
 });
 
 // Analytics validation schemas
@@ -77,7 +78,7 @@ export const clientListAnalyticsSchema = z.object({
   ...analyticsBaseSchema.shape,
   sortBy: z.enum(["name", "email", "totalSpent", "lastVisit", "appointmentCount", "registrationDate"]).default("name"),
   sortOrder: z.enum(["asc", "desc"]).default("asc"),
-  gender: z.enum(["Male", "Female", "Other"]).optional(),
+  gender: z.enum(["Male", "Female", "PreferNotToSay"]).optional(),
 });
 
 export type CreateClientData = z.infer<typeof createClientSchema>;

@@ -667,10 +667,10 @@ export class MemberService {
     if (!organization_memberships || organization_memberships.length === 0) {
       logger.info(`User ${id} created without organization membership, creating a global user record`);
 
-      // Create a global user record without organization (orgId will be empty)
+      // Create a global user record without organization
       // This will be updated later when they're added to an organization via organizationMembership.created
-      const existingGlobalUser = await prisma.member.findFirst({
-        where: { clerkId: id, orgId: "" },
+      const existingGlobalUser = await prisma.member.findUnique({
+        where: { email: primaryEmail, clerkId: "" },
       });
 
       if (!existingGlobalUser) {
@@ -692,59 +692,11 @@ export class MemberService {
           where: { id: existingGlobalUser.id },
           data: {
             clerkId: id,
-            username: username || existingGlobalUser.username,
-            email: primaryEmail,
-            profileImage: image_url || existingGlobalUser.profileImage,
           },
         });
         logger.info(`Updated existing global user record for ${id}`);
       }
-
-      // No cache invalidation needed for global users as they're not org-specific
       return;
-    }
-
-    // Create member for each organization they belong to
-    for (const membership of organization_memberships) {
-      const orgId = membership.id;
-      const role = membership.role === "org:admin" ? Role.ADMIN : Role.MEMBER;
-
-      // Check if member already exists in this organization
-      const existingMember = await this.getMemberByClerkId(id, orgId);
-
-      if (!existingMember) {
-        logger.info(`Creating member for user ${id} in organization ${orgId} with role ${role}`);
-        await prisma.member.create({
-          data: {
-            clerkId: id,
-            orgId: orgId,
-            role: role,
-            username: username || "",
-            email: primaryEmail,
-            profileImage: image_url,
-            isActive: true,
-          },
-        });
-
-        // Invalidate cache for this organization
-        await this.invalidateMemberCache(orgId);
-      } else {
-        logger.info(`Member already exists for user ${id} in organization ${orgId}, updating details`);
-        await prisma.member.update({
-          where: { id: existingMember.id },
-          data: {
-            username: username || existingMember.username,
-            email: primaryEmail,
-            profileImage: image_url || existingMember.profileImage,
-            role: role,
-            isActive: true,
-            orgId: orgId, // Ensure orgId is properly set
-          },
-        });
-
-        // Invalidate cache for this organization
-        await this.invalidateMemberCache(orgId);
-      }
     }
   }
 

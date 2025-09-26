@@ -2,7 +2,7 @@ import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
 import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { ServiceController } from "@/controllers/service.controller";
-import { createServiceSchema, getServiceByCategoryName, updateServiceSchema } from "@/validations/service.schema";
+import { createServiceSchema, updateServiceSchema } from "@/validations/service.schema";
 
 const serviceRoutes = Router();
 const serviceController = new ServiceController();
@@ -15,8 +15,6 @@ serviceRoutes
   .route("/")
   .post(validate(createServiceSchema), serviceController.createService)
   .get(serviceController.getAllServices);
-
-serviceRoutes.route("/categories").get(validate(getServiceByCategoryName), serviceController.getServicesByCategories);
 
 // Get active services only
 serviceRoutes.get("/active", serviceController.getActiveServices);

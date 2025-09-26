@@ -8,10 +8,6 @@ export const getAllServicesSchema = z.object({
   groupBy: z.enum(["categoryId"]).default("categoryId"),
 });
 
-export const getServiceByCategoryName = z.object({
-  group: z.enum(["categoryId"]).default("categoryId"),
-});
-
 export const createServiceSchema = z.object({
   name: z.string().trim().min(2).max(100),
   description: z.string().trim().min(10).max(500).optional(),
@@ -31,6 +27,5 @@ export const updateServiceSchema = z.object({
 });
 
 export type GetAllServicesQuery = z.infer<typeof getAllServicesSchema>;
-export type GetAllServicesByCategoryName = z.infer<typeof getServiceByCategoryName>;
 export type CreateServiceData = z.infer<typeof createServiceSchema>;
 export type UpdateServiceData = z.infer<typeof updateServiceSchema>;

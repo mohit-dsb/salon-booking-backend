@@ -71,13 +71,6 @@ export class ServiceController {
     res.status(200).json({ success: true, data: services });
   });
 
-  public getServicesByCategories = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-    const auth = await getAuthWithOrgId(req);
-
-    const services = await this.serviceService.getServicesByCategories(auth.orgId);
-    res.status(200).json({ success: true, data: services });
-  })
-
   public updateService = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const auth = await getAuthWithOrgId(req);
     const { slug } = req.params;

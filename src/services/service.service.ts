@@ -173,41 +173,6 @@ export class ServiceService {
     return paginatedResponse;
   }
 
-  // Get services grouped by category name
-  public async getServicesByCategories(orgId: string): Promise<Record<string, Service[]>> {
-    const cacheKey = `service:${orgId}:grouped:categoryName`;
-
-    // Try to get from cache first
-    const cached = await cacheService.get<Record<string, Service[]>>(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    // Fetch services with category included
-    const services = await prisma.service.findMany({
-      where: { orgId },
-      include: {
-        category: true,
-      },
-      orderBy: { name: "asc" },
-    });
-
-    // Group services by category name
-    const groupedServices: Record<string, Service[]> = {};
-    for (const service of services) {
-      const categoryName = service.category.name;
-      if (!groupedServices[categoryName]) {
-        groupedServices[categoryName] = [];
-      }
-      groupedServices[categoryName].push(service);
-    }
-
-    // Cache the result for 1 hour
-    await cacheService.set(cacheKey, groupedServices, 3600);
-
-    return groupedServices;
-  }
-
   // Get services by category
   public async getServicesByCategory(categoryId: string, orgId: string): Promise<Service[]> {
     const cacheKey = `service:${orgId}:category:${categoryId}`;

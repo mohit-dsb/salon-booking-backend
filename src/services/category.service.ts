@@ -98,8 +98,34 @@ export class CategoryService {
     return category;
   }
 
+  // Get all categories for an organization
+  public async getAllCategoriesByOrg(orgId: string): Promise<Category[]> {
+    const cacheKey = `category:${orgId}:all`;
+
+    // Try to get from cache first
+    const cached = await cacheService.get<Category[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // If not in cache, fetch from database
+    const categories = await prisma.category.findMany({
+      where: {
+        orgId,
+      },
+      include: {
+        services: true,
+      },
+    });
+
+    // Cache the result for 1 hour
+    await cacheService.set(cacheKey, categories, 3600);
+
+    return categories;
+  }
+
   // Get all categories for an organization with pagination
-  public async getCategoriesByOrg(orgId: string, pagination: PaginationParams): Promise<PaginatedResponse<Category>> {
+  public async getCategoriesByOrgPaginated(orgId: string, pagination: PaginationParams): Promise<PaginatedResponse<Category>> {
     const cacheKey = `category:${orgId}:paginated:${pagination.page}:${pagination.limit}:${pagination.sortBy}:${pagination.sortOrder}`;
 
     // Try to get from cache first

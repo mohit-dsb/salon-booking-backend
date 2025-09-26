@@ -13,7 +13,9 @@ categoryRoutes.use(requireAuthWithOrgId);
 categoryRoutes
   .route("/")
   .post(validate(createCategorySchema), categoryController.createCategory)
-  .get(categoryController.getAllCategories);
+  .get(categoryController.getAllCategoriesPaginated);
+
+categoryRoutes.get("/all", categoryController.getAllCategories);
 
 categoryRoutes
   .route("/:slug")

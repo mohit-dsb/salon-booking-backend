@@ -36,10 +36,16 @@ export class CategoryController {
 
   public getAllCategories = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const auth = await getAuthWithOrgId(req);
+    const categories = await this.categoryService.getAllCategoriesByOrg(auth.orgId);
+    res.status(200).json({ success: true, data: categories });
+  });
+
+  public getAllCategoriesPaginated = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const auth = await getAuthWithOrgId(req);
 
     // Use paginated response
     const pagination = parsePaginationParams(req.query as PaginationQuery, "createdAt");
-    const result = await this.categoryService.getCategoriesByOrg(auth.orgId, pagination);
+    const result = await this.categoryService.getCategoriesByOrgPaginated(auth.orgId, pagination);
     res.status(200).json(result);
   });
 

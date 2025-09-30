@@ -184,6 +184,119 @@ export class ClientService {
     return client;
   }
 
+  // Update client
+  public async updateClient(id: string, orgId: string, data: UpdateClientData): Promise<ClientWithAppointments> {
+    await this.validateOrgMembership(orgId);
+
+    if (!id || id.trim() === "") {
+      throw new AppError("Client ID is required", 400);
+    }
+
+    // Get existing client to verify it exists and get current data
+    const existingClient = await this.getClientById(id, orgId);
+
+    // Prepare update data
+    const updateData: Record<string, unknown> = {};
+
+    // Handle core fields that might have uniqueness constraints
+    if (data.email !== undefined && data.email !== existingClient.email) {
+      // Check if email is already taken by another client in this organization
+      const emailExists = await prisma.client.findUnique({
+        where: {
+          email_orgId: {
+            email: data.email,
+            orgId,
+          },
+        },
+      });
+
+      if (emailExists && emailExists.id !== id) {
+        throw new AppError("Email is already taken by another client", 400);
+      }
+
+      updateData.email = data.email;
+    }
+
+    // Handle other updatable fields
+    const fieldsToUpdate = [
+      "firstName",
+      "lastName",
+      "phone",
+      "gender",
+      "dateOfBirth",
+      "addresses",
+      "clientSource",
+      "referredBy",
+      "preferredLanguage",
+      "occupation",
+      "country",
+      "additionalEmail",
+      "additionalPhone",
+      "notifyByEmail",
+      "notifyBySMS",
+      "notifyByWhatsapp",
+      "allowEmailMarketing",
+      "allowSMSMarketing",
+      "allowWhatsappMarketing",
+      "isActive",
+    ];
+
+    fieldsToUpdate.forEach((field) => {
+      if (data[field as keyof UpdateClientData] !== undefined) {
+        updateData[field] = data[field as keyof UpdateClientData];
+      }
+    });
+
+    // Handle date parsing for dateOfBirth if provided
+    if (data.dateOfBirth !== undefined) {
+      updateData.dateOfBirth =
+        typeof data.dateOfBirth === "string" ? this.parseDate(data.dateOfBirth) : data.dateOfBirth;
+    }
+
+    try {
+      // Update client in database
+      const updatedClient = await prisma.client.update({
+        where: { id },
+        data: updateData,
+        include: {
+          appointments: {
+            orderBy: { startTime: "desc" },
+            take: 5,
+            include: {
+              service: {
+                select: { name: true },
+              },
+            },
+          },
+        },
+      });
+
+      // Invalidate caches
+      await this.invalidateClientCache(orgId);
+
+      logger.info("Client updated successfully", {
+        clientId: id,
+        orgId,
+        updatedFields: Object.keys(updateData),
+      });
+
+      return updatedClient;
+    } catch (error: unknown) {
+      logger.error("Failed to update client", {
+        clientId: id,
+        orgId,
+        error: error instanceof Error ? error.message : "Unknown error",
+        updatedFields: Object.keys(updateData),
+      });
+
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      handleError(error, "updateClient", "Failed to update client");
+    }
+  }
+
   // Get all clients with pagination and filters
   public async getAllClients(
     orgId: string,
@@ -294,63 +407,6 @@ export class ClientService {
     await cacheService.set(cacheKey, result, this.CACHE_TTL);
 
     return result;
-  }
-
-  // Update client
-  public async updateClient(id: string, orgId: string, data: UpdateClientData): Promise<Client> {
-    await this.validateOrgMembership(orgId);
-
-    const existingClient = await this.getClientById(id, orgId);
-
-    // If email is being updated, check for duplicates
-    if (data.email && data.email !== existingClient.email) {
-      const duplicateClient = await prisma.client.findUnique({
-        where: {
-          email_orgId: {
-            email: data.email,
-            orgId,
-          },
-        },
-      });
-
-      if (duplicateClient) {
-        throw new AppError("A client with this email already exists in your organization", 400);
-      }
-    }
-
-    try {
-      // Parse dates properly and handle special fields
-      const parsedData = {
-        ...data,
-        dateOfBirth: data.dateOfBirth ? this.parseDate(data.dateOfBirth) : undefined,
-      };
-
-      // Handle clientSource enum conversion
-      if (data.clientSource === "Walk-in") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (parsedData as any).clientSource = "WALK_IN";
-      }
-
-      // Remove undefined values
-      const cleanData = Object.fromEntries(Object.entries(parsedData).filter(([_, value]) => value !== undefined));
-
-      const updatedClient = await prisma.client.update({
-        where: { id },
-        data: cleanData,
-      });
-
-      // Invalidate all client-related caches for this organization
-      await this.invalidateClientCache(orgId);
-
-      logger.info("Client updated successfully", { clientId: id, orgId });
-
-      return updatedClient;
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      handleError(error, "updateClient", "Failed to update client");
-    }
   }
 
   // Delete client (soft delete by setting isActive to false)

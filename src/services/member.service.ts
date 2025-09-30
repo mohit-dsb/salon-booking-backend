@@ -453,7 +453,7 @@ export class MemberService {
               const newEmail = await clerkClient.emailAddresses.createEmailAddress({
                 userId: existingMember.clerkId,
                 emailAddress: data.email as string,
-                verified: true // skip verification for admin created emails
+                verified: true, // skip verification for admin created emails
               });
               clerkUpdateData.primaryEmailAddressID = newEmail.id;
               await clerkClient.users.updateUser(existingMember.clerkId, clerkUpdateData);

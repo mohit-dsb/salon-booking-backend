@@ -2,12 +2,7 @@ import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
 import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import * as clientController from "@/controllers/client.controller";
-import {
-  createClientSchema,
-  updateClientSchema,
-  clientListAnalyticsSchema,
-  getAllClientsSchema,
-} from "@/validations/client.schema";
+import { createClientSchema, updateClientSchema, clientListAnalyticsSchema, getAllClientsSchema } from "@/validations/client.schema";
 
 const router = Router();
 
@@ -36,11 +31,11 @@ router.get("/", validate(getAllClientsSchema), clientController.getAllClients);
 router.get("/:id", clientController.getClientById);
 
 /**
- * @route   PATCH /api/v1/clients/:id
+ * @route   PUT /api/v1/clients/:id
  * @desc    Update client
  * @access  Private (Member)
  */
-router.patch("/:id", validate(updateClientSchema), clientController.updateClient);
+router.put("/:id", validate(updateClientSchema), clientController.updateClient);
 
 /**
  * @route   DELETE /api/v1/clients/:id

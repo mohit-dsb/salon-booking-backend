@@ -6,8 +6,8 @@ import { asyncHandler, AppError } from "@/middlewares/error.middleware";
 import { ClientTableRow, TableResponse } from "@/types/table.types";
 import type {
   ClientListAnalyticsParams,
-  UpdateClientData,
   CreateClientData,
+  UpdateClientData,
   GetAllClientsParams,
 } from "@/validations/client.schema";
 import { getClientTableColumns, transformClientsReportToTableData } from "@/utils/data-transformation/clients";
@@ -75,20 +75,20 @@ export const getClientById = asyncHandler(async (req: Request, res: Response, _n
 
 /**
  * Update client
- * @route PATCH /api/v1/clients/:id
+ * @route PUT /api/v1/clients/:id
  * @access Private (Member)
  */
 export const updateClient = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
-  const updateData = req.parsedBody as UpdateClientData;
+  const clientData = req.parsedBody as UpdateClientData;
 
-  const client = await clientService.updateClient(id, orgId, updateData);
+  const updatedClient = await clientService.updateClient(id, orgId, clientData);
 
   res.status(200).json({
     success: true,
-    data: client,
     message: "Client updated successfully",
+    data: updatedClient,
   });
 });
 

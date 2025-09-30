@@ -91,48 +91,7 @@ export const createMemberSchema = z.object({
 });
 
 // Update member schema - makes all fields optional except those that shouldn't be changed
-export const updateMemberSchema = z.object({
-  // Core fields that can be updated
-  username: z.string().trim().min(1, "Username is required").max(50, "Username too long").optional(),
-  email: z.email("Invalid email format").optional(),
-  phone: z.string().trim().min(10, "Phone number too short").max(20, "Phone number too long").optional(),
-  role: roleEnum.optional(),
-  country: z.string().trim().min(3, "Country name too short").max(100, "Country name too long").optional(),
-
-  // Profile fields
-  profileImage: z.url("Invalid image URL").optional(),
-  jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
-  bio: z.string().trim().max(500, "Bio too long").optional(),
-  workingHours: workingHoursSchema.optional(),
-
-  // Financial fields
-  commissionRate: z
-    .number()
-    .min(0, "Commission rate must be positive")
-    .max(100, "Commission rate cannot exceed 100%")
-    .optional(),
-  hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
-
-  // Personal information
-  dateOfBirth: z.iso.datetime("Invalid date format").optional(),
-  addresses: z.array(addressSchema).optional(),
-  emergencyContacts: z.array(emergencyContactSchema).optional(),
-
-  // Employment fields
-  startDate: z.iso.datetime("Invalid date format").optional(),
-  endDate: z.iso.datetime("Invalid date format").optional(),
-  employementType: z.enum(["EMPLOYEE", "SELF_EMPLOYED"]).optional(),
-
-  // Services and permissions
-  serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
-  teamMemberId: z.string().trim().optional(),
-  notes: z.string().trim().max(250, "Notes too long").optional(),
-  allowCalendarBookings: z.boolean().optional(),
-  permissionLevel: z.enum(["Low", "Medium", "High", "Basic", "No_access"]).optional(),
-
-  // Status field
-  isActive: z.boolean().optional(),
-});
+export const updateMemberSchema = createMemberSchema.partial();
 
 export const assignServicesSchema = z.object({
   serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).min(1, "At least one service must be assigned"),

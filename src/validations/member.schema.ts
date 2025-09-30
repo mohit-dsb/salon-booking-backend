@@ -67,6 +67,7 @@ const baseUserFields = {
 
 export const createMemberSchema = z.object({
   ...baseUserFields,
+  profileImage: z.url("Invalid image URL").optional(),
   jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
   bio: z.string().trim().max(500, "Bio too long").optional(),
   workingHours: workingHoursSchema.optional(),
@@ -86,13 +87,14 @@ export const createMemberSchema = z.object({
   teamMemberId: z.string().trim().optional(),
   notes: z.string().trim().max(250, "Notes too long").optional(),
   allowCalendarBookings: z.boolean().optional().default(true),
+  permissionLevel: z.enum(["Low", "Medium", "High", "Basic", "No_access"]).optional().default("Low"),
 });
 
 export const updateMemberSchema = z.object({
   username: z.string().trim().min(1, "Username is required").max(50, "Username too long").optional(),
   email: z.email("Invalid email format").optional(),
   phone: z.string().trim().min(10, "Phone number too short").max(20, "Phone number too long").optional(),
-  profileImage: z.url("Invalid image URL").optional(),
+  profileImage: z.url("Invalid image URL").optional().or(z.literal("")), // Allow empty string to remove
   role: roleEnum.optional(),
   jobTitle: z.string().trim().min(1, "Job title is required").max(100, "Job title too long").optional(),
   bio: z.string().trim().max(500, "Bio too long").optional(),
@@ -106,10 +108,16 @@ export const updateMemberSchema = z.object({
   hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
   dateOfBirth: z.iso.datetime("Invalid date format").optional(),
   addresses: z.array(addressSchema).optional(),
+  country: z.string().trim().min(3, "Country name too short").max(100, "Country name too long").optional(),
   emergencyContacts: z.array(emergencyContactSchema).optional(),
+  startDate: z.iso.datetime("Invalid date format").optional(),
   endDate: z.iso.datetime("Invalid date format").optional(),
+  employementType: z.enum(["EMPLOYEE", "SELF_EMPLOYED"]).optional(),
   serviceIds: z.array(z.string().min(1, "Service ID cannot be empty")).optional(),
+  teamMemberId: z.string().trim().optional(),
+  notes: z.string().trim().max(250, "Notes too long").optional(),
   allowCalendarBookings: z.boolean().optional(),
+  permissionLevel: z.enum(["Low", "Medium", "High", "Basic", "No_access"]).optional(),
 });
 
 export const assignServicesSchema = z.object({

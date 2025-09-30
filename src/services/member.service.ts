@@ -132,6 +132,7 @@ export class MemberService {
           email: data.email,
           country: data.country,
           phone: data.phone,
+          profileImage: data.profileImage,
           jobTitle: data.jobTitle,
           bio: data.bio,
           workingHours: data.workingHours,
@@ -146,6 +147,7 @@ export class MemberService {
           teamMemberId: data.teamMemberId,
           notes: data.notes,
           allowCalendarBookings: data.allowCalendarBookings,
+          permissionLevel: data.permissionLevel,
         },
         include: this.memberInclude,
       });
@@ -383,18 +385,20 @@ export class MemberService {
       // Extract serviceIds before updating member
       const { serviceIds, ...memberData } = data;
 
-      // Parse dates properly
-      const parsedData = {
+      // Handle profileImage: if empty string, set to null
+      const processedData = {
         ...memberData,
+        profileImage: memberData.profileImage === "" ? null : memberData.profileImage,
         dateOfBirth:
           typeof memberData.dateOfBirth === "string" ? this.parseDate(memberData.dateOfBirth) : memberData.dateOfBirth,
+        startDate: typeof memberData.startDate === "string" ? this.parseDate(memberData.startDate) : memberData.startDate,
         endDate: typeof memberData.endDate === "string" ? this.parseDate(memberData.endDate) : memberData.endDate,
       };
 
       // Update member in database
       await prisma.member.update({
         where: { id },
-        data: parsedData,
+        data: processedData,
       });
 
       // Update service assignments if provided

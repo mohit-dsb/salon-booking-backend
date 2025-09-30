@@ -61,6 +61,14 @@ enum ClientSource {
   WALK_IN
 }
 
+enum MemberPermissionLevel {
+  Low
+  Medium
+  High
+  Basic
+  No_access
+}
+
 type Address {
   street      String?
   district    String?
@@ -121,10 +129,10 @@ model Service {
 }
 
 model Member {
-  id                    String             @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId               String             @unique
+  id                    String                @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId               String                @unique
   orgId                 String
-  role                  Role               @default(MEMBER)
+  role                  Role                  @default(MEMBER)
   username              String
   email                 String
   phone                 String?
@@ -132,21 +140,22 @@ model Member {
   jobTitle              String?
   bio                   String?
   workingHours          Json? // Store working hours as JSON
-  isActive              Boolean            @default(true)
+  isActive              Boolean               @default(true)
   commissionRate        Float? // Commission percentage (0-100)
   hourlyRate            Float? // Hourly rate for services
   dateOfBirth           DateTime?
   addresses             Address[]
   country               String?
   emergencyContacts     EmergencyContact[]
-  startDate             DateTime           @default(now())
+  startDate             DateTime              @default(now())
   endDate               DateTime?
   employementType       EmployementType?
   teamMemberId          String? // An identifier used for external systems like payroll
   notes                 String? // Internal notes about the member
-  allowCalendarBookings Boolean            @default(true)
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
+  allowCalendarBookings Boolean               @default(true)
+  permissionLevel       MemberPermissionLevel @default(Low) // Level of access to member features
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
 
   // Relationships
   memberServices        MemberService[]

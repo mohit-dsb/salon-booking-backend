@@ -125,7 +125,10 @@ export class CategoryService {
   }
 
   // Get all categories for an organization with pagination
-  public async getCategoriesByOrgPaginated(orgId: string, pagination: PaginationParams): Promise<PaginatedResponse<Category>> {
+  public async getCategoriesByOrgPaginated(
+    orgId: string,
+    pagination: PaginationParams,
+  ): Promise<PaginatedResponse<Category>> {
     const cacheKey = `category:${orgId}:paginated:${pagination.page}:${pagination.limit}:${pagination.sortBy}:${pagination.sortOrder}`;
 
     // Try to get from cache first

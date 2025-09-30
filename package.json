@@ -5,7 +5,7 @@
   "main": "src/server.ts",
   "scripts": {
     "start": "npx prisma generate && node ./dist/server.js",
-    "dev": "npx prisma generate && nodemon ",
+    "dev": "npx prisma generate && nodemon",
     "prebuild": "rm -rf dist",
     "build": "tsc && tsc-alias",
     "test": "jest",

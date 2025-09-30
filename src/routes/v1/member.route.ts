@@ -22,10 +22,6 @@ router.use(requireAuthWithOrgId);
 // Stats and search routes (must come before parameterized routes)
 router.get("/stats", memberController.getMemberStats);
 
-// Profile routes for current user
-router.get("/profile", memberController.getMemberProfile);
-router.patch("/profile", memberController.updateMemberProfile);
-
 // Service-specific routes
 router.get("/by-service/:serviceId", memberController.getMembersByService);
 
@@ -36,14 +32,11 @@ router.delete("/bulk", validate(bulkDeleteMembersSchema), memberController.bulkD
 
 // Parameterized routes (must come after static routes)
 router.get("/:id", memberController.getMemberById);
-router.patch("/:id", validate(updateMemberSchema), memberController.updateMember);
+router.put("/:id", validate(updateMemberSchema), memberController.updateMember);
 router.delete("/:id", memberController.deleteMember);
 
 // Member service management
 router.patch("/:id/services", validate(assignServicesSchema), memberController.assignServices);
-
-// Member status management
-router.patch("/:id/status", memberController.toggleMemberStatus);
 
 // Analytics and Reporting Routes
 

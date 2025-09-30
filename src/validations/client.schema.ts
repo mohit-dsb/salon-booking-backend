@@ -57,7 +57,7 @@ export const getAllClientsSchema = z.object({
   isActive: z.boolean().optional(),
   sortBy: z.enum(["firstName", "lastName", "createdAt"]).default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
-  gender: z.enum(["Male", "Female", "PreferNotToSay"]).optional()
+  gender: z.enum(["Male", "Female", "PreferNotToSay"]).optional(),
 });
 
 // Analytics validation schemas

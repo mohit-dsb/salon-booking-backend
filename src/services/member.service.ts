@@ -321,17 +321,32 @@ export class MemberService {
       throw new AppError("Failed to fetch members", 500);
     }
   }
-
   // Update member
   public async updateMember(id: string, orgId: string, data: UpdateMemberData): Promise<MemberWithServices> {
     await this.validateOrgMembership(orgId);
 
-    // Check if member exists
+    if (!id || id.trim() === "") {
+      throw new AppError("Member ID is required", 400);
+    }
+
+    // Get existing member to verify it exists and get current data
     const existingMember = await this.getMemberById(id, orgId);
 
-    // If email is being updated, check for duplicates
-    if (data.email && data.email !== existingMember.email) {
-      const duplicateMember = await prisma.member.findUnique({
+    // Prepare update data
+    const updateData: Record<string, unknown> = {};
+    const clerkUpdateData: Record<string, unknown> = {};
+    let shouldUpdateClerk = false;
+
+    // Handle core fields
+    if (data.username !== undefined && data.username !== existingMember.username) {
+      updateData.username = data.username;
+      clerkUpdateData.username = data.username;
+      shouldUpdateClerk = true;
+    }
+
+    if (data.email !== undefined && data.email !== existingMember.email) {
+      // Check if email is already taken by another member in this organization
+      const emailExists = await prisma.member.findUnique({
         where: {
           email_orgId: {
             email: data.email,
@@ -340,82 +355,151 @@ export class MemberService {
         },
       });
 
-      if (duplicateMember) {
-        throw new AppError("A member with this email already exists in your organization", 400);
+      if (emailExists && emailExists.id !== id) {
+        throw new AppError("Email is already taken by another member", 400);
       }
+
+      updateData.email = data.email;
+      shouldUpdateClerk = true;
+    }
+
+    // Handle other updatable fields
+    const fieldsToUpdate = [
+      "phone",
+      "role",
+      "country",
+      "profileImage",
+      "jobTitle",
+      "bio",
+      "workingHours",
+      "commissionRate",
+      "hourlyRate",
+      "dateOfBirth",
+      "addresses",
+      "emergencyContacts",
+      "startDate",
+      "endDate",
+      "employementType",
+      "teamMemberId",
+      "notes",
+      "allowCalendarBookings",
+      "permissionLevel",
+      "isActive",
+    ];
+
+    fieldsToUpdate.forEach((field) => {
+      if (data[field as keyof UpdateMemberData] !== undefined) {
+        updateData[field] = data[field as keyof UpdateMemberData];
+      }
+    });
+
+    // Handle profile image update for Clerk
+    if (data.profileImage !== undefined && data.profileImage !== existingMember.profileImage) {
+      clerkUpdateData.profileImageUrl = data.profileImage;
+      shouldUpdateClerk = true;
     }
 
     try {
-      // Update Clerk user if email or username changed
-      if (data.email || data.username) {
-        const updateData: {
-          username?: string;
-          primaryEmailAddressId?: string;
-        } = {};
-        if (data.username) updateData.username = data.username;
+      // Start a transaction to ensure data consistency
+      const updatedMember = await prisma.$transaction(async (tx) => {
+        // Update member in database
+        const member = await tx.member.update({
+          where: { id },
+          data: updateData,
+          include: this.memberInclude,
+        });
 
-        // For email updates, we need to handle it properly
-        if (data.email) {
-          // First, add the new email address and mark it as verified for admin updates
-          const newEmailAddress = await executeClerkOperation(
-            () =>
-              clerkClient.emailAddresses.createEmailAddress({
-                userId: existingMember.clerkId,
-                emailAddress: data.email!,
-                verified: true, // Skip verification for admin-created emails
-              }),
-            "createEmailAddress",
-            "Failed to update email address",
-          );
+        // Handle service assignments if provided
+        if (data.serviceIds !== undefined) {
+          // Verify all services exist and belong to the organization
+          if (data.serviceIds.length > 0) {
+            const services = await tx.service.findMany({
+              where: {
+                id: { in: data.serviceIds },
+                orgId,
+              },
+            });
 
-          // Set the new email as primary
-          updateData.primaryEmailAddressId = newEmailAddress.id;
+            if (services.length !== data.serviceIds.length) {
+              throw new AppError("One or more services not found or don't belong to the organization", 404);
+            }
+          }
+
+          // Remove existing service assignments
+          await tx.memberService.deleteMany({
+            where: { memberId: id },
+          });
+
+          // Create new service assignments
+          if (data.serviceIds.length > 0) {
+            await tx.memberService.createMany({
+              data: data.serviceIds.map((serviceId: string) => ({
+                memberId: id,
+                serviceId,
+                orgId,
+              })),
+            });
+          }
         }
 
-        // Update the user with any other changes
-        if (Object.keys(updateData).length > 0) {
-          await executeClerkOperation(
-            () => clerkClient.users.updateUser(existingMember.clerkId, updateData),
-            "updateUser",
-            "Failed to update user account",
-          );
-        }
-      }
-
-      // Extract serviceIds before updating member
-      const { serviceIds, ...memberData } = data;
-
-      // Handle profileImage: if empty string, set to null
-      const processedData = {
-        ...memberData,
-        profileImage: memberData.profileImage === "" ? null : memberData.profileImage,
-        dateOfBirth:
-          typeof memberData.dateOfBirth === "string" ? this.parseDate(memberData.dateOfBirth) : memberData.dateOfBirth,
-        startDate: typeof memberData.startDate === "string" ? this.parseDate(memberData.startDate) : memberData.startDate,
-        endDate: typeof memberData.endDate === "string" ? this.parseDate(memberData.endDate) : memberData.endDate,
-      };
-
-      // Update member in database
-      await prisma.member.update({
-        where: { id },
-        data: processedData,
+        return member;
       });
 
-      // Update service assignments if provided
-      if (serviceIds !== undefined) {
-        await this.assignServicesToMember(id, orgId, serviceIds);
+      // Update Clerk user if needed
+      if (shouldUpdateClerk && existingMember.clerkId) {
+        try {
+          await executeClerkOperation(
+            async () => {
+              const newEmail = await clerkClient.emailAddresses.createEmailAddress({
+                userId: existingMember.clerkId,
+                emailAddress: data.email as string,
+                verified: true // skip verification for admin created emails
+              });
+              clerkUpdateData.primaryEmailAddressID = newEmail.id;
+              await clerkClient.users.updateUser(existingMember.clerkId, clerkUpdateData);
+            },
+            "updateUser",
+            "Failed to update Clerk user profile",
+          );
+          logger.info("Clerk user updated successfully", {
+            clerkId: existingMember.clerkId,
+            updates: Object.keys(clerkUpdateData),
+          });
+        } catch (clerkError) {
+          logger.error("Failed to update Clerk user, but database update succeeded", {
+            clerkId: existingMember.clerkId,
+            error: clerkError instanceof Error ? clerkError.message : "Unknown error",
+            updatesAttempted: Object.keys(clerkUpdateData),
+          });
+          // Don't throw error here as database update succeeded
+          // TODO: implement a retry mechanism or manual sync for critical updates
+        }
       }
 
-      const updatedMember = await this.getMemberById(id, orgId);
-
-      // Invalidate all member-related caches for this organization
+      // Invalidate caches
       await this.invalidateMemberCache(orgId);
 
+      logger.info("Member updated successfully", {
+        memberId: id,
+        orgId,
+        updatedFields: Object.keys(updateData),
+        clerkUpdated: shouldUpdateClerk,
+      });
+
       return updatedMember;
-    } catch (error) {
+    } catch (error: unknown) {
+      logger.error("Failed to update member", {
+        memberId: id,
+        orgId,
+        error: error instanceof Error ? error.message : "Unknown error",
+        updatedFields: Object.keys(updateData),
+      });
+
       if (error instanceof AppError) {
         throw error;
       }
+
+      // Handle Prisma errors or convert unknown errors to AppError
       handleError(error, "updateMember", "Failed to update member");
     }
   }
@@ -604,52 +688,6 @@ export class MemberService {
     await cacheService.set(cacheKey, stats, 900);
 
     return stats;
-  }
-
-  // Toggle member status
-  public async toggleMemberStatus(id: string, orgId: string): Promise<MemberWithServices> {
-    const currentMember = await this.getMemberById(id, orgId);
-
-    const updatedMember = await this.updateMember(id, orgId, {
-      isActive: !currentMember.isActive,
-    });
-
-    // Note: updateMember already invalidates cache, so no need to do it again
-    return updatedMember;
-  }
-
-  // Update member profile with restricted fields
-  public async updateMemberProfile(
-    clerkId: string,
-    orgId: string,
-    updateData: Record<string, unknown>,
-  ): Promise<MemberWithServices> {
-    const currentMember = await this.getMemberByClerkId(clerkId, orgId);
-
-    if (!currentMember) {
-      throw new AppError("Member profile not found", 404);
-    }
-
-    // Allow members to update only certain fields
-    const allowedFields = [
-      "username",
-      "phone",
-      "bio",
-      "profileImage",
-      "workingHours",
-      "dateOfBirth",
-      "address",
-      "emergencyContact",
-    ];
-
-    const filteredUpdateData: Record<string, unknown> = {};
-    Object.keys(updateData).forEach((key) => {
-      if (allowedFields.includes(key)) {
-        filteredUpdateData[key] = updateData[key];
-      }
-    });
-
-    return await this.updateMember(currentMember.id, orgId, filteredUpdateData);
   }
 
   // ========== USER-RELATED METHODS ==========

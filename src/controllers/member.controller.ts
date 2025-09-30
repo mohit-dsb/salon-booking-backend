@@ -78,20 +78,20 @@ export const getMemberById = asyncHandler(async (req: Request, res: Response, _n
 
 /**
  * Update member
- * @route PATCH /api/v1/members/:id
- * @access Private (Admin/Member)
+ * @route PUT /api/v1/members/:id
+ * @access Private (Admin)
  */
 export const updateMember = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
   const { orgId } = await getAuthWithOrgId(req);
   const { id } = req.params;
-  const updateData = req.parsedBody as UpdateMemberData;
+  const memberData = req.parsedBody as UpdateMemberData;
 
-  const member = await memberService.updateMember(id, orgId, updateData);
+  const updatedMember = await memberService.updateMember(id, orgId, memberData);
 
   res.status(200).json({
     success: true,
     message: "Member updated successfully",
-    data: member,
+    data: updatedMember,
   });
 });
 
@@ -196,64 +196,6 @@ export const getMemberStats = asyncHandler(async (req: Request, res: Response, _
     success: true,
     message: "Member statistics retrieved successfully",
     data: stats,
-  });
-});
-
-/**
- * Toggle member status (activate/deactivate)
- * @route PATCH /api/v1/members/:id/status
- * @access Private (Admin)
- */
-export const toggleMemberStatus = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId } = await getAuthWithOrgId(req);
-  const { id } = req.params;
-
-  const member = await memberService.toggleMemberStatus(id, orgId);
-
-  res.status(200).json({
-    success: true,
-    message: `Member ${member.isActive ? "activated" : "deactivated"} successfully`,
-    data: member,
-  });
-});
-
-// Member Profile Management
-
-/**
- * Get member profile (for the logged-in member)
- * @route GET /api/v1/members/profile
- * @access Private (Member)
- */
-export const getMemberProfile = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId, userId } = await getAuthWithOrgId(req);
-
-  const member = await memberService.getMemberByClerkId(userId as string, orgId);
-
-  if (!member) {
-    throw new AppError("Member profile not found", 404);
-  }
-
-  res.status(200).json({
-    success: true,
-    message: "Member profile retrieved successfully",
-    data: member,
-  });
-});
-
-/**
- * Update member profile (for the logged-in member)
- * @route PATCH /api/v1/members/profile
- * @access Private (Member)
- */
-export const updateMemberProfile = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
-  const { orgId, userId } = await getAuthWithOrgId(req);
-
-  const member = await memberService.updateMemberProfile(userId as string, orgId, req.parsedBody as UpdateMemberData);
-
-  res.status(200).json({
-    success: true,
-    message: "Profile updated successfully",
-    data: member,
   });
 });
 

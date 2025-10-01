@@ -111,33 +111,44 @@ export class CategoryService {
       return cached;
     }
 
-    // If not in cache, fetch from database
-    const categories = await prisma.category.findMany({
-      where: {
-        orgId,
-        OR: [
-          {
-            name: {
-              contains: query.search,
-              mode: "insensitive",
-            },
-          },
-          {
-            services: {
-              some: {
-                name: {
-                  contains: query.search,
-                  mode: "insensitive",
-                },
+    let categories = [];
+
+    if (!query.search) {
+      categories = await prisma.category.findMany({
+        where: { orgId },
+        include: {
+          services: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+      });
+    } else {
+      const searchTerm = query.search;
+
+      categories = await prisma.category.findMany({
+        where: {
+          services: {
+            some: {
+              name: {
+                contains: searchTerm,
+                mode: "insensitive",
               },
             },
           },
-        ],
-      },
-      include: {
-        services: true,
-      },
-    });
+        },
+        include: {
+          services: {
+            where: {
+              name: {
+                contains: searchTerm,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      });
+    }
 
     // Cache the result for 1 hour
     await cacheService.set(cacheKey, categories, 3600);

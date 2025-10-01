@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { getAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { AppError, asyncHandler } from "@/middlewares/error.middleware";
+import { GetAllCategoriesQuery } from "@/validations/category.schema";
 import { parsePaginationParams, PaginationQuery } from "@/utils/pagination";
 import { CategoryService, type IUpdateCategory, type ICreateCategory } from "@/services/category.service";
 
@@ -36,7 +37,8 @@ export class CategoryController {
 
   public getAllCategories = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const auth = await getAuthWithOrgId(req);
-    const categories = await this.categoryService.getAllCategoriesByOrg(auth.orgId);
+    const query = req.parsedQuery as GetAllCategoriesQuery;
+    const categories = await this.categoryService.getAllCategoriesByOrg(auth.orgId, query);
     res.status(200).json({ success: true, data: categories });
   });
 

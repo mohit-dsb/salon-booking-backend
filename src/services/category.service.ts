@@ -4,6 +4,7 @@ import { createSlug } from "@/utils/slugify";
 import { cacheService } from "./cache.service";
 import { AppError } from "@/middlewares/error.middleware";
 import { PaginationParams, createPaginatedResponse, PaginatedResponse } from "@/utils/pagination";
+import { GetAllCategoriesQuery } from "@/validations/category.schema";
 
 // Types for Category operations
 export interface ICreateCategory {
@@ -65,6 +66,8 @@ export class CategoryService {
 
     // Invalidate cache after creation
     await cacheService.invalidatePattern(`category:${data.orgId}:*`);
+    await cacheService.invalidatePattern(`service:${data.orgId}:*`);
+    await cacheService.invalidatePattern(`category:${data.orgId}:all:*`);
 
     return category;
   }
@@ -99,8 +102,8 @@ export class CategoryService {
   }
 
   // Get all categories for an organization
-  public async getAllCategoriesByOrg(orgId: string): Promise<Category[]> {
-    const cacheKey = `category:${orgId}:all`;
+  public async getAllCategoriesByOrg(orgId: string, query: GetAllCategoriesQuery): Promise<Category[]> {
+    const cacheKey = `category:${orgId}:all:${JSON.stringify(query)}`;
 
     // Try to get from cache first
     const cached = await cacheService.get<Category[]>(cacheKey);
@@ -112,6 +115,24 @@ export class CategoryService {
     const categories = await prisma.category.findMany({
       where: {
         orgId,
+        OR: [
+          {
+            name: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            services: {
+              some: {
+                name: {
+                  contains: query.search,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        ],
       },
       include: {
         services: true,
@@ -203,6 +224,8 @@ export class CategoryService {
 
     // Invalidate all related cache entries
     await cacheService.invalidatePattern(`category:${category.orgId}:*`);
+    await cacheService.invalidatePattern(`service:${category.orgId}:*`);
+    await cacheService.invalidatePattern(`category:${category.orgId}:all:*`);
 
     return category;
   }

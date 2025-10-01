@@ -127,7 +127,7 @@ export const transformClientToTableRow = (client: ClientWithAppointments): Clien
       ? new Date(client.appointments[client.appointments.length - 1].startTime).toLocaleDateString("en-US")
       : null,
   loyaltyPoints: 0,
-  clientSource: client.clientSource,
+  clientSource: client.clientSource ?? null,
   referredBy: client?.referredBy
     ? {
         id: client.referredBy.id,

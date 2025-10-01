@@ -77,7 +77,7 @@ export interface ClientTableRow {
   firstAppointmentDate: string | null;
   lastAppointmentDate: string | null;
   loyaltyPoints: number;
-  clientSource: string;
+  clientSource: string | null;
   referredBy?: {
     id: string;
     name: string;

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { validate } from "@/middlewares/validation.middleware";
 import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { CategoryController } from "@/controllers/category.controller";
-import { createCategorySchema, updateCategorySchema } from "@/validations/category.schema";
+import { createCategorySchema, getAllCategoriesSchema, updateCategorySchema } from "@/validations/category.schema";
 
 const categoryRoutes = Router();
 const categoryController = new CategoryController();
@@ -15,7 +15,7 @@ categoryRoutes
   .post(validate(createCategorySchema), categoryController.createCategory)
   .get(categoryController.getAllCategoriesPaginated);
 
-categoryRoutes.get("/all", categoryController.getAllCategories);
+categoryRoutes.get("/all", validate(getAllCategoriesSchema), categoryController.getAllCategories);
 
 categoryRoutes
   .route("/:slug")

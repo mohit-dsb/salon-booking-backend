@@ -95,8 +95,8 @@ export class ClientService {
       if (data.addresses && data.addresses.length > 0) createData.addresses = data.addresses;
 
       // Additional info fields
-      if (data.clientSource === "Walk-in") {
-        createData.clientSource = "WALK_IN";
+      if (data.clientSource) {
+        createData.clientSource = data.clientSource;
       }
       if (data.referredBy) {
         createData.referredBy = {

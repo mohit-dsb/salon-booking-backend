@@ -198,7 +198,7 @@ model Client {
   isActive    Boolean      @default(true)
 
   // ADDITIONAL INFO
-  clientSource      ClientSource @default(WALK_IN) // How the client heard about the business
+  clientSource      ClientSource?
   referredById      String?      @db.ObjectId // Which client referred this client
   preferredLanguage String? // Client's preferred language
   occupation        String? // Client's occupation

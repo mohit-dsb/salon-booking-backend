@@ -26,7 +26,7 @@ export const createClientSchema = z.object({
   gender: z.enum(["Male", "Female", "PreferNotToSay"]).default("PreferNotToSay"),
   // ADDITIONAL INFO
   // Client source: How the client heard about the business
-  clientSource: z.enum(["Walk-in"]).default("Walk-in"), // Extendable for future sources
+  clientSource: z.enum(["WALK_IN"]).default("WALK_IN"), // Extendable for future sources
   // Which client referred this client, if any
   referredBy: z.string().optional(),
   preferredLanguage: z.string().max(20, "Preferred language must be less than 20 characters").optional(),

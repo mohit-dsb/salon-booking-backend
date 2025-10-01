@@ -208,6 +208,17 @@ model Client {
   additionalEmail String? // Secondary email address
   additionalPhone String? // Secondary phone number
 
+  // EMERGENCY CONTACTS DETAILS
+  primaryEmergencyContactFullName String? 
+  primaryEmergencyContactPhone    String? 
+  primaryEmergencyContactEmail    String? 
+  primaryEmergencyContactRelation String? 
+
+  secondaryEmergencyContactFullName String? 
+  secondaryEmergencyContactPhone    String? 
+  secondaryEmergencyContactEmail    String? 
+  secondaryEmergencyContactRelation String? 
+
   // NOTIFICATION PREFERENCES
   notifyByEmail    Boolean @default(true) // Email notifications enabled
   notifyBySMS      Boolean @default(false) // SMS notifications enabled

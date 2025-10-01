@@ -120,6 +120,33 @@ export class ClientService {
       if (data.allowEmailMarketing !== undefined) createData.allowEmailMarketing = data.allowEmailMarketing;
       if (data.allowSMSMarketing !== undefined) createData.allowSMSMarketing = data.allowSMSMarketing;
       if (data.allowWhatsappMarketing !== undefined) createData.allowWhatsappMarketing = data.allowWhatsappMarketing;
+      
+      // Emergency contact details
+      if (data.primaryEmergencyContactFullName) {
+        createData.primaryEmergencyContactFullName = data.primaryEmergencyContactFullName.trim();
+      }
+      if (data.primaryEmergencyContactPhone) {
+        createData.primaryEmergencyContactPhone = data.primaryEmergencyContactPhone.trim();
+      }
+      if (data.primaryEmergencyContactEmail) {
+        createData.primaryEmergencyContactEmail = data.primaryEmergencyContactEmail.toLowerCase().trim();
+      }
+      if (data.primaryEmergencyContactRelation) {
+        createData.primaryEmergencyContactRelation = data.primaryEmergencyContactRelation.trim();
+      }
+
+      if (data.secondaryEmergencyContactFullName) {
+        createData.secondaryEmergencyContactFullName = data.secondaryEmergencyContactFullName.trim();
+      }
+      if (data.secondaryEmergencyContactPhone) {
+        createData.secondaryEmergencyContactPhone = data.secondaryEmergencyContactPhone.trim();
+      }
+      if (data.secondaryEmergencyContactEmail) {
+        createData.secondaryEmergencyContactEmail = data.secondaryEmergencyContactEmail.toLowerCase().trim();
+      }
+      if (data.secondaryEmergencyContactRelation) {
+        createData.secondaryEmergencyContactRelation = data.secondaryEmergencyContactRelation.trim();
+      }
 
       const client = await prisma.client.create({
         data: createData,

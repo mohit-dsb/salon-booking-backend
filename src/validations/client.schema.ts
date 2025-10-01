@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "./pagination.schema";
 
+const PHONE_NUMBER_REGEX = /^\+?[1-9]\d{1,14}$/;
+const PHONE_NUMBER_SCHEMA = z
+  .string()
+  .optional()
+  .refine((val) => !val || PHONE_NUMBER_REGEX.test(val), "Invalid phone number format");
+
 // Address validation schema
 const addressSchema = z.object({
   street: z.string().optional(),
@@ -18,10 +24,7 @@ export const createClientSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50, "First name must be less than 50 characters").trim(),
   lastName: z.string().min(1, "Last name is required").max(50, "Last name must be less than 50 characters").trim(),
   email: z.email("Invalid email format").toLowerCase().trim(),
-  phone: z
-    .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number")
-    .optional(),
+  phone: PHONE_NUMBER_SCHEMA,
   dateOfBirth: z.iso.datetime().optional(),
   gender: z.enum(["Male", "Female", "PreferNotToSay"]).default("PreferNotToSay"),
   // ADDITIONAL INFO
@@ -34,11 +37,17 @@ export const createClientSchema = z.object({
   country: z.string().max(50, "Country must be less than 50 characters").optional(),
   // ADDITIONAL DETAILS
   additionalEmail: z.email("Invalid email format").toLowerCase().trim().optional(),
-  additionalPhone: z
-    .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number")
-    .optional(),
+  additionalPhone: PHONE_NUMBER_SCHEMA,
   addresses: z.array(addressSchema).optional(),
+  // EMERGENCY CONTACTS DETAILS
+  primaryEmergencyContactFullName: z.string().max(100, "Full name must be less than 100 characters").optional(),
+  primaryEmergencyContactPhone: PHONE_NUMBER_SCHEMA,
+  primaryEmergencyContactEmail: z.email("Invalid email format").toLowerCase().trim().optional(),
+  primaryEmergencyContactRelation: z.string().max(50, "Relation must be less than 50 characters").optional(),
+  secondaryEmergencyContactFullName: z.string().max(100, "Full name must be less than 100 characters").optional(),
+  secondaryEmergencyContactPhone: PHONE_NUMBER_SCHEMA,
+  secondaryEmergencyContactEmail: z.email("Invalid email format").toLowerCase().trim().optional(),
+  secondaryEmergencyContactRelation: z.string().max(50, "Relation must be less than 50 characters").optional(),
   // NOTIFICATION PREFERENCES
   notifyByEmail: z.boolean().default(true),
   notifyBySMS: z.boolean().default(false),

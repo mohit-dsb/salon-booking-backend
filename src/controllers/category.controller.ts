@@ -87,13 +87,13 @@ export class CategoryController {
 
   public updateCategory = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
     const auth = await getAuthWithOrgId(req);
-    const { slug } = req.params;
+    const { id } = req.params;
 
-    if (!slug) {
-      throw new AppError("Category slug is required", 400);
+    if (!id) {
+      throw new AppError("Category ID is required", 400);
     }
 
-    const category = await this.categoryService.getCategoryBySlug(slug, auth.orgId);
+    const category = await this.categoryService.getCategoryById(id, auth.orgId);
 
     if (!category) {
       throw new AppError("Category not found", 404);

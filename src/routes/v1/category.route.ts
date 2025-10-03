@@ -32,18 +32,18 @@ router.get("/", categoryController.getAllCategoriesPaginated);
 router.get("/all", validate(getAllCategoriesSchema), categoryController.getAllCategories);
 
 /**
- * @route   GET /api/v1/categories/:slug
- * @desc    Get category by slug
+ * @route   GET /api/v1/categories/:id
+ * @desc    Get category by id
  * @access  Private (Member)
  */
-router.get("/:slug", categoryController.getCategoryBySlug);
+router.get("/:id", categoryController.getCategoryById);
 
 /**
- * @route   PATCH /api/v1/categories/:slug
+ * @route   PUT /api/v1/categories/:id
  * @desc    Update category
  * @access  Private (Member)
  */
-router.patch("/:slug", validate(updateCategorySchema), categoryController.updateCategory);
+router.put("/:id", validate(updateCategorySchema), categoryController.updateCategory);
 
 /**
  * @route   DELETE /api/v1/categories/:id

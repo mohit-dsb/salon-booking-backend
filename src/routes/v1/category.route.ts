@@ -4,23 +4,52 @@ import { requireAuthWithOrgId } from "@/middlewares/auth.middleware";
 import { CategoryController } from "@/controllers/category.controller";
 import { createCategorySchema, getAllCategoriesSchema, updateCategorySchema } from "@/validations/category.schema";
 
-const categoryRoutes = Router();
+const router = Router();
 const categoryController = new CategoryController();
 
 // Apply auth middleware to all routes
-categoryRoutes.use(requireAuthWithOrgId);
+router.use(requireAuthWithOrgId);
 
-categoryRoutes
-  .route("/")
-  .post(validate(createCategorySchema), categoryController.createCategory)
-  .get(categoryController.getAllCategoriesPaginated);
+/**
+ * @route   POST /api/v1/categories
+ * @desc    Create a new category
+ * @access  Private (Member)
+ */
+router.post("/", validate(createCategorySchema), categoryController.createCategory);
 
-categoryRoutes.get("/all", validate(getAllCategoriesSchema), categoryController.getAllCategories);
+/**
+ * @route   GET /api/v1/categories
+ * @desc    Get all categories with pagination
+ * @access  Private (Member)
+ */
+router.get("/", categoryController.getAllCategoriesPaginated);
 
-categoryRoutes
-  .route("/:slug")
-  .get(categoryController.getCategoryBySlug)
-  .patch(validate(updateCategorySchema), categoryController.updateCategory)
-  .delete(categoryController.deleteCategory);
+/**
+ * @route   GET /api/v1/categories/all
+ * @desc    Get all categories without pagination (for dropdowns, etc.)
+ * @access  Private (Member)
+ */
+router.get("/all", validate(getAllCategoriesSchema), categoryController.getAllCategories);
 
-export default categoryRoutes;
+/**
+ * @route   GET /api/v1/categories/:slug
+ * @desc    Get category by slug
+ * @access  Private (Member)
+ */
+router.get("/:slug", categoryController.getCategoryBySlug);
+
+/**
+ * @route   PATCH /api/v1/categories/:slug
+ * @desc    Update category
+ * @access  Private (Member)
+ */
+router.patch("/:slug", validate(updateCategorySchema), categoryController.updateCategory);
+
+/**
+ * @route   DELETE /api/v1/categories/:id
+ * @desc    Delete category
+ * @access  Private (Member)
+ */
+router.delete("/:id", categoryController.deleteCategory);
+
+export default router;
